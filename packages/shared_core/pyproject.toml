@@ -1,0 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shared-core"
+version = "0.1.0"
+description = "公共核心：基础异常、结果类型、标识符、公共类型"
+requires-python = ">=3.11"
+dependencies = []

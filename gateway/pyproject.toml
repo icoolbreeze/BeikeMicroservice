@@ -1,0 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "beike-gateway"
+version = "0.1.0"
+description = "统一 API 网关（预留，未实现）"
+requires-python = ">=3.11"
+dependencies = []

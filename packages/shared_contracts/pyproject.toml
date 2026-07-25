@@ -1,0 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shared-contracts"
+version = "0.1.0"
+description = "服务间契约：事件与消息结构"
+requires-python = ">=3.11"
+dependencies = []

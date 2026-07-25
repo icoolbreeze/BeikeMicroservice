@@ -1,0 +1,21 @@
+# 根工作区配置：仅作为 Monorepo 统一工程配置，不直接打包发布。
+# 各微服务与公共包使用各自目录下的 pyproject.toml 独立构建。
+
+[project]
+name = "beike-microservice"
+version = "0.1.0"
+description = "贝壳 A+ 第三方微服务平台（多服务 Monorepo 工作区）"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+# 各服务测试在自身目录下运行；此处仅预留根级约定
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false

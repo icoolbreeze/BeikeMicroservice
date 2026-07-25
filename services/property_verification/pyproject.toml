@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "property-verification"
+version = "0.1.0"
+description = "房源信息验证微服务（BeikeMicroservice 平台独立服务，当前仅为结构骨架）"
+requires-python = ">=3.11"
+# 依赖仅作规划声明，当前阶段一律不安装
+dependencies = [
+    # "fastapi",
+    # "uvicorn",
+    # "pydantic",
+    # "pydantic-settings",
+    # "sqlalchemy",
+    # "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    # "pytest",
+    # "pytest-asyncio",
+    # "ruff",
+    # "mypy",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

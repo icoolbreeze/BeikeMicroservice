@@ -1,0 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shared-logging"
+version = "0.1.0"
+description = "公共日志：统一格式与日志脱敏"
+requires-python = ">=3.11"
+dependencies = []
