@@ -31,6 +31,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 DEFAULT_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+MODEL_REQUEST_TIMEOUT_SECONDS = 20
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -173,7 +174,12 @@ def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
     last_err: Exception | None = None
     for attempt in (1, 2, 3):
         try:
-            resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=180)
+            resp = requests.post(
+                OPENROUTER_URL,
+                headers=headers,
+                json=payload,
+                timeout=MODEL_REQUEST_TIMEOUT_SECONDS,
+            )
             resp.raise_for_status()
             body = resp.json()
             if "choices" not in body:
@@ -232,7 +238,12 @@ def _vl_text_call(api_key: str, model: str, data_url: str, prompt: str,
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     try:
-        resp = requests.post(OPENROUTER_URL, headers=headers, json=payload, timeout=180)
+        resp = requests.post(
+            OPENROUTER_URL,
+            headers=headers,
+            json=payload,
+            timeout=MODEL_REQUEST_TIMEOUT_SECONDS,
+        )
         resp.raise_for_status()
         body = resp.json()
         if "choices" not in body:

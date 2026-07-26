@@ -68,9 +68,17 @@
   .drop.has-file{padding:8px}
   .drop.has-file .ic,.drop.has-file .t,.drop.has-file .s{display:none}
   .drop.has-file::after{content:"已选择文件，点此重新选择";font-size:12px;color:var(--muted)}
-  .preview{margin-top:10px;display:none;flex:none;text-align:center}
-  .preview img{max-width:100%;max-height:170px;border-radius:8px;border:1px solid var(--line)}
-  .file-name{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
+  /* 已选文件采用紧凑文件条，避免单张证件预览占去主要操作空间。 */
+  .preview{margin-top:10px;display:none;align-items:center;gap:10px;flex:none;
+           min-width:0;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fafbfc}
+  .preview .preview-thumb{flex:none;width:58px;height:58px;padding:0;border:0;border-radius:7px;
+                          overflow:hidden;background:#e8edf3;cursor:zoom-in}
+  .preview img{display:block;width:100%;height:100%;object-fit:cover}
+  .preview .file-info{min-width:0;flex:1;text-align:left}
+  .file-name{font-size:12px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-meta{font-size:11px;color:var(--muted);margin-top:1px}
+  .preview .preview-action{flex:none;border:0;background:transparent;color:var(--brand-2);font:600 12px inherit;
+                           padding:5px;cursor:pointer}
   button.primary{flex:none;width:100%;border:0;background:var(--brand);color:#fff;font-size:16px;
         font-weight:600;padding:13px;border-radius:12px;cursor:pointer;margin-top:12px;transition:.15s}
   button.primary:hover{background:var(--brand-2)}
@@ -131,10 +139,15 @@
 
   /* —— 图片预览 Lightbox —— */
   .lb{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;
-      background:rgba(10,18,28,.86);backdrop-filter:blur(3px);padding:24px;cursor:zoom-out}
+      background:rgba(10,18,28,.86);backdrop-filter:blur(3px);padding:24px}
   .lb.show{display:flex}
-  .lb img{max-width:94vw;max-height:86vh;border-radius:10px;background:#fff;
-          box-shadow:0 14px 52px rgba(0,0,0,.55);animation:lbin .18s ease-out}
+  .lb .stage{width:min(94vw,1200px);height:min(82vh,900px);display:flex;align-items:center;justify-content:center;
+             overflow:hidden;touch-action:none}
+  .lb .stage.pannable{cursor:grab}
+  .lb .stage.panning{cursor:grabbing}
+  .lb img{display:block;max-width:none;max-height:none;border-radius:10px;background:#fff;
+          box-shadow:0 14px 52px rgba(0,0,0,.55);animation:lbin .18s ease-out;
+          transform-origin:center;will-change:transform;user-select:none;-webkit-user-drag:none}
   @keyframes lbin{from{transform:scale(.94);opacity:.4}to{transform:scale(1);opacity:1}}
   .lb .bottom{position:absolute;bottom:16px;left:56px;right:56px;display:flex;align-items:center;
               justify-content:center;gap:12px;color:#dce6f2;font-size:13px}
@@ -142,6 +155,11 @@
   .lb .download{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid rgba(255,255,255,.5);
                 border-radius:7px;color:#fff;text-decoration:none;font-size:12px;white-space:nowrap}
   .lb .download:hover{background:rgba(255,255,255,.14)}
+  .lb .tools{position:absolute;top:14px;left:18px;display:flex;align-items:center;gap:6px}
+  .lb .tools button{width:34px;height:34px;padding:0;border:1px solid rgba(255,255,255,.45);border-radius:8px;
+                    background:rgba(13,48,80,.6);color:#fff;font-size:20px;line-height:1;cursor:pointer}
+  .lb .tools button:hover{background:rgba(255,255,255,.2)}
+  .lb .tools .reset{width:auto;padding:0 10px;font-size:12px}
   .lb .x{position:absolute;top:14px;right:22px;color:#fff;font-size:28px;line-height:1;
          opacity:.75;cursor:pointer}
   .lb .x:hover{opacity:1}
@@ -163,7 +181,9 @@
     .drop .ic{font-size:24px}
     .drop .t{font-size:13px}
     .drop .s{font-size:11px}
-    .preview img{max-height:92px}
+    .preview{margin-top:8px;padding:6px;gap:8px}
+    .preview .preview-thumb{width:46px;height:46px}
+    .preview .preview-action{font-size:11px;padding:4px}
     button.primary{padding:11px;margin-top:10px;font-size:15px}
     .card-upload .hint{display:none} /* 小屏隐藏长提示 */
     .card-progress{flex:1;min-height:0}
@@ -176,6 +196,10 @@
     .art .thumb.zoom::after{opacity:1} /* 触屏无 hover，常显提示 */
     footer{display:none}
     .logs{font-size:11px}
+    .lb{padding:12px}
+    .lb .stage{width:100%;height:82vh}
+    .lb .tools{top:10px;left:12px}
+    .lb .bottom{bottom:12px;left:16px;right:16px;font-size:12px}
   }
 </style>
 </head>
@@ -207,8 +231,14 @@
         <div class="s">支持 JPG / PNG，最大 10MB；可拍照或从相册选择</div>
       </div>
       <div class="preview" id="preview">
-        <img id="previewImg" alt="预览" />
-        <div class="file-name" id="fileName"></div>
+        <button class="preview-thumb" id="previewOpen" type="button" title="放大查看证件">
+          <img id="previewImg" alt="证件缩略图" />
+        </button>
+        <div class="file-info">
+          <div class="file-name" id="fileName"></div>
+          <div class="file-meta" id="fileMeta"></div>
+        </div>
+        <button class="preview-action" id="previewAction" type="button">放大</button>
       </div>
       <button class="primary" id="submitBtn" disabled>开始验证</button>
       <div class="hint">提示：仅用于本公司业务范围内的房源核验，图片含个人敏感信息，请勿上传他人证件。</div>
@@ -242,15 +272,23 @@
     </section>
   </main>
 
-  <footer>本工具由 VL 模型自动解析，结果仅供辅助参考，关键字段请人工复核。</footer>
+  <footer>本工具自动解析证件信息，结果仅供辅助参考，关键字段请人工复核。</footer>
 </div>
 
 <!-- 图片预览浮层 -->
 <div class="lb" id="lb">
   <span class="x" id="lbClose">✕</span>
-  <img id="lbImg" alt="大图预览" />
+  <div class="tools" role="group" aria-label="图片缩放">
+    <button id="lbZoomOut" type="button" aria-label="缩小">−</button>
+    <button id="lbZoomFit" class="reset" type="button">适屏</button>
+    <button id="lbZoomOriginal" class="reset" type="button">原图</button>
+    <button id="lbZoomIn" type="button" aria-label="放大">+</button>
+  </div>
+  <div class="stage" id="lbStage" aria-label="图片预览区域">
+    <img id="lbImg" alt="大图预览" />
+  </div>
   <div class="bottom">
-    <div class="cap" id="lbCap"></div>
+    <div class="cap" id="lbCap">默认完整适屏；可切换原图并放大、拖动查看</div>
     <a class="download" id="lbDownload" href="#" download>下载原图</a>
   </div>
 </div>
@@ -259,6 +297,18 @@
 const $ = id => document.getElementById(id);
 let selectedFile = null;
 let liveTimer=null, hintTimer=null, liveStartTs=0, liveHints=[];
+let lightboxScale = 1;
+let lightboxFitScale = 1;
+let lightboxTranslateX = 0;
+let lightboxTranslateY = 0;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+let panPointerId = null;
+let panStartX = 0;
+let panStartY = 0;
+let panOriginX = 0;
+let panOriginY = 0;
+const activeLightboxPointers = new Map();
 const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
 /* —— 轻提示 toast（微信环境引导长按保存用）—— */
@@ -279,9 +329,32 @@ function showToast(msg){
 }
 
 /* —— 图片放大预览 —— */
+function applyLightboxTransform(){
+  const stage = $("lbStage");
+  $("lbImg").style.transform = "translate3d(" + lightboxTranslateX + "px," +
+    lightboxTranslateY + "px,0) scale(" + lightboxScale + ")";
+  stage.classList.toggle("pannable", lightboxScale > lightboxFitScale);
+}
+function setLightboxZoom(scale){
+  lightboxScale = Math.min(4, Math.max(lightboxFitScale, scale));
+  if(lightboxScale <= lightboxFitScale){ lightboxTranslateX = 0; lightboxTranslateY = 0; }
+  applyLightboxTransform();
+}
+function fitLightboxImage(){
+  const image = $("lbImg");
+  const stage = $("lbStage");
+  if(!image.naturalWidth || !image.naturalHeight || !stage.clientWidth || !stage.clientHeight) return;
+  lightboxFitScale = Math.min(1, (stage.clientWidth - 12) / image.naturalWidth,
+    (stage.clientHeight - 12) / image.naturalHeight);
+  lightboxTranslateX = 0; lightboxTranslateY = 0;
+  setLightboxZoom(lightboxFitScale);
+}
 function openLightbox(src, caption, filename){
-  $("lbImg").src = src;
-  $("lbCap").textContent = caption || "";
+  const image = $("lbImg");
+  lightboxFitScale = 1;
+  image.onload = fitLightboxImage;
+  image.src = src;
+  $("lbCap").textContent = (caption || "图片预览") + " · 原图预览，可双指缩放、拖动";
   const dl = $("lbDownload");
   if(isWeChat){
     // 微信内置浏览器拦截 <a download>，改为引导长按图片保存
@@ -296,23 +369,86 @@ function openLightbox(src, caption, filename){
     dl.onclick = null;
   }
   $("lb").classList.add("show");
+  if(image.complete) requestAnimationFrame(fitLightboxImage);
 }
-function closeLightbox(){ $("lb").classList.remove("show"); $("lbImg").src = ""; }
-$("lb").addEventListener("click", closeLightbox);
+function closeLightbox(){
+  $("lb").classList.remove("show");
+  $("lbImg").src = "";
+  $("lbImg").style.transform = "";
+  activeLightboxPointers.clear();
+  $("lbStage").classList.remove("pannable", "panning");
+}
+$("lb").addEventListener("click", e=>{ if(e.target === $("lb")) closeLightbox(); });
 $("lbClose").addEventListener("click", closeLightbox);
 $("lbDownload").addEventListener("click", e=>e.stopPropagation());
-document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeLightbox(); });
+$("lbZoomIn").addEventListener("click", ()=>setLightboxZoom(lightboxScale * 1.25));
+$("lbZoomOut").addEventListener("click", ()=>setLightboxZoom(lightboxScale / 1.25));
+$("lbZoomFit").addEventListener("click", ()=>setLightboxZoom(lightboxFitScale));
+$("lbZoomOriginal").addEventListener("click", ()=>setLightboxZoom(1));
+$("lbStage").addEventListener("wheel", e=>{
+  e.preventDefault();
+  setLightboxZoom(lightboxScale * (e.deltaY < 0 ? 1.15 : 1 / 1.15));
+}, {passive:false});
+function pointerDistance(points){
+  return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+}
+function startLightboxPan(point){
+  panPointerId = point.id;
+  panStartX = point.x; panStartY = point.y;
+  panOriginX = lightboxTranslateX; panOriginY = lightboxTranslateY;
+  $("lbStage").classList.add("panning");
+}
+$("lbStage").addEventListener("pointerdown", e=>{
+  const stage = $("lbStage");
+  activeLightboxPointers.set(e.pointerId, {id:e.pointerId, x:e.clientX, y:e.clientY});
+  stage.setPointerCapture?.(e.pointerId);
+  const points = [...activeLightboxPointers.values()];
+  if(points.length === 2){
+    pinchStartDistance = pointerDistance(points);
+    pinchStartScale = lightboxScale;
+    panPointerId = null; stage.classList.remove("panning");
+  }else if(lightboxScale > lightboxFitScale){ startLightboxPan(points[0]); }
+}, {passive:false});
+$("lbStage").addEventListener("pointermove", e=>{
+  if(!activeLightboxPointers.has(e.pointerId)) return;
+  activeLightboxPointers.set(e.pointerId, {id:e.pointerId, x:e.clientX, y:e.clientY});
+  const points = [...activeLightboxPointers.values()];
+  if(points.length === 2 && pinchStartDistance){
+    e.preventDefault();
+    setLightboxZoom(pinchStartScale * pointerDistance(points) / pinchStartDistance);
+  }else if(points.length === 1 && e.pointerId === panPointerId && lightboxScale > lightboxFitScale){
+    e.preventDefault();
+    lightboxTranslateX = panOriginX + e.clientX - panStartX;
+    lightboxTranslateY = panOriginY + e.clientY - panStartY;
+    applyLightboxTransform();
+  }
+}, {passive:false});
+function endLightboxPointer(e){
+  activeLightboxPointers.delete(e.pointerId);
+  const points = [...activeLightboxPointers.values()];
+  if(points.length === 1 && lightboxScale > lightboxFitScale) startLightboxPan(points[0]);
+  else { panPointerId = null; $("lbStage").classList.remove("panning"); }
+  if(points.length < 2) pinchStartDistance = 0;
+}
+$("lbStage").addEventListener("pointerup", endLightboxPointer);
+$("lbStage").addEventListener("pointercancel", endLightboxPointer);
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape") closeLightbox();
+  if(!$("lb").classList.contains("show")) return;
+  if(e.key === "+" || e.key === "=") setLightboxZoom(lightboxScale * 1.25);
+  if(e.key === "-") setLightboxZoom(lightboxScale / 1.25);
+});
 
 /* 头部二维码：点击放大，方便扫码 */
 $("qrBox").addEventListener("click", ()=>openLightbox("contact-qr.png", "微信扫码 · 联系开发者"));
 
 /* —— 实时反馈：长时间无新事件时用呼吸点 + 已用时 + 轮播提示，避免用户以为卡住 —— */
 function hintsFor(msg){
-  if(/提取|识别|字段|证件图片|模型/.test(msg))
-    return ["视觉模型正在阅读证件照片…",
+  if(/提取|识别|字段|证件图片/.test(msg))
+    return ["正在读取证件照片…",
             "正在识别图片中的文字与编号…",
             "正在解析业务件号与产权证号…",
-            "模型解析通常需要十几秒，请稍候…",
+            "信息解析通常需要十几秒，请稍候…",
             "如耗时略长属正常现象，仍在处理中…"];
   if(/蓉e?办|验证|查询|填|截图|房源信息/.test(msg))
     return ["正在打开蓉e办验证页面…",
@@ -363,11 +499,20 @@ function setFile(f){
   }
   selectedFile = f;
   drop.classList.add("has-file");
-  $("preview").style.display = "block";
+  $("preview").style.display = "flex";
   $("previewImg").src = URL.createObjectURL(f);
-  $("fileName").textContent = f.name + " · " + (f.size/1024).toFixed(1) + " KB";
+  $("fileName").textContent = f.name;
+  $("fileMeta").textContent = (f.size/1024).toFixed(1) + " KB · 点击可放大查看";
   $("submitBtn").disabled = false;
 }
+
+function openSelectedFilePreview(){
+  if(selectedFile && $("previewImg").src){
+    openLightbox($("previewImg").src, selectedFile.name, selectedFile.name);
+  }
+}
+$("previewOpen").addEventListener("click", openSelectedFilePreview);
+$("previewAction").addEventListener("click", openSelectedFilePreview);
 
 $("submitBtn").addEventListener("click", async ()=>{
   if(!selectedFile) return;
@@ -449,13 +594,15 @@ async function finishOk(jobId){
     return;
   }
   screenshots.forEach(a=>{
-    const url = a.url || ("/api/v1/verification/" + jobId + "/download/" + a.spec);
+    // 卡片可替换为缩略图，但弹窗与下载始终使用产物原文件接口。
+    const originalUrl = "/api/v1/verification/" + jobId + "/download/" + a.spec;
+    const thumbnailUrl = a.url || originalUrl;
     const el = document.createElement("div");
     el.className = "art";
     const thumb = document.createElement("div");
     thumb.className = "thumb zoom";
     const img = document.createElement("img");
-    img.loading = "lazy"; img.src = url; img.alt = a.title || "验证截图";
+    img.loading = "lazy"; img.src = thumbnailUrl; img.alt = a.title || "验证截图";
     thumb.appendChild(img);
     const meta = document.createElement("div"); meta.className = "meta";
     const title = document.createElement("div"); title.className = "ti"; title.textContent = a.title || "验证截图";
@@ -469,15 +616,15 @@ async function finishOk(jobId){
       download.textContent = "长按图片保存到相册";
       download.style.cursor = "pointer";
       download.addEventListener("click", ()=>{
-        openLightbox(url, a.title || "验证截图", a.filename);
+        openLightbox(originalUrl, a.title || "验证截图", a.filename);
         showToast("请长按上方图片，选择「保存到相册」");
       });
     }else{
-      download.href = url; download.download = a.filename || "";
+      download.href = originalUrl; download.download = a.filename || "";
       download.textContent = "下载图片";
     }
     actions.append(download); meta.append(title, size, actions); el.append(thumb, meta);
-    const previewImage = ()=>openLightbox(url, a.title || "验证截图", a.filename);
+    const previewImage = ()=>openLightbox(originalUrl, a.title || "验证截图", a.filename);
     thumb.addEventListener("click", previewImage);
     box.appendChild(el);
   });

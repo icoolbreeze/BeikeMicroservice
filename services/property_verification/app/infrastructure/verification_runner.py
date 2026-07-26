@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 import threading
 from pathlib import Path
@@ -18,30 +19,48 @@ from app.infrastructure.job_store import JobStore, SUCCEEDED, FAILED
 
 
 class _StdoutTee:
-    """临时替换 sys.stdout，按行转发为进度事件，同时保留原输出。"""
+    """临时替换 sys.stdout，按行脱敏后转发为进度事件及控制台日志。"""
 
-    def __init__(self, real, emit) -> None:
+    def __init__(self, real, emit, sanitize) -> None:
         self._real = real
         self._emit = emit
+        self._sanitize = sanitize
         self._buf = ""
 
     def write(self, data: str) -> int:  # noqa: D401
         if not data:
             return 0
-        self._real.write(data)
         self._buf += data
         while "\n" in self._buf:
             line, self._buf = self._buf.split("\n", 1)
-            line = line.strip()
+            line = self._sanitize(line.strip())
             if line:
+                self._real.write(line + "\n")
                 self._emit("log", line)
         return len(data)
 
     def flush(self) -> None:
-        if self._buf.strip():
-            self._emit("log", self._buf.strip())
+        line = self._sanitize(self._buf.strip())
+        if line:
+            self._real.write(line)
+            self._emit("log", line)
         self._buf = ""
         self._real.flush()
+
+
+def _public_message(message: str, settings: Settings) -> str:
+    """删除面向用户与控制台日志中的模型标识及其调用细节。"""
+    result = str(message)
+    for model in (settings.vl_model, settings.vl_model_fallback):
+        if model:
+            result = result.replace(model, "识别服务")
+    # 兜底覆盖第三方返回的「model: provider/name」等形式，避免新增配置漏网。
+    result = re.sub(
+        r"(?i)(?:使用)?(?:模型|model)\s*[：:]\s*[^，,;；\s)）]+",
+        "识别服务",
+        result,
+    )
+    return result
 
 
 def _scripts_dir(settings: Settings) -> Path:
@@ -68,7 +87,7 @@ def _load_house_verify(scripts_dir: Path):
 def run_verification(job_id: str, cert_path: Path, settings: Settings,
                     store: JobStore) -> None:
     """执行完整验证流程并更新任务状态。在后台线程调用。"""
-    emit = lambda t, m: store.append_event(job_id, t, m)
+    emit = lambda t, m: store.append_event(job_id, t, _public_message(m, settings))
 
     def _emit_milestone(msg: str) -> None:
         emit("milestone", msg)
@@ -77,7 +96,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
     work_dir.mkdir(parents=True, exist_ok=True)
 
     real_stdout = sys.stdout
-    tee = _StdoutTee(real_stdout, emit)
+    tee = _StdoutTee(real_stdout, emit, lambda m: _public_message(m, settings))
     saved_stdout = sys.stdout
 
     try:
@@ -87,12 +106,8 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
         if not api_key:
             raise RuntimeError("OPENROUTER_API_KEY 未配置，无法调用视觉模型")
 
-        used_model = settings.vl_model
-
         def _fallback_hook(primary: str, fallback: str, err: str) -> None:
-            nonlocal used_model
-            used_model = fallback
-            _emit_milestone(f"主模型 {primary} 提取失败，切换兜底模型 {fallback}")
+            _emit_milestone("当前识别服务响应异常，正在切换备用识别服务")
 
         _emit_milestone("正在识别证件图片，提取关键字段…")
         cred = hv.extract_credentials(
@@ -103,8 +118,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
         (work_dir / "extracted.json").write_text(
             json.dumps(cred, ensure_ascii=False, indent=2), encoding="utf-8")
         _emit_milestone(
-            f"提取完成：业务件号={cred['业务件号']} 证件编码={cred['证件编码']} "
-            f"（使用模型：{used_model}）")
+            f"提取完成：业务件号={cred['业务件号']} 证件编码={cred['证件编码']}")
 
         _emit_milestone("正在调用蓉e办房源信息验证…")
         outputs = hv.run_query(
@@ -117,7 +131,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
         store.append_event(job_id, "done", "done")
         store.finish(job_id, SUCCEEDED)
     except BaseException as exc:  # noqa: BLE001 - 捕获 SystemExit 与异常
-        msg = str(exc) or exc.__class__.__name__
+        msg = _public_message(str(exc) or exc.__class__.__name__, settings)
         emit("error", f"验证失败：{msg}")
         store.finish(job_id, FAILED, error=msg)
     finally:
