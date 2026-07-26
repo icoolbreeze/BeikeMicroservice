@@ -566,7 +566,8 @@ $("submitBtn").addEventListener("click", async ()=>{
     updateQuota(d.data.remaining_minute, d.data.remaining_day);
     updateServedCount(d.data.served_count);
     const ahead = d.data.queue_ahead || 0;
-    setStatus("queued", "排队中，前方有 " + ahead + " 个任务等待处理");
+    if(ahead > 0) setStatus("queued", "排队中，前方有 " + ahead + " 个任务等待处理");
+    else setStatus("running", "任务已受理，正在准备处理");
     listenEvents(jobId);
   }catch(err){
     showError("网络异常：" + err.message);
@@ -587,7 +588,11 @@ function listenEvents(jobId){
       es.close(); $("submitBtn").disabled = false; $("bar").classList.remove("indet");
       return;
     }
-    if(obj.type === "queue") setStatus("queued", obj.message || "排队中");
+    if(obj.type === "queue"){
+      const message = obj.message || "排队中";
+      if(/前方有 0 个任务/.test(message)) setStatus("running", "正在准备处理");
+      else setStatus("queued", message);
+    }
     if(obj.type === "milestone" && /已轮到您|开始处理/.test(obj.message || "")){
       setStatus("running", obj.message);
     }

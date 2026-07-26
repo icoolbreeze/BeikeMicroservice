@@ -84,9 +84,13 @@ class VerificationService:
             with self._queue_lock:
                 queue_ahead = len(self._queued_job_ids)
                 self._queued_job_ids.append(rec.job_id)
-            self.store.append_event(
-                rec.job_id, "queue",
-                f"排队中，前方有 {queue_ahead} 个任务等待处理")
+            if queue_ahead:
+                self.store.append_event(
+                    rec.job_id, "queue",
+                    f"排队中，前方有 {queue_ahead} 个任务等待处理")
+            else:
+                self.store.append_event(
+                    rec.job_id, "milestone", "任务已受理，正在准备处理")
             self._executor.submit(self._run, rec.job_id, cert_path)
             served_count = self._increment_served_count()
             return {
@@ -153,9 +157,10 @@ class VerificationService:
     def _publish_queue_positions(self, queued: list[str]) -> None:
         """每次有任务出队时，向仍在等待的用户推送最新位置。"""
         for position, queued_job_id in enumerate(queued):
+            message = (f"排队中，前方有 {position} 个任务等待处理"
+                       if position else "正在等待空闲处理资源，您是下一位")
             self.store.append_event(
-                queued_job_id, "queue",
-                f"排队中，前方有 {position} 个任务等待处理")
+                queued_job_id, "queue", message)
 
     def _wait_for_model_slot(self, job_id: str) -> None:
         """在调用模型前守住账户级预算；分钟级满载时等待，日额度耗尽则失败。"""

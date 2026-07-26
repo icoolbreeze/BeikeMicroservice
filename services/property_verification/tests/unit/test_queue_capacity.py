@@ -42,12 +42,17 @@ def test_queue_rejects_after_running_and_waiting_capacity(tmp_path) -> None:
         rate_per_minute=100,
         rate_per_day=100,
     )
-    service = VerificationService(settings, JobStore())
+    store = JobStore()
+    service = VerificationService(settings, store)
     service._executor = _FakeExecutor()
 
     for index in range(15):
         result = service.submit(f"10.0.0.{index}", "cert.jpg", _jpeg())
         assert result["queue_capacity"] == 12
+        if index == 0:
+            first_events = store.events_since(result["job_id"], 0)
+            assert first_events[-1].type == "milestone"
+            assert "正在准备处理" in first_events[-1].message
     assert service.get_stats()["served_count"] == 15
 
     restarted_service = VerificationService(settings, JobStore())
