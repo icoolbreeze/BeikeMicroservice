@@ -8,6 +8,12 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# 加载服务目录下的 .env（存在时），使 README 指引生效
+_SERVICE_ROOT = Path(__file__).resolve().parents[3]
+load_dotenv(_SERVICE_ROOT / ".env")
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -24,6 +30,8 @@ class Settings:
     # OpenRouter 视觉模型
     openrouter_api_key: str = ""
     vl_model: str = "nvidia/nemotron-nano-12b-v2-vl:free"
+    # 兜底模型：主模型提取字段缺失时自动切换；留空则不启用兜底
+    vl_model_fallback: str = "google/gemma-4-26b-a4b-it:free"
 
     # 验证渠道页面地址（合法授权来源）
     verification_channel_url: str = ""
@@ -68,6 +76,8 @@ def load_settings() -> Settings:
         storage_dir=storage,
         openrouter_api_key=_env("OPENROUTER_API_KEY"),
         vl_model=_env("PV_VL_MODEL", "nvidia/nemotron-nano-12b-v2-vl:free"),
+        vl_model_fallback=_env(
+            "PV_VL_MODEL_FALLBACK", "google/gemma-4-26b-a4b-it:free"),
         verification_channel_url=_env(
             "PV_VERIFICATION_URL",
             "https://blmp.cdzjryb.com/fplc_daas_portal/#/integratedQueryNew"

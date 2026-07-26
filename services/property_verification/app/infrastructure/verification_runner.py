@@ -88,7 +88,10 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
             raise RuntimeError("OPENROUTER_API_KEY 未配置，无法调用视觉模型")
 
         _emit_milestone("正在提取证件字段…")
-        cred = hv.extract_credentials(api_key, settings.vl_model, cert_path)
+        cred = hv.extract_credentials(
+            api_key, settings.vl_model, cert_path,
+            fallback_model=settings.vl_model_fallback or None,
+        )
         (work_dir / "extracted.json").write_text(
             json.dumps(cred, ensure_ascii=False, indent=2), encoding="utf-8")
         _emit_milestone(

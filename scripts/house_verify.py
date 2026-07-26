@@ -60,14 +60,42 @@ def clean_field(value: str) -> str:
     return re.sub(r"\s+", "", value).replace("(", "（").replace(")", "）")
 
 
-def extract_credentials(api_key: str, model: str, cert_image: Path) -> dict:
-    """从产权证图片提取业务件号与证件编码。"""
+def _try_extract(api_key: str, model: str, cert_image: Path) -> dict:
+    """单次调用 VL 模型提取字段，返回清洗后的 dict。任一字段为空则抛 ValueError。"""
     data = call_vl_model(api_key, model, cert_image, EXTRACT_PROMPT)
     ywh = clean_field(data.get("业务件号") or "")
     zsbm = clean_field(data.get("证件编码") or "")
     if not ywh or not zsbm:
-        raise SystemExit(f"字段提取失败：业务件号={ywh!r} 证件编码={zsbm!r}，请更换清晰照片")
+        raise ValueError(
+            f"业务件号={ywh!r} 证件编码={zsbm!r}，请更换清晰照片"
+        )
     return {"业务件号": ywh, "证件编码": zsbm}
+
+
+def extract_credentials(
+    api_key: str, model: str, cert_image: Path,
+    fallback_model: str | None = None,
+) -> dict:
+    """从产权证图片提取业务件号与证件编码。
+
+    先用主模型；任一字段为空时自动切换到 fallback_model 重试一次；
+    两次都失败才抛 SystemExit。
+    """
+    try:
+        return _try_extract(api_key, model, cert_image)
+    except ValueError as primary_err:
+        if not fallback_model or fallback_model == model:
+            raise SystemExit(f"字段提取失败：{primary_err}") from primary_err
+        print(
+            f"  ⚠ 主模型提取失败（{model}：{primary_err}），"
+            f"切换到兜底模型 {fallback_model}"
+        )
+        try:
+            return _try_extract(api_key, fallback_model, cert_image)
+        except ValueError as fb_err:
+            raise SystemExit(
+                f"字段提取失败：主模型与兜底模型均失败（{fb_err}）"
+            ) from fb_err
 
 
 def _first_visible(page, selectors: list[str], timeout: int = 8000):
@@ -244,6 +272,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="房源信息验证：证件提取 + 实时查询 + 结果截图")
     ap.add_argument("cert_image", type=Path, help="产权证照片路径")
     ap.add_argument("--model", default="nvidia/nemotron-nano-12b-v2-vl:free")
+    ap.add_argument("--model-fallback",
+                    default="google/gemma-4-26b-a4b-it:free",
+                    help="主模型提取失败时的兜底模型（默认 google/gemma-4-26b-a4b-it:free；"
+                         "传空字符串可关闭）")
     ap.add_argument("--api-key", default=None)
     ap.add_argument("--url", default=DEFAULT_URL, help="房源信息验证页面地址")
     ap.add_argument("--out", type=Path, default=None)
@@ -258,7 +290,9 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"[1/3] 提取证件字段：{args.cert_image.name}")
-    cred = extract_credentials(api_key, args.model, args.cert_image)
+    fallback = args.model_fallback.strip() or None
+    cred = extract_credentials(
+        api_key, args.model, args.cert_image, fallback_model=fallback)
     print(f"      业务件号={cred['业务件号']}　证件编码={cred['证件编码']}")
     (out_dir / "extracted.json").write_text(
         json.dumps(cred, ensure_ascii=False, indent=2), encoding="utf-8")
