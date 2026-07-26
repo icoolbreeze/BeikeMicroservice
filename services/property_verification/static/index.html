@@ -259,14 +259,42 @@
 const $ = id => document.getElementById(id);
 let selectedFile = null;
 let liveTimer=null, hintTimer=null, liveStartTs=0, liveHints=[];
+const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+/* —— 轻提示 toast（微信环境引导长按保存用）—— */
+let _toastEl=null,_toastTimer=null;
+function showToast(msg){
+  if(!_toastEl){
+    _toastEl=document.createElement("div");
+    _toastEl.style.cssText="position:fixed;left:50%;bottom:32%;transform:translateX(-50%);"+
+      "background:rgba(0,0,0,.82);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;"+
+      "z-index:200;max-width:82vw;text-align:center;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.3);"+
+      "opacity:0;transition:opacity .25s;pointer-events:none";
+    document.body.appendChild(_toastEl);
+  }
+  _toastEl.textContent=msg;
+  _toastEl.style.opacity="1";
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{ _toastEl.style.opacity="0"; },2800);
+}
 
 /* —— 图片放大预览 —— */
 function openLightbox(src, caption, filename){
   $("lbImg").src = src;
   $("lbCap").textContent = caption || "";
-  $("lbDownload").href = src;
-  $("lbDownload").download = filename || "";
-  $("lbDownload").style.display = filename ? "inline-flex" : "none";
+  const dl = $("lbDownload");
+  if(isWeChat){
+    // 微信内置浏览器拦截 <a download>，改为引导长按图片保存
+    dl.removeAttribute("href"); dl.removeAttribute("download");
+    dl.textContent = "长按图片保存";
+    dl.style.cursor = "pointer"; dl.style.display = "inline-flex";
+    dl.onclick = e=>{ e.preventDefault(); e.stopPropagation(); showToast("请长按上方图片，选择「保存到相册」"); };
+  }else{
+    dl.href = src; dl.download = filename || "";
+    dl.textContent = "下载原图";
+    dl.style.display = filename ? "inline-flex" : "none";
+    dl.onclick = null;
+  }
   $("lb").classList.add("show");
 }
 function closeLightbox(){ $("lb").classList.remove("show"); $("lbImg").src = ""; }
@@ -434,8 +462,20 @@ async function finishOk(jobId){
     const size = document.createElement("div"); size.className = "sz";
     size.textContent = (a.filename || "截图") + " · " + fmtSize(a.size);
     const actions = document.createElement("div"); actions.className = "actions";
-    const download = document.createElement("a"); download.className = "dl"; download.href = url;
-    download.download = a.filename || ""; download.textContent = "下载图片";
+    const download = document.createElement(isWeChat ? "div" : "a");
+    download.className = "dl";
+    if(isWeChat){
+      // 微信内置浏览器无法触发 <a download>，引导用户长按图片保存
+      download.textContent = "长按图片保存到相册";
+      download.style.cursor = "pointer";
+      download.addEventListener("click", ()=>{
+        openLightbox(url, a.title || "验证截图", a.filename);
+        showToast("请长按上方图片，选择「保存到相册」");
+      });
+    }else{
+      download.href = url; download.download = a.filename || "";
+      download.textContent = "下载图片";
+    }
     actions.append(download); meta.append(title, size, actions); el.append(thumb, meta);
     const previewImage = ()=>openLightbox(url, a.title || "验证截图", a.filename);
     thumb.addEventListener("click", previewImage);
