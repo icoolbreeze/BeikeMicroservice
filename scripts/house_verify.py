@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime
@@ -179,7 +180,11 @@ def run_query(ywh: str, zsbm: str, url: str, out_dir: Path, headed: bool) -> dic
 
     outputs: dict[str, str] = {}
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=not headed)
+        launch_options = {"headless": not headed}
+        executable_path = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "").strip()
+        if executable_path:
+            launch_options["executable_path"] = executable_path
+        browser = p.chromium.launch(**launch_options)
         page = browser.new_page(viewport={"width": 1720, "height": 1080},
                                 device_scale_factor=2)
         print(f"  打开验证页面：{url}")

@@ -27,5 +27,8 @@ dev = [
     "mypy",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

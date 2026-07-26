@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#0d3050" />
-<title>房源信息验证 · 上传证件</title>
+<title>查档核验 · 上传证件</title>
 <style>
   :root{
     --brand:#0d3050; --brand-2:#1e6091; --accent:#2e7d32;
@@ -13,50 +13,85 @@
     --radius:14px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
+  html,body{margin:0;padding:0;height:100%}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-       background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:860px;margin:0 auto;padding:16px 16px 64px}
-  header.top{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;
-             padding:18px 18px;border-radius:0 0 var(--radius) var(--radius);margin:-8px -16px 18px;
+       background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased;
+       overflow:hidden} /* 单屏：页面不滚动，仅内部区域滚动 */
+
+  .app{height:100dvh;max-width:1160px;margin:0 auto;padding:12px 16px;
+       display:flex;flex-direction:column;gap:12px}
+
+  /* —— 头部：标题 + 右上角二维码 —— */
+  header.top{flex:none;display:flex;align-items:center;gap:16px;
+             background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;
+             padding:12px 18px;border-radius:var(--radius);
              box-shadow:0 4px 14px rgba(13,48,80,.18)}
-  header.top h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.5px}
-  header.top p{margin:6px 0 0;opacity:.85;font-size:13px}
-  .quota{display:flex;gap:14px;margin-top:12px;font-size:12px;opacity:.92;flex-wrap:wrap}
-  .quota span{background:rgba(255,255,255,.14);padding:3px 10px;border-radius:999px}
+  header.top .tt{flex:1;min-width:0}
+  header.top h1{margin:0;font-size:20px;font-weight:700;letter-spacing:2px}
+  header.top .sub{margin:3px 0 0;opacity:.85;font-size:12px;
+                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .quota{display:flex;gap:8px;margin-top:7px;font-size:11px;opacity:.95;flex-wrap:wrap}
+  .quota span{background:rgba(255,255,255,.14);padding:2px 9px;border-radius:999px}
+  .qr{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;
+      cursor:pointer;transition:transform .15s}
+  .qr:hover{transform:scale(1.04)}
+  .qr img{width:66px;height:66px;border-radius:8px;background:#fff;padding:3px;
+          box-shadow:0 2px 8px rgba(0,0,0,.25);display:block}
+  .qr span{font-size:11px;opacity:.92;letter-spacing:.5px}
+
+  /* —— 主体：单屏网格布局 —— */
+  main{flex:1;min-height:0;display:grid;gap:12px;
+       grid-template-columns:400px minmax(0,1fr);
+       grid-template-rows:minmax(0,1fr) auto;
+       grid-template-areas:"upload progress" "upload result"}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-        padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-  .card h2{margin:0 0 12px;font-size:16px;color:var(--brand)}
+        padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04);
+        display:flex;flex-direction:column;min-height:0}
+  .card h2{margin:0 0 10px;font-size:15px;color:var(--brand);flex:none}
+  .card-upload{grid-area:upload}
+  .card-progress{grid-area:progress}
+  .card-result{grid-area:result}
+
+  /* 空状态占位 */
+  .empty{flex:1;min-height:56px;display:flex;align-items:center;justify-content:center;
+         text-align:center;color:var(--muted);font-size:13px;
+         border:1px dashed var(--line);border-radius:10px;background:#fafbfc;padding:10px}
+
   /* 上传区 */
-  .drop{border:2px dashed #b9c4d0;border-radius:12px;padding:28px 16px;text-align:center;
-        cursor:pointer;transition:.18s;background:#fbfcfe;position:relative}
+  .drop{border:2px dashed #b9c4d0;border-radius:12px;padding:22px 14px;text-align:center;
+        cursor:pointer;transition:.18s;background:#fbfcfe;position:relative;flex:none}
   .drop:hover,.drop.drag{border-color:var(--brand-2);background:#eef5fb}
   .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
-  .drop .ic{font-size:34px;line-height:1}
-  .drop .t{margin-top:8px;font-weight:600}
+  .drop .ic{font-size:32px;line-height:1}
+  .drop .t{margin-top:6px;font-weight:600;font-size:14px}
   .drop .s{color:var(--muted);font-size:12px}
-  .preview{margin-top:12px;display:none}
-  .preview img{max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--line)}
-  .file-name{font-size:13px;color:var(--muted);margin-top:6px;word-break:break-all}
-  button.primary{width:100%;border:0;background:var(--brand);color:#fff;font-size:16px;
-        font-weight:600;padding:14px;border-radius:12px;cursor:pointer;margin-top:14px;transition:.15s}
+  .drop.has-file{padding:8px}
+  .drop.has-file .ic,.drop.has-file .t,.drop.has-file .s{display:none}
+  .drop.has-file::after{content:"已选择文件，点此重新选择";font-size:12px;color:var(--muted)}
+  .preview{margin-top:10px;display:none;flex:none;text-align:center}
+  .preview img{max-width:100%;max-height:170px;border-radius:8px;border:1px solid var(--line)}
+  .file-name{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
+  button.primary{flex:none;width:100%;border:0;background:var(--brand);color:#fff;font-size:16px;
+        font-weight:600;padding:13px;border-radius:12px;cursor:pointer;margin-top:12px;transition:.15s}
   button.primary:hover{background:var(--brand-2)}
   button.primary:disabled{background:#9fb2c4;cursor:not-allowed}
-  /* 进度 */
-  .status-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px;flex:none}
+
+  /* 进度区 */
+  .status-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;flex:none}
   .badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;color:#fff}
   .b-pending{background:#90a4ae}.b-running{background:var(--info)}
   .b-ok{background:var(--ok)}.b-fail{background:var(--err)}
-  .bar{height:8px;background:#e3e8ef;border-radius:99px;overflow:hidden}
+  .bar{flex:none;height:8px;background:#e3e8ef;border-radius:99px;overflow:hidden}
   .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand-2),var(--info));
            transition:width .4s}
   .bar.indet > i{width:35%;animation:slide 1.1s infinite ease-in-out}
   @keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
-  .logs{margin-top:12px;max-height:200px;overflow:auto;background:#0f1b2a;color:#cfe3ff;
+  .logs{margin-top:10px;flex:1;min-height:0;overflow:auto;background:#0f1b2a;color:#cfe3ff;
         border-radius:10px;padding:10px 12px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace}
   .logs .e{padding:1px 0}.logs .e.milestone{color:#ffd54f;font-weight:600}
   .logs .e.error{color:#ff8a80}.logs .e.done{color:#a5d6a7}
-  .live{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:13px;color:var(--muted)}
+  .live{flex:none;display:flex;align-items:center;gap:9px;margin:10px 0 0;font-size:13px;color:var(--muted)}
   .live .pulse{width:9px;height:9px;border-radius:50%;background:var(--info);flex:none;
     box-shadow:0 0 0 0 rgba(21,101,192,.5);animation:livepulse 1.4s infinite}
   @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(21,101,192,.45)}70%{box-shadow:0 0 0 9px rgba(21,101,192,0)}100%{box-shadow:0 0 0 0 rgba(21,101,192,0)}}
@@ -66,86 +101,182 @@
   .logs .e.active::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:3px;
     border-radius:2px;background:#ffd54f;animation:liveblink 1s infinite}
   @keyframes liveblink{0%,100%{opacity:1}50%{opacity:.3}}
-  /* 产物 */
-  .arts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:6px}
-  .art{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
-  .art .thumb{height:120px;background:#eef2f6;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .err-box{flex:none;background:#fdecea;border:1px solid #f5c6cb;color:#a0301b;border-radius:10px;
+           padding:10px 12px;font-size:13px;margin-top:10px}
+
+  /* 结果区：仅展示可核验截图，避免把打包产物挤进主界面 */
+  .arts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-height:0}
+  .arts.single{grid-template-columns:minmax(0,300px)}
+  .art{min-width:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;
+       background:#fff;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(13,48,80,.04)}
+  .art .thumb{height:112px;background:#eef2f6;display:flex;align-items:center;justify-content:center;
+              overflow:hidden;position:relative}
   .art .thumb img{width:100%;height:100%;object-fit:cover}
+  .art .thumb.zoom{cursor:zoom-in}
+  .art .thumb.zoom::after{content:"🔍 点击预览";position:absolute;left:0;right:0;bottom:0;
+              background:rgba(13,48,80,.62);color:#fff;font-size:10px;text-align:center;
+              padding:2px 0;opacity:0;transition:.15s}
+  .art .thumb.zoom:hover::after{opacity:1}
   .art .thumb .ph{color:#9fb2c4;font-size:12px;text-align:center;padding:8px}
-  .art .meta{padding:10px 12px}
-  .art .ti{font-size:13px;font-weight:600}
-  .art .sz{font-size:11px;color:var(--muted)}
-  .art a.dl{display:block;text-align:center;background:var(--brand);color:#fff;text-decoration:none;
-            font-size:13px;font-weight:600;padding:8px;border-radius:8px;margin-top:8px}
+  .art .meta{padding:9px 10px 10px}
+  .art .ti{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .art .sz{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .art .actions{margin-top:8px}
+  .art a.dl{display:flex;align-items:center;justify-content:center;min-height:30px;
+            border-radius:8px;font:600 12px inherit;cursor:pointer;text-decoration:none}
+  .art a.dl{background:var(--brand);color:#fff}
   .art a.dl:hover{background:var(--brand-2)}
-  .art.zip .thumb{background:#fff4e5}
-  .err-box{background:#fdecea;border:1px solid #f5c6cb;color:#a0301b;border-radius:10px;
-           padding:10px 12px;font-size:13px;margin-top:12px}
-  .hint{font-size:12px;color:var(--muted);margin-top:8px}
-  footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
-  @media(max-width:520px){
-    header.top h1{font-size:17px}
-    .drop{padding:22px 12px}
-    .arts{grid-template-columns:1fr 1fr}
+
+  footer{flex:none;font-size:11px;color:var(--muted);text-align:center}
+
+  /* —— 图片预览 Lightbox —— */
+  .lb{position:fixed;inset:0;z-index:99;display:none;align-items:center;justify-content:center;
+      background:rgba(10,18,28,.86);backdrop-filter:blur(3px);padding:24px;cursor:zoom-out}
+  .lb.show{display:flex}
+  .lb img{max-width:94vw;max-height:86vh;border-radius:10px;background:#fff;
+          box-shadow:0 14px 52px rgba(0,0,0,.55);animation:lbin .18s ease-out}
+  @keyframes lbin{from{transform:scale(.94);opacity:.4}to{transform:scale(1);opacity:1}}
+  .lb .bottom{position:absolute;bottom:16px;left:56px;right:56px;display:flex;align-items:center;
+              justify-content:center;gap:12px;color:#dce6f2;font-size:13px}
+  .lb .cap{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb .download{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:1px solid rgba(255,255,255,.5);
+                border-radius:7px;color:#fff;text-decoration:none;font-size:12px;white-space:nowrap}
+  .lb .download:hover{background:rgba(255,255,255,.14)}
+  .lb .x{position:absolute;top:14px;right:22px;color:#fff;font-size:28px;line-height:1;
+         opacity:.75;cursor:pointer}
+  .lb .x:hover{opacity:1}
+
+  /* —— 手机端：纵向紧凑单屏 —— */
+  @media(max-width:760px){
+    .app{padding:8px 10px;gap:8px}
+    header.top{padding:10px 14px;border-radius:12px;gap:10px}
+    header.top h1{font-size:16px;letter-spacing:1px}
+    header.top .sub{font-size:11px}
+    .quota{display:none} /* 小屏隐藏限流说明，保证单屏 */
+    .qr img{width:52px;height:52px}
+    .qr span{font-size:10px}
+    main{display:flex;flex-direction:column;gap:8px}
+    .card{padding:10px 12px;border-radius:12px}
+    .card h2{font-size:14px;margin-bottom:8px}
+    .card-upload{flex:none}
+    .drop{padding:12px 10px}
+    .drop .ic{font-size:24px}
+    .drop .t{font-size:13px}
+    .drop .s{font-size:11px}
+    .preview img{max-height:92px}
+    button.primary{padding:11px;margin-top:10px;font-size:15px}
+    .card-upload .hint{display:none} /* 小屏隐藏长提示 */
+    .card-progress{flex:1;min-height:0}
+    .card-result{flex:none}
+    .arts{gap:8px}
+    .art .thumb{height:84px}
+    .art .meta{padding:7px 8px 8px}
+    .art .actions{margin-top:6px}
+    .art a.dl{min-height:28px;font-size:11px}
+    .art .thumb.zoom::after{opacity:1} /* 触屏无 hover，常显提示 */
+    footer{display:none}
+    .logs{font-size:11px}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app">
   <header class="top">
-    <h1>房源信息验证</h1>
-    <p>上传不动产权证照片，自动提取业务件号与产权证号并在蓉e办完成验证。</p>
-    <div class="quota" id="quota">
-      <span>本服务无需登录</span>
-      <span>限流：同一 IP 1 次/分钟、10 次/天</span>
+    <div class="tt">
+      <h1>查档核验</h1>
+      <p class="sub">上传不动产权证照片，自动提取业务件号与产权证号，并在蓉e办完成核验</p>
+      <div class="quota" id="quota">
+        <span>本服务无需登录</span>
+        <span>限流：同一 IP 1 次/分钟、10 次/天</span>
+      </div>
+    </div>
+    <div class="qr" id="qrBox" title="点击查看大图">
+      <img src="contact-qr.png" alt="开发者微信二维码" />
+      <span>联系开发者</span>
     </div>
   </header>
 
-  <section class="card">
-    <h2>1 · 上传证件</h2>
-    <div class="drop" id="drop">
-      <input id="file" type="file" accept="image/jpeg,image/png" capture="environment" />
-      <div class="ic">📷</div>
-      <div class="t">点击或拖拽上传不动产权证照片</div>
-      <div class="s">支持 JPG / PNG，最大 10MB；手机可直接拍照</div>
-    </div>
-    <div class="preview" id="preview">
-      <img id="previewImg" alt="预览" />
-      <div class="file-name" id="fileName"></div>
-    </div>
-    <button class="primary" id="submitBtn" disabled>开始验证</button>
-    <div class="hint" id="hint">提示：仅用于本公司业务范围内的房源核验，图片含个人敏感信息，请勿上传他人证件。</div>
-  </section>
+  <main>
+    <!-- 1 · 上传 -->
+    <section class="card card-upload">
+      <h2>1 · 上传证件</h2>
+      <div class="drop" id="drop">
+        <input id="file" type="file" accept="image/jpeg,image/png" />
+        <div class="ic">📷</div>
+        <div class="t">点击或拖拽上传不动产权证照片</div>
+        <div class="s">支持 JPG / PNG，最大 10MB；可拍照或从相册选择</div>
+      </div>
+      <div class="preview" id="preview">
+        <img id="previewImg" alt="预览" />
+        <div class="file-name" id="fileName"></div>
+      </div>
+      <button class="primary" id="submitBtn" disabled>开始验证</button>
+      <div class="hint">提示：仅用于本公司业务范围内的房源核验，图片含个人敏感信息，请勿上传他人证件。</div>
+    </section>
 
-  <section class="card" id="progressCard" style="display:none">
-    <h2>2 · 处理进度</h2>
-    <div class="status-row">
-      <span class="badge b-pending" id="badge">排队中</span>
-      <span id="statusText" style="font-size:13px;color:var(--muted)">等待开始…</span>
-    </div>
-    <div class="bar" id="bar"><i></i></div>
-    <div class="live" id="live" style="display:none">
-      <span class="pulse"></span>
-      <span class="live-hint" id="liveHint">正在处理…</span>
-      <span class="live-time" id="liveTime"></span>
-    </div>
-    <div class="logs" id="logs"></div>
-    <div class="err-box" id="errBox" style="display:none"></div>
-  </section>
+    <!-- 2 · 进度 -->
+    <section class="card card-progress">
+      <h2>2 · 处理进度</h2>
+      <div class="empty" id="progressEmpty">上传证件并点击「开始验证」后，此处将实时显示处理进度。</div>
+      <div id="progressBody" style="display:none;flex:1;min-height:0;flex-direction:column">
+        <div class="status-row">
+          <span class="badge b-pending" id="badge">排队中</span>
+          <span id="statusText" style="font-size:13px;color:var(--muted)">等待开始…</span>
+        </div>
+        <div class="bar" id="bar"><i></i></div>
+        <div class="live" id="live" style="display:none">
+          <span class="pulse"></span>
+          <span class="live-hint" id="liveHint">正在处理…</span>
+          <span class="live-time" id="liveTime"></span>
+        </div>
+        <div class="logs" id="logs"></div>
+        <div class="err-box" id="errBox" style="display:none"></div>
+      </div>
+    </section>
 
-  <section class="card" id="resultCard" style="display:none">
-    <h2>3 · 查询验证图片</h2>
-    <div class="hint" style="margin-bottom:8px">以下截图可分别下载，或一键下载全部产物。</div>
-    <div class="arts" id="arts"></div>
-  </section>
+    <!-- 3 · 结果 -->
+    <section class="card card-result">
+      <h2>3 · 查询验证图片</h2>
+      <div class="empty" id="resultEmpty" style="min-height:96px">核验完成后将生成验证截图；<b>点击缩略图</b>可在弹窗中查看。</div>
+      <div class="arts" id="arts" style="display:none"></div>
+    </section>
+  </main>
 
   <footer>本工具由 VL 模型自动解析，结果仅供辅助参考，关键字段请人工复核。</footer>
+</div>
+
+<!-- 图片预览浮层 -->
+<div class="lb" id="lb">
+  <span class="x" id="lbClose">✕</span>
+  <img id="lbImg" alt="大图预览" />
+  <div class="bottom">
+    <div class="cap" id="lbCap"></div>
+    <a class="download" id="lbDownload" href="#" download>下载原图</a>
+  </div>
 </div>
 
 <script>
 const $ = id => document.getElementById(id);
 let selectedFile = null;
 let liveTimer=null, hintTimer=null, liveStartTs=0, liveHints=[];
+
+/* —— 图片放大预览 —— */
+function openLightbox(src, caption, filename){
+  $("lbImg").src = src;
+  $("lbCap").textContent = caption || "";
+  $("lbDownload").href = src;
+  $("lbDownload").download = filename || "";
+  $("lbDownload").style.display = filename ? "inline-flex" : "none";
+  $("lb").classList.add("show");
+}
+function closeLightbox(){ $("lb").classList.remove("show"); $("lbImg").src = ""; }
+$("lb").addEventListener("click", closeLightbox);
+$("lbClose").addEventListener("click", closeLightbox);
+$("lbDownload").addEventListener("click", e=>e.stopPropagation());
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeLightbox(); });
+
+/* 头部二维码：点击放大，方便扫码 */
+$("qrBox").addEventListener("click", ()=>openLightbox("contact-qr.png", "微信扫码 · 联系开发者"));
 
 /* —— 实时反馈：长时间无新事件时用呼吸点 + 已用时 + 轮播提示，避免用户以为卡住 —— */
 function hintsFor(msg){
@@ -203,6 +334,7 @@ function setFile(f){
     alert("文件超过 10MB 限制"); return;
   }
   selectedFile = f;
+  drop.classList.add("has-file");
   $("preview").style.display = "block";
   $("previewImg").src = URL.createObjectURL(f);
   $("fileName").textContent = f.name + " · " + (f.size/1024).toFixed(1) + " KB";
@@ -213,8 +345,10 @@ $("submitBtn").addEventListener("click", async ()=>{
   if(!selectedFile) return;
   $("submitBtn").disabled = true;
   $("errBox").style.display = "none";
-  $("progressCard").style.display = "block";
-  $("resultCard").style.display = "none";
+  $("progressEmpty").style.display = "none";
+  $("progressBody").style.display = "flex";
+  $("resultEmpty").style.display = "";
+  $("arts").style.display = "none";
   resetProgress();
 
   const fd = new FormData();
@@ -277,33 +411,44 @@ async function finishOk(jobId){
   const r = await fetch("/api/v1/verification/" + jobId + "/artifacts");
   const d = await r.json();
   const arts = (d.data && d.data.artifacts) || [];
+  // ZIP 等辅助产物仍由接口保留，但不占用用户的截图查看区。
+  const screenshots = arts.filter(a=>a.content_type && a.content_type.startsWith("image/"));
   const box = $("arts"); box.innerHTML = "";
-  if(!arts.length){
-    box.innerHTML = '<div class="hint">未生成可下载产物</div>';
-    $("resultCard").style.display = "block"; return;
+  box.classList.toggle("single", screenshots.length === 1);
+  if(!screenshots.length){
+    $("resultEmpty").style.display = "";
+    $("resultEmpty").textContent = "未生成可查看的验证截图";
+    return;
   }
-  arts.forEach(a=>{
+  screenshots.forEach(a=>{
     const url = a.url || ("/api/v1/verification/" + jobId + "/download/" + a.spec);
     const el = document.createElement("div");
-    el.className = "art" + (a.spec === "zip" ? " zip" : "");
-    const isImg = a.content_type && a.content_type.startsWith("image/");
-    el.innerHTML =
-      '<div class="thumb">' + (isImg
-        ? '<img loading="lazy" src="' + url + '" alt="' + a.title + '">'
-        : '<div class="ph">📦 全部产物打包<br/>(截图 + 提取字段)</div>') + '</div>' +
-      '<div class="meta"><div class="ti">' + a.title + '</div>' +
-      '<div class="sz">' + a.filename + ' · ' + fmtSize(a.size) + '</div>' +
-      '<a class="dl" href="' + url + '" download="' + a.filename + '">下载</a></div>';
+    el.className = "art";
+    const thumb = document.createElement("div");
+    thumb.className = "thumb zoom";
+    const img = document.createElement("img");
+    img.loading = "lazy"; img.src = url; img.alt = a.title || "验证截图";
+    thumb.appendChild(img);
+    const meta = document.createElement("div"); meta.className = "meta";
+    const title = document.createElement("div"); title.className = "ti"; title.textContent = a.title || "验证截图";
+    const size = document.createElement("div"); size.className = "sz";
+    size.textContent = (a.filename || "截图") + " · " + fmtSize(a.size);
+    const actions = document.createElement("div"); actions.className = "actions";
+    const download = document.createElement("a"); download.className = "dl"; download.href = url;
+    download.download = a.filename || ""; download.textContent = "下载图片";
+    actions.append(download); meta.append(title, size, actions); el.append(thumb, meta);
+    const previewImage = ()=>openLightbox(url, a.title || "验证截图", a.filename);
+    thumb.addEventListener("click", previewImage);
     box.appendChild(el);
   });
-  $("resultCard").style.display = "block";
+  $("resultEmpty").style.display = "none";
+  box.style.display = "grid";
 }
-
-function setFile_clear(){ selectedFile=null; $("preview").style.display="none"; $("submitBtn").disabled=true; }
 
 function resetProgress(){
   $("logs").innerHTML = ""; $("bar").classList.add("indet");
   $("bar").firstElementChild.style.width = "0";
+  $("bar").firstElementChild.style.background = "";
   liveStop();
 }
 function addLog(type, msg){

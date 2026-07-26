@@ -1,0 +1,23 @@
+[Unit]
+Description=Property verification microservice
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/property-verification/current/services/property_verification
+Environment=APP_ENV=production
+Environment=PYTHONUNBUFFERED=1
+Environment=STORAGE_DIR=/var/lib/property-verification
+Environment=PV_SCRIPTS_DIR=/opt/property-verification/current/scripts
+Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/property-verification/playwright-browsers
+Environment=PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/snap/bin/chromium
+ExecStart=/opt/property-verification/venv/bin/uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
