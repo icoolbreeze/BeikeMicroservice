@@ -1,26 +1,34 @@
-"""API 依赖注入占位：配置、仓储、外部 Provider 等的装配入口。"""
+"""API 依赖注入：配置、应用服务、任务存储等单例的装配入口。"""
 from __future__ import annotations
 
+from functools import lru_cache
 
-def get_settings():
-    """获取服务配置（占位）。
-
-    TODO: 返回 infrastructure.config.settings.Settings 实例。
-    """
-    raise NotImplementedError
+from app.application.services.verification_service import VerificationService
+from app.infrastructure.config.settings import Settings, load_settings
+from app.infrastructure.job_store import JobStore, get_store
 
 
-def get_verification_repository():
-    """获取验证任务仓储（占位）。
-
-    TODO: 返回 domain.repositories.verification_repository 的实现。
-    """
-    raise NotImplementedError
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """获取服务配置单例。"""
+    return load_settings()
 
 
-def get_ocr_provider():
-    """获取 OCR Provider（占位）。
+@lru_cache(maxsize=1)
+def get_job_store() -> JobStore:
+    """获取任务存储单例。"""
+    return get_store()
 
-    TODO: 按配置返回 domain.providers.ocr_provider.OCRProvider 的实现。
-    """
-    raise NotImplementedError
+
+@lru_cache(maxsize=1)
+def get_verification_service() -> VerificationService:
+    """获取验证应用服务单例（含限流器与线程池）。"""
+    return VerificationService(get_settings(), get_job_store())
+
+
+def get_client_ip(request) -> str:
+    """取真实客户端 IP（兼容反代 X-Forwarded-For）。"""
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"

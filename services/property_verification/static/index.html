@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0d3050" />
+<title>房源信息验证 · 上传证件</title>
+<style>
+  :root{
+    --brand:#0d3050; --brand-2:#1e6091; --accent:#2e7d32;
+    --ok:#2e7d32; --warn:#f57f17; --err:#c62828; --info:#1565c0;
+    --bg:#f4f6f9; --card:#fff; --line:#e3e8ef; --text:#212121; --muted:#6b7785;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:16px 16px 64px}
+  header.top{background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;
+             padding:18px 18px;border-radius:0 0 var(--radius) var(--radius);margin:-8px -16px 18px;
+             box-shadow:0 4px 14px rgba(13,48,80,.18)}
+  header.top h1{margin:0;font-size:20px;font-weight:700;letter-spacing:.5px}
+  header.top p{margin:6px 0 0;opacity:.85;font-size:13px}
+  .quota{display:flex;gap:14px;margin-top:12px;font-size:12px;opacity:.92;flex-wrap:wrap}
+  .quota span{background:rgba(255,255,255,.14);padding:3px 10px;border-radius:999px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+        padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .card h2{margin:0 0 12px;font-size:16px;color:var(--brand)}
+  /* 上传区 */
+  .drop{border:2px dashed #b9c4d0;border-radius:12px;padding:28px 16px;text-align:center;
+        cursor:pointer;transition:.18s;background:#fbfcfe;position:relative}
+  .drop:hover,.drop.drag{border-color:var(--brand-2);background:#eef5fb}
+  .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop .ic{font-size:34px;line-height:1}
+  .drop .t{margin-top:8px;font-weight:600}
+  .drop .s{color:var(--muted);font-size:12px}
+  .preview{margin-top:12px;display:none}
+  .preview img{max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--line)}
+  .file-name{font-size:13px;color:var(--muted);margin-top:6px;word-break:break-all}
+  button.primary{width:100%;border:0;background:var(--brand);color:#fff;font-size:16px;
+        font-weight:600;padding:14px;border-radius:12px;cursor:pointer;margin-top:14px;transition:.15s}
+  button.primary:hover{background:var(--brand-2)}
+  button.primary:disabled{background:#9fb2c4;cursor:not-allowed}
+  /* 进度 */
+  .status-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:999px;color:#fff}
+  .b-pending{background:#90a4ae}.b-running{background:var(--info)}
+  .b-ok{background:var(--ok)}.b-fail{background:var(--err)}
+  .bar{height:8px;background:#e3e8ef;border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand-2),var(--info));
+           transition:width .4s}
+  .bar.indet > i{width:35%;animation:slide 1.1s infinite ease-in-out}
+  @keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+  .logs{margin-top:12px;max-height:200px;overflow:auto;background:#0f1b2a;color:#cfe3ff;
+        border-radius:10px;padding:10px 12px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace}
+  .logs .e{padding:1px 0}.logs .e.milestone{color:#ffd54f;font-weight:600}
+  .logs .e.error{color:#ff8a80}.logs .e.done{color:#a5d6a7}
+  /* 产物 */
+  .arts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:6px}
+  .art{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+  .art .thumb{height:120px;background:#eef2f6;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .art .thumb img{width:100%;height:100%;object-fit:cover}
+  .art .thumb .ph{color:#9fb2c4;font-size:12px;text-align:center;padding:8px}
+  .art .meta{padding:10px 12px}
+  .art .ti{font-size:13px;font-weight:600}
+  .art .sz{font-size:11px;color:var(--muted)}
+  .art a.dl{display:block;text-align:center;background:var(--brand);color:#fff;text-decoration:none;
+            font-size:13px;font-weight:600;padding:8px;border-radius:8px;margin-top:8px}
+  .art a.dl:hover{background:var(--brand-2)}
+  .art.zip .thumb{background:#fff4e5}
+  .err-box{background:#fdecea;border:1px solid #f5c6cb;color:#a0301b;border-radius:10px;
+           padding:10px 12px;font-size:13px;margin-top:12px}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+  @media(max-width:520px){
+    header.top h1{font-size:17px}
+    .drop{padding:22px 12px}
+    .arts{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>房源信息验证</h1>
+    <p>上传不动产权证照片，自动提取业务件号与产权证号并在蓉e办完成验证。</p>
+    <div class="quota" id="quota">
+      <span>本服务无需登录</span>
+      <span>限流：同一 IP 1 次/分钟、10 次/天</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>1 · 上传证件</h2>
+    <div class="drop" id="drop">
+      <input id="file" type="file" accept="image/jpeg,image/png" capture="environment" />
+      <div class="ic">📷</div>
+      <div class="t">点击或拖拽上传不动产权证照片</div>
+      <div class="s">支持 JPG / PNG，最大 10MB；手机可直接拍照</div>
+    </div>
+    <div class="preview" id="preview">
+      <img id="previewImg" alt="预览" />
+      <div class="file-name" id="fileName"></div>
+    </div>
+    <button class="primary" id="submitBtn" disabled>开始验证</button>
+    <div class="hint" id="hint">提示：仅用于本公司业务范围内的房源核验，图片含个人敏感信息，请勿上传他人证件。</div>
+  </section>
+
+  <section class="card" id="progressCard" style="display:none">
+    <h2>2 · 处理进度</h2>
+    <div class="status-row">
+      <span class="badge b-pending" id="badge">排队中</span>
+      <span id="statusText" style="font-size:13px;color:var(--muted)">等待开始…</span>
+    </div>
+    <div class="bar" id="bar"><i></i></div>
+    <div class="logs" id="logs"></div>
+    <div class="err-box" id="errBox" style="display:none"></div>
+  </section>
+
+  <section class="card" id="resultCard" style="display:none">
+    <h2>3 · 查询验证图片</h2>
+    <div class="hint" style="margin-bottom:8px">以下截图可分别下载，或一键下载全部产物。</div>
+    <div class="arts" id="arts"></div>
+  </section>
+
+  <footer>本工具由 VL 模型自动解析，结果仅供辅助参考，关键字段请人工复核。</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let selectedFile = null;
+
+$("file").addEventListener("change", e=>{
+  const f = e.target.files[0];
+  if(f) setFile(f);
+});
+const drop = $("drop");
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("drag")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("drag")}));
+drop.addEventListener("drop",e=>{
+  const f = e.dataTransfer.files[0];
+  if(f) setFile(f);
+});
+
+function setFile(f){
+  if(!/^image\/(jpeg|png)$/.test(f.type)){
+    alert("仅支持 JPG / PNG 格式"); return;
+  }
+  if(f.size > 10*1024*1024){
+    alert("文件超过 10MB 限制"); return;
+  }
+  selectedFile = f;
+  $("preview").style.display = "block";
+  $("previewImg").src = URL.createObjectURL(f);
+  $("fileName").textContent = f.name + " · " + (f.size/1024).toFixed(1) + " KB";
+  $("submitBtn").disabled = false;
+}
+
+$("submitBtn").addEventListener("click", async ()=>{
+  if(!selectedFile) return;
+  $("submitBtn").disabled = true;
+  $("errBox").style.display = "none";
+  $("progressCard").style.display = "block";
+  $("resultCard").style.display = "none";
+  resetProgress();
+
+  const fd = new FormData();
+  fd.append("file", selectedFile);
+  try{
+    const r = await fetch("/api/v1/verification", {method:"POST", body:fd});
+    if(r.status === 429){
+      const d = await r.json();
+      const det = d.detail || {};
+      const wait = det.retry_after || 60;
+      showError("请求过于频繁：" + (det.message||"已达限流") + "，请约 " + wait + " 秒后再试。");
+      countdown(wait);
+      $("submitBtn").disabled = false;
+      return;
+    }
+    if(r.status === 422){
+      const d = await r.json();
+      showError("上传不合规：" + (d.detail||"请检查文件格式与大小"));
+      $("submitBtn").disabled = false;
+      return;
+    }
+    if(!r.ok){
+      showError("提交失败（HTTP " + r.status + "），请稍后重试");
+      $("submitBtn").disabled = false;
+      return;
+    }
+    const d = await r.json();
+    const jobId = d.data.job_id;
+    updateQuota(d.data.remaining_minute, d.data.remaining_day);
+    setStatus("running","验证任务已提交");
+    listenEvents(jobId);
+  }catch(err){
+    showError("网络异常：" + err.message);
+    $("submitBtn").disabled = false;
+  }
+});
+
+function listenEvents(jobId){
+  const es = new EventSource("/api/v1/verification/" + jobId + "/events");
+  es.onmessage = ev=>{
+    const obj = JSON.parse(ev.data);
+    if(obj.type === "terminal"){
+      if(obj.status === "succeeded"){
+        setStatus("ok","验证完成"); finishOk(jobId);
+      }else{
+        setStatus("fail","验证失败"); showError(obj.error || "处理失败");
+      }
+      es.close(); $("submitBtn").disabled = false; $("bar").classList.remove("indet");
+      return;
+    }
+    if(obj.message) addLog(obj.type, obj.message);
+  };
+  es.onerror = ()=>{
+    // 浏览器自动重连；若已终态则关闭
+    if(["ok","fail"].includes($("badge").textContent)) es.close();
+  };
+}
+
+async function finishOk(jobId){
+  const r = await fetch("/api/v1/verification/" + jobId + "/artifacts");
+  const d = await r.json();
+  const arts = (d.data && d.data.artifacts) || [];
+  const box = $("arts"); box.innerHTML = "";
+  if(!arts.length){
+    box.innerHTML = '<div class="hint">未生成可下载产物</div>';
+    $("resultCard").style.display = "block"; return;
+  }
+  arts.forEach(a=>{
+    const url = a.url || ("/api/v1/verification/" + jobId + "/download/" + a.spec);
+    const el = document.createElement("div");
+    el.className = "art" + (a.spec === "zip" ? " zip" : "");
+    const isImg = a.content_type && a.content_type.startsWith("image/");
+    el.innerHTML =
+      '<div class="thumb">' + (isImg
+        ? '<img loading="lazy" src="' + url + '" alt="' + a.title + '">'
+        : '<div class="ph">📦 全部产物打包<br/>(截图 + 提取字段)</div>') + '</div>' +
+      '<div class="meta"><div class="ti">' + a.title + '</div>' +
+      '<div class="sz">' + a.filename + ' · ' + fmtSize(a.size) + '</div>' +
+      '<a class="dl" href="' + url + '" download="' + a.filename + '">下载</a></div>';
+    box.appendChild(el);
+  });
+  $("resultCard").style.display = "block";
+}
+
+function setFile_clear(){ selectedFile=null; $("preview").style.display="none"; $("submitBtn").disabled=true; }
+
+function resetProgress(){
+  $("logs").innerHTML = ""; $("bar").classList.add("indet");
+  $("bar").firstElementChild.style.width = "0";
+}
+function addLog(type, msg){
+  const el = document.createElement("div");
+  el.className = "e " + (type||"log");
+  el.textContent = (type==="milestone"?"◆ ":type==="error"?"✗ ":type==="done"?"✓ ":"› ") + msg;
+  $("logs").appendChild(el); $("logs").scrollTop = $("logs").scrollHeight;
+}
+function setStatus(kind, text){
+  const b = $("badge");
+  b.className = "badge b-" + (kind==="running"?"running":kind==="ok"?"ok":"fail");
+  b.textContent = kind==="running"?"处理中":kind==="ok"?"完成":"失败";
+  $("statusText").textContent = text;
+  if(kind==="ok"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%"; }
+  if(kind==="fail"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%";
+                    $("bar").firstElementChild.style.background="var(--err)"; }
+}
+function showError(msg){ $("errBox").textContent = msg; $("errBox").style.display="block"; }
+function countdown(sec){
+  let n = sec; const btn = $("submitBtn");
+  const t = setInterval(()=>{ n--; if(n<=0){clearInterval(t);btn.disabled=false;btn.textContent="开始验证";}
+    else{btn.textContent="请等待 " + n + "s";} },1000);
+  btn.disabled = true; btn.textContent = "请等待 " + n + "s";
+}
+function updateQuota(m, d){
+  $("quota").innerHTML = '<span>本服务无需登录</span>' +
+    '<span>剩余：本分钟 ' + m + ' 次 · 今日 ' + d + ' 次</span>';
+}
+function fmtSize(b){ if(!b) return "—"; if(b<1024) return b+" B"; if(b<1048576) return (b/1024).toFixed(1)+" KB"; return (b/1048576).toFixed(2)+" MB"; }
+</script>
+</body>
+</html>

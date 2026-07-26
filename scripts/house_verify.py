@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -52,11 +53,18 @@ EXTRACT_PROMPT = (
 )
 
 
+def clean_field(value: str) -> str:
+    """清洗提取字段：去除所有空格（含中间空格），英文括号统一为中文括号。"""
+    if not value:
+        return ""
+    return re.sub(r"\s+", "", value).replace("(", "（").replace(")", "）")
+
+
 def extract_credentials(api_key: str, model: str, cert_image: Path) -> dict:
     """从产权证图片提取业务件号与证件编码。"""
     data = call_vl_model(api_key, model, cert_image, EXTRACT_PROMPT)
-    ywh = (data.get("业务件号") or "").strip()
-    zsbm = (data.get("证件编码") or "").strip()
+    ywh = clean_field(data.get("业务件号") or "")
+    zsbm = clean_field(data.get("证件编码") or "")
     if not ywh or not zsbm:
         raise SystemExit(f"字段提取失败：业务件号={ywh!r} 证件编码={zsbm!r}，请更换清晰照片")
     return {"业务件号": ywh, "证件编码": zsbm}

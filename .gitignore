@@ -26,8 +26,8 @@ htmlcov/
 .workbuddy/
 
 # 运行期文件（保留目录结构，忽略内容）
-services/*/storage/**
-!services/*/storage/**/.gitkeep
+services/**/storage/**
+!services/**/storage/**/.gitkeep
 
 # 本地核验输出（含个人敏感信息，禁止入库）
 outputs/
