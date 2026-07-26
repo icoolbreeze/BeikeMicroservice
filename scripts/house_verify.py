@@ -75,17 +75,26 @@ def _try_extract(api_key: str, model: str, cert_image: Path) -> dict:
 def extract_credentials(
     api_key: str, model: str, cert_image: Path,
     fallback_model: str | None = None,
+    on_fallback: object = None,
 ) -> dict:
     """从产权证图片提取业务件号与证件编码。
 
     先用主模型；任一字段为空时自动切换到 fallback_model 重试一次；
     两次都失败才抛 SystemExit。
+
+    如果提供了 on_fallback 回调，切换兜底模型时会调用它（参数为
+    primary_model, fallback_model, error_message），便于调用方上报进度。
     """
     try:
         return _try_extract(api_key, model, cert_image)
     except ValueError as primary_err:
         if not fallback_model or fallback_model == model:
             raise SystemExit(f"字段提取失败：{primary_err}") from primary_err
+        if on_fallback:
+            try:
+                on_fallback(model, fallback_model, str(primary_err))
+            except Exception:  # noqa: BLE001 - 回调异常不影响主流程
+                pass
         print(
             f"  ⚠ 主模型提取失败（{model}：{primary_err}），"
             f"切换到兜底模型 {fallback_model}"
