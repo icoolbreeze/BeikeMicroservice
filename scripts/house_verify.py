@@ -74,6 +74,47 @@ def _first_visible(page, selectors: list[str], timeout: int = 8000):
     return None
 
 
+def adapt_table_width(page, ywh: str) -> None:
+    """适配结果表格宽度：表头/单元格强制单行显示，并按需加宽视口。
+
+    网站结果表默认列宽不足，「门牌号」「是否抵押」等表头及长文本单元格会换行。
+    这里注入 nowrap 样式、表格 table-layout:auto + width:max-content，
+    放开祖先容器的横向约束，再把视口加宽到表格自然宽度，使截图不出现换行。
+    """
+    needed = page.evaluate(
+        """(ywh) => {
+          const style = document.createElement('style');
+          style.id = '__hv_nowrap';
+          style.textContent = `
+            th, td { white-space: nowrap !important; }
+            th *, td * { white-space: nowrap !important;
+                          overflow: visible !important; text-overflow: clip !important; }
+            table { table-layout: auto !important;
+                    width: max-content !important; min-width: 100% !important; }
+          `;
+          document.head.appendChild(style);
+
+          const td = Array.from(document.querySelectorAll('td'))
+            .find(el => (el.textContent || '').includes(ywh));
+          if (!td) return 0;
+          const table = td.closest('table');
+          let el = table;
+          while (el && el !== document.body) {
+            el.style.setProperty('overflow', 'visible', 'important');
+            el.style.setProperty('max-width', 'none', 'important');
+            el = el.parentElement;
+          }
+          const rect = table.getBoundingClientRect();
+          return Math.ceil(Math.max(rect.right,
+                                    document.documentElement.scrollWidth) + 40);
+        }""", ywh)
+    target_w = max(1720, min(int(needed or 0), 3600))
+    if target_w > 1720:
+        print(f"  适配表格宽度：视口加宽至 {target_w}px")
+        page.set_viewport_size({"width": target_w, "height": 1080})
+        page.wait_for_timeout(800)  # 等重新布局稳定
+
+
 def run_query(ywh: str, zsbm: str, url: str, out_dir: Path, headed: bool) -> dict:
     """驱动浏览器完成房源信息验证并截图。返回输出文件路径 dict。
 
@@ -151,6 +192,9 @@ def run_query(ywh: str, zsbm: str, url: str, out_dir: Path, headed: bool) -> dic
             browser.close()
             raise SystemExit("查询结果未返回或不包含该业务件号（已保存 debug_no_result 快照）")
         page.wait_for_timeout(1200)  # 等表格渲染稳定
+
+        # 适配表头宽度，避免截图中表头/单元格换行
+        adapt_table_width(page, ywh)
 
         full_png = out_dir / "result_full.png"
         page.screenshot(path=str(full_png), full_page=True)
