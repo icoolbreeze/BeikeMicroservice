@@ -56,6 +56,9 @@ class VerificationService:
             self._max_concurrent_jobs + self._max_queued_jobs)
         self._queue_lock = threading.Lock()
         self._queued_job_ids: deque[str] = deque()
+        self._counter_lock = threading.Lock()
+        self._counter_path = self.settings.jobs_root / "served_count.txt"
+        self._served_count = self._load_served_count()
 
     # ---- 提交 -----------------------------------------------------------
     def submit(self, ip: str, filename: str, data: bytes) -> dict:
@@ -85,9 +88,11 @@ class VerificationService:
                 rec.job_id, "queue",
                 f"排队中，前方有 {queue_ahead} 个任务等待处理")
             self._executor.submit(self._run, rec.job_id, cert_path)
+            served_count = self._increment_served_count()
             return {
                 "job_id": rec.job_id,
                 "status": rec.status,
+                "served_count": served_count,
                 "queue_ahead": queue_ahead,
                 "queue_capacity": self._max_queued_jobs,
                 "remaining_minute": decision.remaining_minute,
@@ -99,6 +104,21 @@ class VerificationService:
 
     def _next_work_dir(self) -> Path:
         return self.settings.jobs_root / f"{int(time.time() * 1000)}_{threading.get_ident()}"
+
+    def _load_served_count(self) -> int:
+        try:
+            return max(int(self._counter_path.read_text(encoding="utf-8").strip()), 0)
+        except (OSError, ValueError):
+            return 0
+
+    def _increment_served_count(self) -> int:
+        """持久化已受理任务数；服务重启后仍可在页面展示累计值。"""
+        with self._counter_lock:
+            self._served_count += 1
+            temp_path = self._counter_path.with_suffix(".tmp")
+            temp_path.write_text(str(self._served_count), encoding="utf-8")
+            temp_path.replace(self._counter_path)
+            return self._served_count
 
     # ---- 后台执行 -------------------------------------------------------
     def _run(self, job_id: str, cert_path: Path) -> None:
@@ -149,6 +169,9 @@ class VerificationService:
             time.sleep(min(max(decision.retry_after_seconds, 1), 60))
 
     # ---- 查询 -----------------------------------------------------------
+    def get_stats(self) -> dict:
+        return {"served_count": self._served_count}
+
     def get_status(self, job_id: str) -> dict | None:
         rec = self.store.get(job_id)
         if rec is None:

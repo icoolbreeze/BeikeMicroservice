@@ -38,6 +38,10 @@ def test_queue_rejects_after_running_and_waiting_capacity(tmp_path) -> None:
     for index in range(15):
         result = service.submit(f"10.0.0.{index}", "cert.jpg", _jpeg())
         assert result["queue_capacity"] == 12
+    assert service.get_stats()["served_count"] == 15
+
+    restarted_service = VerificationService(settings, JobStore())
+    assert restarted_service.get_stats()["served_count"] == 15
 
     try:
         service.submit("10.0.1.1", "cert.jpg", _jpeg())

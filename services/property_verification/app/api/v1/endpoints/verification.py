@@ -60,6 +60,14 @@ async def create_verification(file: UploadFile = File(...),
     return ApiResponse(data=result)
 
 
+@router.get("/stats", response_model=ApiResponse)
+def verification_stats(
+    svc: VerificationService = Depends(get_verification_service),
+):
+    """服务累计受理次数，供页面顶部展示。"""
+    return ApiResponse(data=svc.get_stats())
+
+
 @router.get("/{job_id}/events")
 async def job_events(job_id: str):
     """SSE 推送任务进度，直到终态。"""

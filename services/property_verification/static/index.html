@@ -32,6 +32,7 @@
                   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .quota{display:flex;gap:8px;margin-top:7px;font-size:11px;opacity:.95;flex-wrap:wrap}
   .quota span{background:rgba(255,255,255,.14);padding:2px 9px;border-radius:999px}
+  .ai-note{margin:5px 0 0;font-size:11px;line-height:1.45;color:rgba(255,255,255,.9)}
   .qr{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;
       cursor:pointer;transition:transform .15s}
   .qr:hover{transform:scale(1.04)}
@@ -170,7 +171,9 @@
     header.top{padding:10px 14px;border-radius:12px;gap:10px}
     header.top h1{font-size:16px;letter-spacing:1px}
     header.top .sub{font-size:11px}
-    .quota{display:none} /* 小屏隐藏限流说明，保证单屏 */
+    .quota{display:flex;margin-top:5px}
+    .quota .quota-limit{display:none} /* 小屏保留服务次数，隐藏次要限流说明 */
+    .ai-note{font-size:10px;margin-top:3px}
     .qr img{width:52px;height:52px}
     .qr span{font-size:10px}
     main{display:flex;flex-direction:column;gap:8px}
@@ -209,9 +212,11 @@
     <div class="tt">
       <h1>查档核验</h1>
       <p class="sub">上传不动产权证照片，自动提取业务件号与产权证号，并在蓉e办完成核验</p>
+      <p class="ai-note">声明：本服务由 AI 自动识别，识别结果请人工核对。</p>
       <div class="quota" id="quota">
         <span>本服务无需登录</span>
-        <span>限流：同一 IP 2 次/分钟、30 次/天</span>
+        <span id="servedCount">累计服务 — 次</span>
+        <span class="quota-limit" id="quotaLimit">限流：同一 IP 2 次/分钟、30 次/天</span>
       </div>
     </div>
     <div class="qr" id="qrBox" title="点击查看大图">
@@ -559,6 +564,7 @@ $("submitBtn").addEventListener("click", async ()=>{
     const d = await r.json();
     const jobId = d.data.job_id;
     updateQuota(d.data.remaining_minute, d.data.remaining_day);
+    updateServedCount(d.data.served_count);
     const ahead = d.data.queue_ahead || 0;
     setStatus("queued", "排队中，前方有 " + ahead + " 个任务等待处理");
     listenEvents(jobId);
@@ -682,9 +688,19 @@ function countdown(sec){
   btn.disabled = true; btn.textContent = "请等待 " + n + "s";
 }
 function updateQuota(m, d){
-  $("quota").innerHTML = '<span>本服务无需登录</span>' +
-    '<span>剩余：本分钟 ' + m + ' 次 · 今日 ' + d + ' 次</span>';
+  $("quotaLimit").textContent = "剩余：本分钟 " + m + " 次 · 今日 " + d + " 次";
 }
+function updateServedCount(count){
+  if(Number.isFinite(count)) $("servedCount").textContent = "累计服务 " + count + " 次";
+}
+async function loadServiceStats(){
+  try{
+    const r = await fetch("/api/v1/verification/stats");
+    const d = await r.json();
+    if(r.ok && d.data) updateServedCount(d.data.served_count);
+  }catch(_err){ /* 统计数据不可用时保留占位，不影响核验流程。 */ }
+}
+loadServiceStats();
 function fmtSize(b){ if(!b) return "—"; if(b<1024) return b+" B"; if(b<1048576) return (b/1024).toFixed(1)+" KB"; return (b/1048576).toFixed(2)+" MB"; }
 </script>
 </body>
