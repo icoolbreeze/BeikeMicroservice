@@ -109,7 +109,12 @@ class VerificationService:
         try:
             return max(int(self._counter_path.read_text(encoding="utf-8").strip()), 0)
         except (OSError, ValueError):
-            return 0
+            # 首次启用计数时，复用仍保留在任务存储中的历史任务目录作为初始值。
+            try:
+                return sum(1 for path in self.settings.jobs_root.iterdir()
+                           if path.is_dir())
+            except OSError:
+                return 0
 
     def _increment_served_count(self) -> int:
         """持久化已受理任务数；服务重启后仍可在页面展示累计值。"""
