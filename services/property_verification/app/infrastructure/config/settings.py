@@ -37,14 +37,19 @@ class Settings:
     verification_channel_url: str = ""
 
     # 限流：同一 IP 每分钟请求数上限、每日请求数上限
-    rate_per_minute: int = 1
-    rate_per_day: int = 10
+    rate_per_minute: int = 2
+    rate_per_day: int = 30
+
+    # OpenRouter 免费模型的账户级预算；按实际模型请求（含重试）计数。
+    model_rate_per_minute: int = 15
+    model_rate_per_day: int = 800
 
     # 上传限制
     max_upload_mb: int = 10
 
-    # 并发浏览器会话上限（Playwright 重，建议 1~2）
-    max_concurrent_jobs: int = 1
+    # 并发浏览器会话上限与等待队列上限（等待数不含正在运行的任务）。
+    max_concurrent_jobs: int = 3
+    max_queued_jobs: int = 12
 
     # 仓库 scripts 目录（复用已有验证逻辑），留空则按本文件位置推断
     scripts_dir: str = ""
@@ -83,9 +88,12 @@ def load_settings() -> Settings:
             "https://blmp.cdzjryb.com/fplc_daas_portal/#/integratedQueryNew"
             "?prevPageTitle=%E4%BD%8F%E5%BB%BA%E8%93%89e%E5%8A%9E&code=50",
         ),
-        rate_per_minute=int(_env("PV_RATE_PER_MIN", "1") or 1),
-        rate_per_day=int(_env("PV_RATE_PER_DAY", "10") or 10),
+        rate_per_minute=int(_env("PV_RATE_PER_MIN", "2") or 2),
+        rate_per_day=int(_env("PV_RATE_PER_DAY", "30") or 30),
+        model_rate_per_minute=int(_env("PV_MODEL_RATE_PER_MIN", "15") or 15),
+        model_rate_per_day=int(_env("PV_MODEL_RATE_PER_DAY", "800") or 800),
         max_upload_mb=int(_env("PV_MAX_UPLOAD_MB", "10") or 10),
-        max_concurrent_jobs=int(_env("PV_MAX_CONCURRENT", "1") or 1),
+        max_concurrent_jobs=int(_env("PV_MAX_CONCURRENT", "3") or 3),
+        max_queued_jobs=int(_env("PV_MAX_QUEUED", "12") or 12),
         scripts_dir=_env("PV_SCRIPTS_DIR"),
     )

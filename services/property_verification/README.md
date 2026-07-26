@@ -15,7 +15,7 @@
 ## 安全机制
 
 - **无需登录**：用户直接上传证件即可验证；
-- **IP 限流**：同一 IP 默认 1 次/分钟、10 次/天（可经 `PV_RATE_PER_MIN` / `PV_RATE_PER_DAY` 调整）；
+- **IP 限流**：同一 IP 默认 2 次/分钟、30 次/天（可经 `PV_RATE_PER_MIN` / `PV_RATE_PER_DAY` 调整）；
 - 上传件校验：仅 JPEG/PNG、≤10MB、魔数嗅探、文件名规范化；
 - 上传原件核验后即删；产物存于 `storage/verify_jobs/`（已 gitignore，不入库）；
 - 任务 ID 为 uuid4，对未登录用户即作为访问凭据（不可猜测）。

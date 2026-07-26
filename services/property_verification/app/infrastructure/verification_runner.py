@@ -85,7 +85,7 @@ def _load_house_verify(scripts_dir: Path):
 
 
 def run_verification(job_id: str, cert_path: Path, settings: Settings,
-                    store: JobStore) -> None:
+                    store: JobStore, before_model_request=None) -> None:
     """执行完整验证流程并更新任务状态。在后台线程调用。"""
     emit = lambda t, m: store.append_event(job_id, t, _public_message(m, settings))
 
@@ -114,6 +114,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
             api_key, settings.vl_model, cert_path,
             fallback_model=settings.vl_model_fallback or None,
             on_fallback=_fallback_hook,
+            before_model_request=before_model_request,
         )
         (work_dir / "extracted.json").write_text(
             json.dumps(cred, ensure_ascii=False, indent=2), encoding="utf-8")

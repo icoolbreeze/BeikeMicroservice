@@ -211,7 +211,7 @@
       <p class="sub">上传不动产权证照片，自动提取业务件号与产权证号，并在蓉e办完成核验</p>
       <div class="quota" id="quota">
         <span>本服务无需登录</span>
-        <span>限流：同一 IP 1 次/分钟、10 次/天</span>
+        <span>限流：同一 IP 2 次/分钟、30 次/天</span>
       </div>
     </div>
     <div class="qr" id="qrBox" title="点击查看大图">
@@ -543,6 +543,14 @@ $("submitBtn").addEventListener("click", async ()=>{
       $("submitBtn").disabled = false;
       return;
     }
+    if(r.status === 503){
+      const d = await r.json();
+      const det = d.detail || {};
+      showError((det.message || "当前任务较多，请稍后再试") +
+        (det.queue_capacity ? "（最多可等待 " + det.queue_capacity + " 个任务）" : ""));
+      $("submitBtn").disabled = false;
+      return;
+    }
     if(!r.ok){
       showError("提交失败（HTTP " + r.status + "），请稍后重试");
       $("submitBtn").disabled = false;
@@ -551,7 +559,8 @@ $("submitBtn").addEventListener("click", async ()=>{
     const d = await r.json();
     const jobId = d.data.job_id;
     updateQuota(d.data.remaining_minute, d.data.remaining_day);
-    setStatus("running","验证任务已提交");
+    const ahead = d.data.queue_ahead || 0;
+    setStatus("queued", "排队中，前方有 " + ahead + " 个任务等待处理");
     listenEvents(jobId);
   }catch(err){
     showError("网络异常：" + err.message);
@@ -571,6 +580,10 @@ function listenEvents(jobId){
       }
       es.close(); $("submitBtn").disabled = false; $("bar").classList.remove("indet");
       return;
+    }
+    if(obj.type === "queue") setStatus("queued", obj.message || "排队中");
+    if(obj.type === "milestone" && /已轮到您|开始处理/.test(obj.message || "")){
+      setStatus("running", obj.message);
     }
     if(obj.message) addLog(obj.type, obj.message);
   };
@@ -654,8 +667,8 @@ function addLog(type, msg){
 }
 function setStatus(kind, text){
   const b = $("badge");
-  b.className = "badge b-" + (kind==="running"?"running":kind==="ok"?"ok":"fail");
-  b.textContent = kind==="running"?"处理中":kind==="ok"?"完成":"失败";
+  b.className = "badge b-" + (kind==="running"?"running":kind==="queued"?"pending":kind==="ok"?"ok":"fail");
+  b.textContent = kind==="running"?"处理中":kind==="queued"?"排队中":kind==="ok"?"完成":"失败";
   $("statusText").textContent = text;
   if(kind==="ok"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%"; liveStop(); }
   if(kind==="fail"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%";

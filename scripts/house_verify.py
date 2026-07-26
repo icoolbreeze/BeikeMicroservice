@@ -61,10 +61,12 @@ def clean_field(value: str) -> str:
     return re.sub(r"\s+", "", value).replace("(", "（").replace(")", "）")
 
 
-def _try_extract(api_key: str, model: str, cert_image: Path) -> dict:
+def _try_extract(api_key: str, model: str, cert_image: Path,
+                 before_model_request: object = None) -> dict:
     """单次调用 VL 模型提取字段，返回清洗后的 dict。任一字段为空则抛 ValueError。"""
     data = call_vl_model(
-        api_key, model, cert_image, EXTRACT_PROMPT, enhance_text=True)
+        api_key, model, cert_image, EXTRACT_PROMPT, enhance_text=True,
+        before_request=before_model_request)
     ywh = clean_field(data.get("业务件号") or "")
     zsbm = clean_field(data.get("证件编码") or "")
     if not ywh or not zsbm:
@@ -78,6 +80,7 @@ def extract_credentials(
     api_key: str, model: str, cert_image: Path,
     fallback_model: str | None = None,
     on_fallback: object = None,
+    before_model_request: object = None,
 ) -> dict:
     """从产权证图片提取业务件号与证件编码。
 
@@ -88,7 +91,7 @@ def extract_credentials(
     primary_model, fallback_model, error_message），便于调用方上报进度。
     """
     try:
-        return _try_extract(api_key, model, cert_image)
+        return _try_extract(api_key, model, cert_image, before_model_request)
     except ValueError as primary_err:
         if not fallback_model or fallback_model == model:
             raise SystemExit(f"字段提取失败：{primary_err}") from primary_err
@@ -102,7 +105,8 @@ def extract_credentials(
             f"切换到兜底模型 {fallback_model}"
         )
         try:
-            return _try_extract(api_key, fallback_model, cert_image)
+            return _try_extract(api_key, fallback_model, cert_image,
+                                before_model_request)
         except ValueError as fb_err:
             raise SystemExit(
                 f"字段提取失败：主模型与兜底模型均失败（{fb_err}）"

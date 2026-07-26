@@ -1,8 +1,8 @@
 """基于 IP 的访问限流（内存实现，单实例足够）。
 
 规则：
-- 同一 IP 每 ``rate_per_minute`` 秒窗口内最多 N 次（默认 1 次/分钟）；
-- 同一 IP 滑动 24 小时窗口内最多 M 次（默认 10 次/天）。
+- 同一 IP 每 ``rate_per_minute`` 秒窗口内最多 N 次（默认 2 次/分钟）；
+- 同一 IP 滑动 24 小时窗口内最多 M 次（默认 30 次/天）。
 
 多实例部署需替换为 Redis 实现；当前为进程内线程安全实现。
 """
@@ -28,7 +28,7 @@ class RateDecision:
 class IPRateLimiter:
     """按 IP 的分钟级 + 日级滑动窗口限流器。"""
 
-    def __init__(self, per_minute: int = 1, per_day: int = 10,
+    def __init__(self, per_minute: int = 2, per_day: int = 30,
                  minute_window: int = 60, day_window: int = 86400) -> None:
         self._per_minute = per_minute
         self._per_day = per_day

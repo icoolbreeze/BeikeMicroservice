@@ -25,6 +25,7 @@ import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 import requests
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
@@ -143,7 +144,8 @@ def image_to_data_url(path: Path, max_side: int = 1600) -> str:
 
 
 def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
-                  enhance_text: bool = False) -> dict:
+                  enhance_text: bool = False,
+                  before_request: Callable[[], None] | None = None) -> dict:
     """调用 OpenRouter VL 模型解析图片，返回解析后的 dict。
 
     ``enhance_text`` 用于证件类文字识别：请求会带上经对比度/锐化处理后的图片；
@@ -173,6 +175,9 @@ def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     last_err: Exception | None = None
     for attempt in (1, 2, 3):
+        # 账户级预算不足时由调用方决定等待或终止，不能被网络重试吞掉。
+        if before_request:
+            before_request()
         try:
             resp = requests.post(
                 OPENROUTER_URL,

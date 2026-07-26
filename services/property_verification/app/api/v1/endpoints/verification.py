@@ -6,7 +6,7 @@
 - GET  /verification/{id}/artifacts  产物清单。
 - GET  /verification/{id}/download/{spec}  下载指定规格截图或打包。
 
-安全：无需登录；按 IP 限流（默认 1 次/分钟、10 次/天）。
+安全：无需登录；按 IP 限流（默认 2 次/分钟、30 次/天）。
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from app.api.dependencies import (get_client_ip, get_job_store,
                                   get_verification_service, get_settings)
 from app.application.services.verification_service import (
-    RateLimitExceeded, VerificationService)
+    QueueFull, RateLimitExceeded, VerificationService)
 from app.infrastructure.job_store import JobStore
 from app.security.file_validation import UploadValidationError
 from app.schemas.common import ApiResponse
@@ -46,6 +46,14 @@ async def create_verification(file: UploadFile = File(...),
                 "retry_after": exc.decision.retry_after_seconds,
                 "remaining_minute": exc.decision.remaining_minute,
                 "remaining_day": exc.decision.remaining_day,
+            })
+    except QueueFull as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": 503,
+                "message": "当前排队任务较多，请稍后再试",
+                "queue_capacity": exc.max_queued_jobs,
             })
     except UploadValidationError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
