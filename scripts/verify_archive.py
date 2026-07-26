@@ -27,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 
 import requests
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 DEFAULT_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -81,9 +81,57 @@ def load_api_key(cli_key: str | None) -> str:
     sys.exit("未找到 OPENROUTER_API_KEY：请通过 --api-key、环境变量或仓库根目录 .env 提供。")
 
 
+def _enhance_text_image(img: Image.Image, max_side: int) -> Image.Image:
+    """生成适合证件文字识别的图像，处理全程仅在内存中进行。
+
+    手机上的照片常见曝光发灰、轻微模糊和 EXIF 方向未被模型读取的问题。这里用
+    灰度自动对比度、轻度去噪及反锐化掩模增强笔画边缘；不做二值化，以免抹掉浅色
+    印刷文字或印章。放大上限略高于普通图片，避免证件号码在下采样时丢失细节。
+    """
+    img = ImageOps.exif_transpose(img).convert("RGB")
+    if max(img.size) > max_side:
+        ratio = max_side / max(img.size)
+        img = img.resize((int(img.width * ratio), int(img.height * ratio)), Image.LANCZOS)
+
+    gray = ImageOps.grayscale(img)
+    gray = ImageOps.autocontrast(gray, cutoff=1)
+    gray = gray.filter(ImageFilter.MedianFilter(size=3))
+    gray = ImageEnhance.Contrast(gray).enhance(1.35)
+    gray = gray.filter(ImageFilter.UnsharpMask(radius=1.4, percent=170, threshold=2))
+    return gray.convert("RGB")
+
+
+def image_to_data_urls(path: Path, max_side: int = 1800) -> list[str]:
+    """将证件转为增强后的 data URL；纵向双页照片额外提供两个转正方向。
+
+    有些用户把展开的双页证件横着拍摄后直接上传。对于明显纵向的图片，同时传递
+    顺/逆时针方向的增强副本，让视觉模型选择文字正向的一张，而不是猜测旋转方向。
+    返回的数据均由原图在内存中生成，不会额外写入文件。
+    """
+    with Image.open(path) as source:
+        base = ImageOps.exif_transpose(source).convert("RGB")
+
+    variants = [base]
+    if base.height >= base.width * 1.20:
+        variants.extend([
+            base.transpose(Image.Transpose.ROTATE_90),
+            base.transpose(Image.Transpose.ROTATE_270),
+        ])
+
+    urls: list[str] = []
+    for variant in variants:
+        enhanced = _enhance_text_image(variant, max_side)
+        buf = io.BytesIO()
+        enhanced.save(buf, format="JPEG", quality=93, optimize=True)
+        b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+        urls.append(f"data:image/jpeg;base64,{b64}")
+    return urls
+
+
 def image_to_data_url(path: Path, max_side: int = 1600) -> str:
-    """读取图片并转为 base64 data URL（过大时先缩放）。"""
-    img = Image.open(path).convert("RGB")
+    """兼容旧调用：返回一张经过尺寸约束的原方向图片。"""
+    with Image.open(path) as source:
+        img = ImageOps.exif_transpose(source).convert("RGB")
     if max(img.size) > max_side:
         ratio = max_side / max(img.size)
         img = img.resize((int(img.width * ratio), int(img.height * ratio)), Image.LANCZOS)
@@ -93,8 +141,23 @@ def image_to_data_url(path: Path, max_side: int = 1600) -> str:
     return f"data:image/jpeg;base64,{b64}"
 
 
-def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str) -> dict:
-    """调用 OpenRouter VL 模型解析单张图片，返回解析后的 dict。"""
+def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
+                  enhance_text: bool = False) -> dict:
+    """调用 OpenRouter VL 模型解析图片，返回解析后的 dict。
+
+    ``enhance_text`` 用于证件类文字识别：请求会带上经对比度/锐化处理后的图片；
+    对明显横放的双页证件还会附带两个转正方向，提升号码读取成功率。
+    """
+    image_urls = (image_to_data_urls(image_path) if enhance_text
+                  else [image_to_data_url(image_path)])
+    content = [{"type": "text", "text": prompt}]
+    if enhance_text and len(image_urls) > 1:
+        content[0]["text"] += (
+            "\n图片为同一份证件的增强版及两个旋转方向副本；"
+            "请只读取文字正向、最清晰的版本，且不要把不同版本的字段混合。"
+        )
+    content.extend({"type": "image_url", "image_url": {"url": url}}
+                   for url in image_urls)
     payload = {
         "model": model,
         "temperature": 0,
@@ -102,10 +165,7 @@ def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str) -> di
         "messages": [
             {
                 "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": image_to_data_url(image_path)}},
-                ],
+                "content": content,
             }
         ],
     }

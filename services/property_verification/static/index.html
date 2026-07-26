@@ -56,6 +56,16 @@
         border-radius:10px;padding:10px 12px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace}
   .logs .e{padding:1px 0}.logs .e.milestone{color:#ffd54f;font-weight:600}
   .logs .e.error{color:#ff8a80}.logs .e.done{color:#a5d6a7}
+  .live{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:13px;color:var(--muted)}
+  .live .pulse{width:9px;height:9px;border-radius:50%;background:var(--info);flex:none;
+    box-shadow:0 0 0 0 rgba(21,101,192,.5);animation:livepulse 1.4s infinite}
+  @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(21,101,192,.45)}70%{box-shadow:0 0 0 9px rgba(21,101,192,0)}100%{box-shadow:0 0 0 0 rgba(21,101,192,0)}}
+  .live .live-hint{flex:1;line-height:1.4}
+  .live .live-time{font-variant-numeric:tabular-nums;color:var(--brand-2);font-weight:600;flex:none}
+  .logs .e.active{position:relative;padding-left:11px}
+  .logs .e.active::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:3px;
+    border-radius:2px;background:#ffd54f;animation:liveblink 1s infinite}
+  @keyframes liveblink{0%,100%{opacity:1}50%{opacity:.3}}
   /* 产物 */
   .arts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:6px}
   .art{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
@@ -114,6 +124,11 @@
       <span id="statusText" style="font-size:13px;color:var(--muted)">等待开始…</span>
     </div>
     <div class="bar" id="bar"><i></i></div>
+    <div class="live" id="live" style="display:none">
+      <span class="pulse"></span>
+      <span class="live-hint" id="liveHint">正在处理…</span>
+      <span class="live-time" id="liveTime"></span>
+    </div>
     <div class="logs" id="logs"></div>
     <div class="err-box" id="errBox" style="display:none"></div>
   </section>
@@ -130,6 +145,43 @@
 <script>
 const $ = id => document.getElementById(id);
 let selectedFile = null;
+let liveTimer=null, hintTimer=null, liveStartTs=0, liveHints=[];
+
+/* —— 实时反馈：长时间无新事件时用呼吸点 + 已用时 + 轮播提示，避免用户以为卡住 —— */
+function hintsFor(msg){
+  if(/提取|识别|字段|证件图片|模型/.test(msg))
+    return ["视觉模型正在阅读证件照片…",
+            "正在识别图片中的文字与编号…",
+            "正在解析业务件号与产权证号…",
+            "模型解析通常需要十几秒，请稍候…",
+            "如耗时略长属正常现象，仍在处理中…"];
+  if(/蓉e?办|验证|查询|填|截图|房源信息/.test(msg))
+    return ["正在打开蓉e办验证页面…",
+            "正在自动填入证件信息并查询…",
+            "等待政府系统返回结果，约需二三十秒…",
+            "正在生成查询结果截图…",
+            "政府系统响应偶尔较慢，仍在等待结果…"];
+  return ["正在处理，请稍候…","仍在工作中，请耐心等待…"];
+}
+function liveStart(msg){
+  liveHints = hintsFor(msg||"");
+  liveStartTs = Date.now();
+  $("live").style.display = "flex";
+  $("liveHint").textContent = liveHints[0];
+  liveTick();
+  clearInterval(liveTimer); clearInterval(hintTimer);
+  liveTimer = setInterval(liveTick, 1000);
+  let hi=0;
+  hintTimer = setInterval(()=>{ hi=(hi+1)%liveHints.length; $("liveHint").textContent=liveHints[hi]; }, 3500);
+}
+function liveTick(){
+  const s = Math.floor((Date.now()-liveStartTs)/1000);
+  $("liveTime").textContent = "已用 " + (s>=60 ? Math.floor(s/60)+"分"+(s%60)+"秒" : s+"秒");
+}
+function liveStop(){
+  clearInterval(liveTimer); clearInterval(hintTimer); liveTimer=hintTimer=null;
+  $("live").style.display = "none";
+}
 
 $("file").addEventListener("change", e=>{
   const f = e.target.files[0];
@@ -252,21 +304,30 @@ function setFile_clear(){ selectedFile=null; $("preview").style.display="none"; 
 function resetProgress(){
   $("logs").innerHTML = ""; $("bar").classList.add("indet");
   $("bar").firstElementChild.style.width = "0";
+  liveStop();
 }
 function addLog(type, msg){
   const el = document.createElement("div");
   el.className = "e " + (type||"log");
   el.textContent = (type==="milestone"?"◆ ":type==="error"?"✗ ":type==="done"?"✓ ":"› ") + msg;
-  $("logs").appendChild(el); $("logs").scrollTop = $("logs").scrollHeight;
+  const box = $("logs");
+  box.querySelectorAll(".e.active").forEach(n=>n.classList.remove("active"));
+  box.appendChild(el);
+  if(type!=="error" && type!=="done") el.classList.add("active");
+  box.scrollTop = box.scrollHeight;
+  // 仍在处理中：开启实时反馈（完成类里程碑不启动，避免结尾闪一下）
+  if((type==="milestone"||type==="log") && !/完成|已生成|成功/.test(msg)){
+    liveStart(msg);
+  }
 }
 function setStatus(kind, text){
   const b = $("badge");
   b.className = "badge b-" + (kind==="running"?"running":kind==="ok"?"ok":"fail");
   b.textContent = kind==="running"?"处理中":kind==="ok"?"完成":"失败";
   $("statusText").textContent = text;
-  if(kind==="ok"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%"; }
+  if(kind==="ok"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%"; liveStop(); }
   if(kind==="fail"){ $("bar").classList.remove("indet"); $("bar").firstElementChild.style.width="100%";
-                    $("bar").firstElementChild.style.background="var(--err)"; }
+                    $("bar").firstElementChild.style.background="var(--err)"; liveStop(); }
 }
 function showError(msg){ $("errBox").textContent = msg; $("errBox").style.display="block"; }
 function countdown(sec){

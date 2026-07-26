@@ -62,7 +62,8 @@ def clean_field(value: str) -> str:
 
 def _try_extract(api_key: str, model: str, cert_image: Path) -> dict:
     """单次调用 VL 模型提取字段，返回清洗后的 dict。任一字段为空则抛 ValueError。"""
-    data = call_vl_model(api_key, model, cert_image, EXTRACT_PROMPT)
+    data = call_vl_model(
+        api_key, model, cert_image, EXTRACT_PROMPT, enhance_text=True)
     ywh = clean_field(data.get("业务件号") or "")
     zsbm = clean_field(data.get("证件编码") or "")
     if not ywh or not zsbm:

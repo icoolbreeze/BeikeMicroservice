@@ -94,7 +94,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
             used_model = fallback
             _emit_milestone(f"主模型 {primary} 提取失败，切换兜底模型 {fallback}")
 
-        _emit_milestone("正在提取证件字段…")
+        _emit_milestone("正在识别证件图片，提取关键字段…")
         cred = hv.extract_credentials(
             api_key, settings.vl_model, cert_path,
             fallback_model=settings.vl_model_fallback or None,
