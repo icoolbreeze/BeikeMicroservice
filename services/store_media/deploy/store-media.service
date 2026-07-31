@@ -1,0 +1,25 @@
+[Unit]
+Description=Store media publishing and property display service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/store-media/current/services/store_media
+Environment=APP_ENV=production
+Environment=PYTHONUNBUFFERED=1
+Environment=SM_STORAGE_DIR=/var/lib/store-media
+EnvironmentFile=-/etc/store-media/store-media.env
+ExecStart=/opt/store-media/venv/bin/uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8080
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/store-media
+
+[Install]
+WantedBy=multi-user.target

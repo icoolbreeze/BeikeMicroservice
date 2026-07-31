@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "store-media"
+version = "0.1.0"
+description = "门店多媒体广告发布、房源轮播与角色管理服务"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "ruff", "mypy"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

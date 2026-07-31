@@ -9,8 +9,26 @@ services:
     build: ./services/property_verification
     # TODO: 挂载 ./services/property_verification/storage、配置环境变量
 
+  store-media:
+    build: ./services/store_media
+    ports:
+      - "${SM_PUBLIC_PORT:-8080}:8010"
+    environment:
+      SM_STORAGE_DIR: /app/storage
+      SM_MAX_UPLOAD_MB: ${SM_MAX_UPLOAD_MB:-500}
+      SM_SESSION_HOURS: ${SM_SESSION_HOURS:-12}
+      SM_CORS_ORIGINS: ${SM_CORS_ORIGINS:-}
+      SM_BOOTSTRAP_ADMIN_USERNAME: ${SM_BOOTSTRAP_ADMIN_USERNAME:-}
+      SM_BOOTSTRAP_ADMIN_PASSWORD: ${SM_BOOTSTRAP_ADMIN_PASSWORD:-}
+      SM_BOOTSTRAP_ADMIN_DISPLAY_NAME: ${SM_BOOTSTRAP_ADMIN_DISPLAY_NAME:-系统管理员}
+    volumes:
+      - store-media-data:/app/storage
+
   workers:
     build: ./workers
     # TODO: 接入任务队列后启用
 
   # TODO: 按需补充 postgres / redis 等基础组件（当前不启用、不创建任何数据表）
+
+volumes:
+  store-media-data:

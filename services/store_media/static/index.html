@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>门店内容发布中心</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header><div><b>门店内容发布中心</b><span>Store Media Console</span></div><button id="logout" class="ghost hidden">退出</button></header>
+  <main>
+    <section id="login-card" class="card narrow">
+      <h1>登录管理端</h1><p class="muted">使用管理员、区域经理或店长账号登录。</p>
+      <form id="login-form"><label>用户名<input name="username" required autocomplete="username"></label><label>密码<input name="password" type="password" required autocomplete="current-password"></label><button>登录</button></form>
+      <p id="login-error" class="error"></p>
+    </section>
+    <div id="console" class="hidden">
+      <section class="hero card"><div><span class="eyebrow">当前用户</span><h1 id="welcome"></h1><p id="scope" class="muted"></p></div><a id="display-link" class="button ghost hidden" target="_blank">打开门店展示屏</a></section>
+      <nav><button data-tab="media" class="active">内容发布</button><button data-tab="users">角色与账号</button><button data-tab="stores">门店管理</button></nav>
+
+      <section id="readonly" class="card hidden"><span class="eyebrow">只读账号</span><h2>店员没有管理权限</h2><p class="muted">可通过“打开门店展示屏”查看本门店已发布内容。如需发布或账号管理权限，请联系店长或区域经理。</p></section>
+
+      <section id="tab-media" class="tab grid two">
+        <article class="card"><h2>上传图片或视频</h2><form id="upload-form"><label>门店<select name="store_id" required></select></label><label>标题<input name="title" maxlength="200" required></label><label>图片停留时长（秒）<input name="image_duration_seconds" type="number" min="1" max="3600" value="8"><small>视频会在播放完毕后自动切换，此值不生效。</small></label><label>文件<input name="file" type="file" accept="image/*,video/*,.mov,.m4v" required></label><label><span>上传后立即发布</span><input name="is_published" type="checkbox" checked></label><button>上传</button></form></article>
+        <article class="card wide"><div class="title-row"><h2>播放清单</h2><div><button id="refresh-media" class="ghost">放弃修改</button> <button id="save-playlist">统一保存</button></div></div><div id="media-list" class="list empty">请选择门店</div></article>
+      </section>
+
+      <section id="tab-users" class="tab grid two hidden">
+        <article class="card"><h2>添加账号</h2><form id="user-form"><label>用户名<input name="username" required></label><label>姓名<input name="display_name" required></label><label>初始密码<input name="password" type="password" minlength="8" required></label><label>角色<select name="role" required></select></label><label>区域标识<input name="region_id" placeholder="区域经理必填"></label><label>所属门店<select name="store_id"><option value="">不指定</option></select></label><button>添加账号</button></form></article>
+        <article class="card wide"><h2>账号与角色</h2><div id="user-list" class="list"></div></article>
+      </section>
+
+      <section id="tab-stores" class="tab grid two hidden">
+        <article class="card"><h2>添加门店</h2><form id="store-form"><label>门店标识<input name="id" pattern="[A-Za-z0-9_-]+" required></label><label>门店名称<input name="name" required></label><label>区域标识<input name="region_id" pattern="[A-Za-z0-9_-]+" required></label><button>添加门店</button></form></article>
+        <article class="card wide"><h2>可管理门店</h2><div id="store-list" class="list"></div></article>
+      </section>
+      <p id="notice" class="notice hidden"></p>
+    </div>
+  </main>
+  <script src="/admin.js" defer></script>
+</body>
+</html>

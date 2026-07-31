@@ -1,21 +1,14 @@
 # 服务注册表
 
-平台内所有微服务的清单与状态。新增服务时必须更新本表。
+所有服务先登记到机器可读的 [`services/catalog.yaml`](../services/catalog.yaml)，本文档提供面向开发者的摘要。
 
-| 服务 | 路径 | 状态 | 说明 |
-| --- | --- | --- | --- |
-| property_verification | `services/property_verification` | 结构已创建（未实现） | 房源信息验证：接收不动产权证图片、提取业务件号与证件编码、调用合法授权渠道验证、解析结果、生成查询截图 |
+| 服务 | 路径 | 成熟度 | 数据所有权 | 说明 |
+| --- | --- | --- | --- | --- |
+| property_verification | `services/property_verification` | development | 核验任务及输出 | 房源信息提取与核验 |
+| store_media | `services/store_media` | runnable | 门店、账号、会话、媒体元数据与文件 | 门店媒体发布、房源轮播、范围化 RBAC |
+
+新增服务必须声明：服务所有者、业务边界、健康检查、配置前缀、持久化数据、对外 API 前缀和依赖。服务之间禁止直接读取对方数据库或上传目录。
 
 ## 规划中的候选服务
 
-| 服务 | 状态 | 说明 |
-| --- | --- | --- |
-| image_processing | 规划中 | 房源图片处理 |
-| document_extraction | 规划中 | 合同或文档信息提取 |
-| data_sync | 规划中 | 内部系统数据同步 |
-| notification | 规划中 | 消息通知 |
-| contract_tools | 规划中 | 合同辅助工具 |
-| house_tools | 规划中 | 房源相关辅助工具 |
-
-> 候选服务仅为规划示例，实际新增以业务需求为准；创建方式见
-> [service-development-guide.md](service-development-guide.md)。
+`identity_access`、`image_processing`、`document_extraction`、`data_sync` 和 `notification`。其中统一身份服务应在第二个业务服务需要登录或接入企业 SSO 时启动拆分，而不是提前复制账号表。

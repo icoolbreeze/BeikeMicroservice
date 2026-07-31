@@ -10,6 +10,7 @@ dist/
 # 环境与密钥（禁止入库）
 .env
 *.local
+*.pem
 
 # 测试与缓存
 .pytest_cache/

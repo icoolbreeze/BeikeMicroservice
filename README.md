@@ -1,44 +1,53 @@
 # BeikeMicroservice
 
-贝壳 A+ 第三方微服务平台。
+面向房产经纪公司内部工具的多服务 Monorepo。每个业务服务独立开发、测试、构建和部署，共享工程规范而不共享业务数据。
 
-## 项目定位
+## 当前服务
 
-本仓库是面向贝壳房产经纪公司内部 A+ 系统的**第三方微服务集合**（Monorepo）。
-它不是单一的房产信息查询项目，也不只服务于某一个查询页面，而是承载多个相互独立、可逐步扩展的辅助工具和业务服务的统一工程。
+| 服务 | 端口 | 状态 | 能力 |
+| --- | --- | --- | --- |
+| `property_verification` | 8000 | 开发中 | 房源证件字段提取与授权渠道核验 |
+| `store_media` | 8010 | 可运行 | 门店图片/视频发布、房源轮播、区域与门店级 RBAC |
 
-未来可能包含但不限于：房源信息验证、不动产权证信息提取、图片 OCR、房源图片处理、合同/文档信息提取、房源数据格式转换、内部系统数据同步、自动化查询工具、消息通知、文件生成、任务队列、审计记录等。
+`store_media` 的管理页面位于 `/`，门店展示页面位于 `/display.html?store_id=<门店标识>`。详见 [服务说明](services/store_media/README.md)。
 
 ## 仓库结构
 
 | 目录 | 说明 |
 | --- | --- |
-| `services/` | 独立业务微服务（当前：`property_verification`） |
-| `packages/` | 跨服务公共 Python 包（核心类型、配置、日志、契约） |
-| `gateway/` | 统一 API 入口（预留，未实现） |
-| `workers/` | 通用后台任务消费者（预留，未实现） |
-| `infrastructure/` | 部署与基础设施说明（仅文档） |
-| `docs/` | 平台文档（架构、开发指南、API 约定、安全、隐私、路线图） |
-| `scripts/` | 开发脚本（如创建新服务骨架） |
-| `tests/` | 跨服务测试（契约测试、端到端测试，预留） |
+| `services/` | 独立业务微服务及机器可读的 `catalog.yaml` |
+| `packages/` | 无业务含义的公共 Python 包 |
+| `gateway/` | 统一入口骨架，投入生产前需要补齐反向代理与统一令牌校验 |
+| `workers/` | 通用后台任务消费者骨架 |
+| `infrastructure/` | 部署与基础设施说明 |
+| `docs/` | 架构、API、安全、隐私和演进决策 |
+| `scripts/` | 工程脚本 |
+| `tests/` | 跨服务契约和端到端测试 |
 
-## 当前服务
+## 快速启动门店媒体服务
 
-- `services/property_verification`：房源信息验证微服务，平台中的第一个独立服务。
-  当前仅为结构骨架，不包含任何业务实现。
+```powershell
+cd services/store_media
+$env:SM_BOOTSTRAP_ADMIN_USERNAME="admin"
+$env:SM_BOOTSTRAP_ADMIN_PASSWORD="请设置至少8位的随机密码"
+python -m uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8010
+```
 
-## 扩展新服务
+也可通过 Docker Compose 启动：
 
-未来可继续新增独立服务，例如 `image_processing`、`document_extraction`、`data_sync`、
-`notification`、`contract_tools`、`house_tools` 等。
+```powershell
+$env:SM_BOOTSTRAP_ADMIN_USERNAME="admin"
+$env:SM_BOOTSTRAP_ADMIN_PASSWORD="请设置至少8位的随机密码"
+docker compose up --build store-media
+```
 
-- 新增方式见 [docs/service-development-guide.md](docs/service-development-guide.md)
-- 服务清单见 [docs/service-registry.md](docs/service-registry.md)
+Docker Compose 启动后访问 `http://localhost:8080/`；直接运行 Uvicorn 时仍使用 `8010`。
 
-## 当前状态
+## 服务器连接
 
-仅包含项目结构：不实现 OCR、网页自动化、外部接口调用等任何业务功能；
-不包含真实网址、账号凭据或个人数据；不创建数据库表。
+生产服务器的 SSH 入口、首次配置、连接验证和维护命令见 [服务器连接说明](docs/deployment-servers.md)。密钥和生产凭据不存放在本仓库中。
+
+架构扩展原则与分阶段改造计划见 [架构说明](docs/architecture.md) 和 [ADR-0001](docs/adr/0001-evolutionary-platform-architecture.md)。
 
 ## License
 

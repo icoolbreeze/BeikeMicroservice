@@ -1,0 +1,20 @@
+version: 1
+services:
+  - name: property_verification
+    path: services/property_verification
+    maturity: development
+    owner: platform-team
+    api_prefix: /api/v1
+    health_path: /api/v1/health
+    config_prefix: PV_
+    data_owner: verification jobs and generated evidence
+    dependencies: []
+  - name: store_media
+    path: services/store_media
+    maturity: runnable
+    owner: store-operations
+    api_prefix: /api/v1
+    health_path: /api/v1/health
+    config_prefix: SM_
+    data_owner: stores, local identities, sessions, media metadata and media files
+    dependencies: []

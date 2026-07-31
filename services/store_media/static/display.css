@@ -1,0 +1,18 @@
+.image-progress {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 3%);
+}
+
+.image-progress > div {
+  height: 100%;
+  background: rgb(215 255 100 / 32%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
