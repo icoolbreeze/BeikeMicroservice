@@ -32,3 +32,5 @@ services/**/storage/**
 
 # 本地核验输出（含个人敏感信息，禁止入库）
 outputs/
+deliverables/
+.playwright-mcp/
