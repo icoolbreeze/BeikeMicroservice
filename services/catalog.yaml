@@ -18,3 +18,12 @@ services:
     config_prefix: SM_
     data_owner: stores, local identities, sessions, media metadata and media files
     dependencies: []
+  - name: crm_connector
+    path: services/crm_connector
+    maturity: development
+    owner: platform-team
+    api_prefix: /api/v1
+    health_path: /api/v1/health
+    config_prefix: CC_
+    data_owner: employee-scoped CRM connector configuration and redacted audit summaries
+    dependencies: []
