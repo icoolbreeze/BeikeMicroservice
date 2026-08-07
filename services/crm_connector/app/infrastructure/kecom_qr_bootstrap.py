@@ -5,10 +5,12 @@ import json
 import logging
 import os
 import re
+import sys
 import time
 import urllib.parse
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any, Callable
 
 import httpx
@@ -120,7 +122,7 @@ class KeComQrBootstrapProvider:
             follow_redirects=False,
             headers={"user-agent": "crm-connector/0.1"},
         )
-        self._qr = qr_renderer or _TerminalQrRenderer()
+        self._qr = qr_renderer or _default_renderer(self._settings)
         self._clock = clock
         self._sleep = sleep
 
@@ -751,3 +753,51 @@ class _TerminalQrRenderer(_QrRenderer):
         print(buffer.getvalue())
         print(note)
         print(f"qrCodeContent: {payload}")
+
+
+class _PopupQrRenderer(_QrRenderer):
+    """Windows popup renderer: open the QR payload in an image viewer.
+
+    Pillow renders the payload into ``run/qr_<epoch-ms>.png`` and
+    ``os.startfile`` opens it with the system default image viewer, so the
+    employee can scan from their phone while the CLI keeps polling. Each QR
+    refresh writes a new file and prunes the previous PNGs so run/ stays
+    clean. Falls back to a one-line URL print when Pillow or ``os.startfile``
+    is unavailable (e.g. non-Windows hosts).
+    """
+
+    def __init__(self, output_dir: Path) -> None:
+        self._output_dir = output_dir
+
+    def render(self, payload: str, *, note: str) -> None:
+        startfile = getattr(os, "startfile", None)
+        try:
+            import qrcode  # type: ignore[import-not-found, import-untyped]
+            from qrcode.image.pil import PilImage  # type: ignore[import-not-found, import-untyped]
+        except ImportError:
+            startfile = None
+        if startfile is None:
+            print(payload)
+            print(note)
+            return
+
+        self._output_dir.mkdir(parents=True, exist_ok=True)
+        target = self._output_dir / f"qr_{time.time_ns() // 1_000_000}.png"
+        qrcode.make(payload, image_factory=PilImage).save(target)
+        for stale in self._output_dir.glob("qr_*.png"):
+            if stale != target:
+                stale.unlink(missing_ok=True)
+        startfile(str(target))
+        print(f"qrCodeContent: {payload}")
+
+
+def _default_renderer(settings: Settings) -> _QrRenderer:
+    """Pick the best QR renderer for this host.
+
+    Windows hosts default to the popup renderer because the terminal
+    renderer's Unicode block characters break under the default cp1252
+    console encoding; other hosts keep the terminal ASCII renderer.
+    """
+    if sys.platform == "win32":
+        return _PopupQrRenderer(Path(settings.credential_store_path).parent)
+    return _TerminalQrRenderer()

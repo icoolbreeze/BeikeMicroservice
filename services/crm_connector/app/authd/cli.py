@@ -36,8 +36,9 @@ def cmd_login(settings: Settings) -> int:
     print("[*] bootstrapping via login.ke.com qrcode SSO ...")
 
     # bootstrap blocks here until the bound employee has scanned + confirmed
-    # on their phone. The renderer prints a QR code on stdout along with the
-    # qrCodeContent URL for staff who scan from a separate device.
+    # on their phone. On Windows the QR payload pops up as an image window
+    # (see _PopupQrRenderer); the qrCodeContent URL is always printed for
+    # staff who scan from a separate device.
     try:
         result = bootstrap.bootstrap()
     except Exception as exc:  # pragma: no cover - terminal error path

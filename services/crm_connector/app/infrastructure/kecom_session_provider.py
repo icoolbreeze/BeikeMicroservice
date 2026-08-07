@@ -12,7 +12,7 @@ from typing import Callable
 import httpx
 
 from app.domain.errors import AuthenticationRequiredError, NetworkRequiredError
-from app.domain.models import ConnectionState, ProviderStatus
+from app.domain.models import ConnectionState, Principal, ProviderStatus
 from app.domain.providers.credential_bootstrap_provider import (
     BootstrapResult,
     CredentialBootstrapProvider,
@@ -147,6 +147,20 @@ class KecomSessionProvider:
             )
 
         return UpstreamResponse(status_code=response.status_code, body=response.json())
+
+    def bound_principal(self) -> Principal | None:
+        """Return the employee principal this session was bootstrapped with.
+
+        The upstream accountRightInfo envelope does not echo the principal,
+        so the identity recorded at scan time (the ``UCID`` cookie) is the
+        authoritative local source.
+        """
+        with self._lock:
+            active = self._active or self._store.load_active()
+            self._active = active
+        if active is None or not active.employee_principal:
+            return None
+        return Principal(employee_principal=active.employee_principal)
 
     def close(self) -> None:
         if self._client_owner:

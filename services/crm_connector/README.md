@@ -5,24 +5,28 @@
 ## 当前能力
 
 > **完整链路已于 2026-08-06 用真实扫码验证打通**：扫码登录 → CAS 双跳 bootstrap → 凭证入库 → `authorizedFetch` 业务调用 → TGC 无感刷新。
+> **MCP stdio 已于 2026-08-07 用真实凭据验证**：`crm-mcp` 子进程在 `kecom-prod` profile 下通过 `stdio` 暴露 4 个工具，`crm_whoami` / `rental_listing_search` / `rental_listing_get_detail` 均返回真实 CRM 数据。
 
 - `/api/v1/health`：服务健康检查；
 - `/api/v1/connection/status`：认证与连接状态；
-- `/api/v1/mcp/tools`：待 MCP transport 暴露的工具元数据；
-- `/api/v1/modules`：CRM 导航模块及实现状态；
+- `/api/v1/mcp/tools`：与 MCP transport 同源的工具元数据（`app/mcp/tools.py`，经 `/tools/list` 暴露）；
 - `/api/v1/crm/me`、`/api/v1/listings/rental/search`：已完成租赁房源的分层与输入/输出契约，走通真实上游 `KecomCrmClient` → `KecomSessionProvider.authorizedFetch` → `lease-pz.link.lianjia.com`。
 - `/api/v1/listings/rental/{listing_id}`：租赁房源详情端点，返回单条 `RentalListingResponse`。
 
-## crm-authd 命令行
+## crm-authd / crm-mcp 命令行
 
-本服务除 FastAPI 主服务（默认 `8020`）外，还提供独立的 `crm-authd` 命令行，用于管理员工 CRM 认证材料并在本地保持会话。入口在 `pyproject.toml` 注册为 `crm-authd = "app.authd.cli:main"`，实现见 `app/authd/cli.py`。
+本服务除 FastAPI 主服务（默认 `8020`）外，还提供两个命令行入口：
 
-| 子命令 | 作用 |
+- `crm-authd`：管理员工 CRM 认证材料并在本地保持会话，入口在 `pyproject.toml` 注册为 `crm-authd = "app.authd.cli:main"`，实现见 `app/authd/cli.py`；
+- `crm-mcp`：MCP stdio 服务器，入口注册为 `crm-mcp = "app.mcp.server:main"`，实现见 `app/mcp/server.py`。
+
+| 命令 | 作用 |
 | --- | --- |
-| `crm-authd login` | 触发扫码登录引导，拿到上游凭证后用 Windows DPAPI 写入 `CC_CREDENTIAL_STORE_PATH`，并校验 `CC_BOUND_EMPLOYEE_PRINCIPAL` 是否与扫码主体一致 |
+| `crm-authd login` | 触发扫码登录引导（弹出二维码窗口），拿到上游凭证后用 Windows DPAPI 写入 `CC_CREDENTIAL_STORE_PATH`，并校验 `CC_BOUND_EMPLOYEE_PRINCIPAL` 是否与扫码主体一致 |
 | `crm-authd status` | 读取本地凭证并打印 `state`（`ready` / `expiring` / `auth_required`）、会话主体、过期时间、`credential_version` |
 | `crm-authd logout` | 调用 `bootstrap.revoke` 失效上游会话并清空本地凭证记录 |
 | `crm-authd serve` | 在 `CC_AUTHD_LISTEN_ADDRESS`（默认 `127.0.0.1:8021`）启动本地认证中心 HTTP 服务，并在同进程内运行 keepalive 后台线程 |
+| `crm-mcp` | 在 `stdio` 上运行 MCP server（`app/mcp/server.py` 的 `main()`），按 `CC_UPSTREAM_PROFILE` 接线真实或 stub provider |
 
 `crm-authd serve` 暴露的端点（前缀 `/api/v1/auth`）：
 
@@ -53,6 +57,32 @@ python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 
 默认 `CC_UPSTREAM_PROFILE=unconfigured`，主服务会以 stub provider 启动，可在 CI/开发环境直接跑通。接入真实 CRM 上游的方法见 `.env.example`：先把 `CC_UPSTREAM_PROFILE` 改为非 `unconfigured`，再在单独的 PowerShell 中执行 `crm-authd login` 完成扫码引导，凭证入库后用 `crm-authd serve`（监听 `127.0.0.1:8021`）保持会话。
 
+## MCP 接入
+
+`crm-mcp` 以 stdio 运行 MCP server，供本地 Agent（Claude Code 等）直接调用：
+
+```json
+{
+  "mcpServers": {
+    "crm-connector": {
+      "command": "python",
+      "args": ["-m", "app.mcp.server"],
+      "cwd": "C:\\path\\to\\services\\crm_connector",
+      "env": {
+        "CC_UPSTREAM_PROFILE": "kecom-prod",
+        "CC_BOUND_EMPLOYEE_PRINCIPAL": "<扫码主体>",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}
+```
+
+- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_search`、`rental_listing_get_detail`；
+- `crm_connection_status` 不限额；其余 3 个按调用者主体（`getpass.getuser()`）受 `CC_MCP_RATE_LIMIT_PER_MIN`（默认 30 次/分钟）滑动窗口限流，超限返回 `RATE_LIMITED`；
+- 未配置凭据时业务工具返回 `CRM_AUTH_REQUIRED`，不会访问上游；
+- 凭据只经 `SessionProvider.authorizedFetch()` 注入，MCP 响应与日志不含任何认证材料。
+
 > Dockerfile 用于服务契约与基础运行验证；生产 Connector 仍应运行在云枢已接入的员工专属 Windows VM 中，不应把云枢或员工认证材料打包进镜像。
 
 ## 分层
@@ -69,7 +99,10 @@ api -> application -> domain <- infrastructure
 - `infrastructure/kecom_session_provider.py`：已认证请求代理与 keepalive，注入 `puzu_lease_token` + `saas_token` 等业务 cookie（`KecomSessionProvider`）；
 - `infrastructure/kecom_crm_client.py`：CRM 业务 Adapter，通过 `SessionProvider.authorizedFetch` 调用受控路由（`KecomCrmClient`）；
 - `infrastructure/windows_dpapi_credential_store.py`：Windows DPAPI 加密本地存储；
-- `mcp/tools.py` 定义首期租赁 MCP tool 契约，实际 MCP transport 在后续接入。
+- `mcp/tools.py`：首期 4 个 MCP tool 的契约（输入/输出 Schema、只读标注），与 HTTP `/api/v1/mcp/tools` 同源；
+- `mcp/server.py`：MCP server 组装（`build_mcp_server`）与 `stdio` 入口（`main`），`MCPServer.tool` 注册 4 个工具、`ToolAnnotations(read_only_hint=True)` 只读标注、`_require_quota` 按调用者主体限流；
+- `mcp/schemas.py`：MCP 入参模型（`extra="forbid"` 拒绝未知字段）；
+- `mcp/rate_limit.py`：滑动窗口工具级限流。
 
 认证流程固定为：`CredentialBootstrapProvider → CRM 主体验证 → CredentialStore → SessionProvider.authorizedFetch()`。
 业务 Adapter 只能通过 `SessionProvider.authorizedFetch()` 发起已认证请求。不得将认证材料存入 SQLite、普通文件、环境变量、日志、MCP 响应或前端页面。

@@ -18,6 +18,9 @@ class ReadySessionProvider:
     def status(self) -> ProviderStatus:
         return ProviderStatus(ConnectionState.READY, "CRM authorization is ready")
 
+    def bound_principal(self) -> Principal | None:
+        return Principal(employee_principal="employee-1")
+
     def authorized_fetch(self, request):  # pragma: no cover - exercised by future HTTP adapter
         raise AssertionError("Fake CRM client does not make HTTP requests")
 

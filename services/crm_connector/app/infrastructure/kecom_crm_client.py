@@ -260,6 +260,14 @@ class KecomCrmClient:
     # -- CrmClient protocol ------------------------------------------------
 
     def whoami(self) -> Principal:
+        # The upstream accountRightInfo envelope does not echo the employee
+        # principal (verified 2026-08-07), so the identity recorded at scan
+        # time is the authoritative local source. The upstream path below is
+        # kept for profiles that do expose a ucid.
+        principal = self._session.bound_principal()
+        if principal is not None:
+            return principal
+
         response = self._session.authorized_fetch(_build_whoami_request())
         if response.status_code != 200:
             raise UpstreamChangedError(

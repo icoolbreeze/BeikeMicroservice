@@ -12,6 +12,7 @@ class Settings:
     upstream_profile: str = "unconfigured"
     request_timeout_seconds: float = 15.0
     cors_origins: tuple[str, ...] = ()
+    mcp_rate_limit_per_min: int = 30
 
     crm_login_base: str = "https://login.ke.com"
     crm_service_url: str = "https://lease-pz.link.lianjia.com/login?gotoURL=%252F"
@@ -38,6 +39,7 @@ def load_settings() -> Settings:
             for origin in cors_raw.split(",")
             if origin.strip()
         ),
+        mcp_rate_limit_per_min=int(os.getenv("CC_MCP_RATE_LIMIT_PER_MIN", "30")),
         crm_login_base=os.getenv("CC_CRM_LOGIN_BASE", "https://login.ke.com").strip()
         or "https://login.ke.com",
         crm_service_url=os.getenv("CC_CRM_SERVICE_URL", "").strip()

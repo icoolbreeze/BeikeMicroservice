@@ -45,6 +45,10 @@ class CapturingSession:
             else ProviderStatus(ConnectionState.AUTH_REQUIRED, "no auth")
         )
 
+    def bound_principal(self) -> Principal | None:
+        # No locally-bound identity: force the upstream discovery path.
+        return None
+
     def authorized_fetch(self, request: AuthorizedRequest) -> UpstreamResponse:
         self.calls.append(request)
         if not self.responses:

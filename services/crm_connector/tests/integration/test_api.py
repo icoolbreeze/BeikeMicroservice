@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.domain.models import ConnectionState, ProviderStatus
+from app.domain.models import ConnectionState, Principal, ProviderStatus
 from app.domain.providers.session_provider import AuthorizedRequest, UpstreamResponse
 from app.infrastructure.settings import Settings
 from app.main import create_app
@@ -20,6 +20,10 @@ class StubSession:
 
     def status(self) -> ProviderStatus:
         return ProviderStatus(ConnectionState.READY, "stub ready")
+
+    def bound_principal(self) -> Principal | None:
+        # No locally-bound identity: force the upstream discovery path.
+        return None
 
     def authorized_fetch(self, request: AuthorizedRequest) -> UpstreamResponse:
         self.calls.append(request)
@@ -61,7 +65,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
         {
             "code": 100000, "msg": "ok",
             "data": {
-                "list": [
+                "result": [
                     {"delCode": "RC-1", "resblockName": "万象城一期",
                      "bedroomAmount": 2, "hallAmount": 1, "area": 80.0, "price": 3500,
                      "orientation": ["南"]},
@@ -106,7 +110,7 @@ def test_get_detail_flows_through_full_app_pipeline(tmp_path) -> None:
         {
             "code": 100000, "msg": "ok",
             "data": {
-                "list": [
+                "result": [
                     {"delCode": "RC-42", "resblockName": "万象城天曜",
                      "bedroomAmount": 3, "hallAmount": 2, "bathroomAmount": 2,
                      "area": 145.0, "price": 9000, "orientation": ["东南"]},

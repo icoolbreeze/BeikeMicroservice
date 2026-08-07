@@ -413,16 +413,16 @@ services/crm_connector/
 
 ### 阶段 3：MCP 接入
 
-- [~] 定义 MCP tools、描述、输入 Schema 与返回 Schema。（`app/mcp/tools.py:7-84` 4 个工具均带 `name/description/input_schema`；**返回 Schema 缺失**：`McpToolDefinition` 字段无 `output_schema`，`as_dict:14-20` 只输出 `inputSchema`）
-- [ ] 支持 `stdio` 模式。（`settings.py:11` `mcp_transport` 默认值 `stdio`，但无 stdio 传输实现：`app/api/mcp_server.py` 不存在、`grep mcp_server/fastmcp/stdio transport` 零匹配，`main.py:13-37` 只有 FastAPI HTTP）
-- [ ] 如需远程调用，支持 Streamable HTTP 与调用者认证。（`grep StreamableHTTP/streamable_http/fastmcp` 零匹配；`main.py:30-35` 仅有 CORSMiddleware，无调用者认证中间件）
-- [~] 实现调用者主体、VM 绑定员工、CRM 主体三方一致性校验。（仅实现 1/3：`ConnectorService._verify_bound_principal` `app/application/service.py:70-73` 校验 CRM 主体 = `bound_employee_principal`；调用者主体校验与 VM 绑定校验未实现）
-- [~] 添加工具级限流、只读工具白名单和超时控制。（只读白名单：`tools.py:12 read_only=True` 默认值 + `as_dict:18 readOnlyHint` 但**未强制**；限流：`grep rate_limit/throttle` 零匹配；超时：`settings.py:13 request_timeout_seconds=15` 经 `kecom_session_provider.py:82` 用于 `httpx.Timeout`，httpx 层算完成）
-- [ ] 编写 MCP 契约测试和 Agent 调用样例。（`tests/integration/test_api.py:28-35` 仅测 `/api/v1/mcp/tools` 元数据 4 个工具名，非 MCP 协议契约测试；无 Agent 调用样例目录）
+- [x] 定义 MCP tools、描述、输入 Schema 与返回 Schema。（`app/mcp/tools.py` 4 个工具均带 `name/description/input_schema/output_schema`：`McpToolDefinition` 含 `output_schema` 字段，`as_dict()` 输出 `outputSchema`；MCP 2.0 单模型入参经 `mcp/schemas.py` 的 `extra="forbid"` 模型嵌套在 `{"input": ...}` 下）
+- [x] 支持 `stdio` 模式。（`app/mcp/server.py` 的 `build_mcp_server` 用 mcp 2.0 `MCPServer` 注册 4 个工具，`main()` 按 `CC_MCP_TRANSPORT` 校验后以 `server.run(transport="stdio")` 运行；`pyproject.toml` 注册 `crm-mcp = "app.mcp.server:main"`；2026-08-07 用真实 DPAPI 凭据在 `kecom-prod` profile 下经 stdio 子进程验证：whoami/search/detail 均返回真实 CRM 数据）
+- [ ] 如需远程调用，支持 Streamable HTTP 与调用者认证。（当前范围仅本地 stdio 接入；`mcp.server` 的 `server.run` 亦支持 `streamable-http`，远程部署前需补调用者认证中间件，`main.py` 目前只有 CORSMiddleware）
+- [~] 实现调用者主体、VM 绑定员工、CRM 主体三方一致性校验。（实现 2/3：`ConnectorService._verify_bound_principal` `app/application/service.py` 校验 CRM 主体 = `bound_employee_principal`；调用者主体经 `_caller_subject()`（`getpass.getuser()`）作为 MCP 工具限流身份；VM 绑定校验（云枢）未实现）
+- [x] 添加工具级限流、只读工具白名单和超时控制。（只读：全部工具 `ToolAnnotations(read_only_hint=True)` 标注 + `tools.py` `read_only=True` 默认；限流：`app/mcp/rate_limit.py` 滑动窗口 `RateLimiter`，`crm_connection_status` 不限额，其余 3 个按调用者主体受 `CC_MCP_RATE_LIMIT_PER_MIN` 限制，超限返回 `RATE_LIMITED`；超时：`request_timeout_seconds=15` 经 `kecom_session_provider.py` 用于 `httpx.Timeout`）
+- [~] 编写 MCP 契约测试和 Agent 调用样例。（`tests/integration/test_mcp.py` 11 个：工具发现/只读标注/状态不限额/三条业务管线/上游错误映射/未知字段拒绝/认证拦截/限流/Schema 元数据/stdio 子进程入口；`tests/unit/test_rate_limit.py` 4 个；Agent 调用样例目录仍待补充）
 
 **验收标准**：Agent 只能发现并调用允许的语义工具；无法提交任意 URL、认证头或跨员工参数。
 
-对照代码现状：MCP 工具元数据已暴露在 HTTP `/api/v1/mcp/tools`，但既非真正的 MCP 协议传输、也未在三方一致性上做兜底；Agent 实际无法用 `stdio` 或 `Streamable HTTP` 接入。要达到验收标准仍需 (1) `app/api/mcp_server.py` 实现 MCP 传输（FastMCP 或等价）；(2) 调用者主体解码与校验中间件；(3) 工具级限流执行层；(4) MCP 协议契约测试套。
+对照代码现状：MCP stdio 传输已实现并通过真实凭据验证——`crm-mcp` 子进程（`app/mcp/server.py:main`）以 mcp 2.0 `MCPServer` 暴露 4 个只读工具，全部经 `SessionProvider.authorizedFetch()` 走受控路由，未知输入字段在 `schemas.py` 层即被 `extra="forbid"` 拒绝。三方一致性仍缺 VM 绑定校验一环（云枢主体解码）；Streamable HTTP 远程调用与调用者认证留待后续阶段。
 
 ### 阶段 4：可靠性与运维
 
