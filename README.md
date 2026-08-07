@@ -8,8 +8,10 @@
 | --- | --- | --- | --- |
 | `property_verification` | 8000 | 开发中 | 房源证件字段提取与授权渠道核验 |
 | `store_media` | 8010 | 可运行 | 门店图片/视频发布、房源轮播、区域与门店级 RBAC |
+| `crm_connector` | 8020 | 开发中 | 员工专属 CRM MCP Connector，封装 ke.com SSO 认证与租赁房源查询；另附 `crm-authd` CLI 于本地 `8021` 端口管理认证 |
 
 `store_media` 的管理页面位于 `/`，门店展示页面位于 `/display.html?store_id=<门店标识>`。详见 [服务说明](services/store_media/README.md)。
+`crm_connector` 的认证链路、`crm-authd` CLI 与端点契约详见 [服务说明](services/crm_connector/README.md)。
 
 ## 仓库结构
 

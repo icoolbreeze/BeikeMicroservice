@@ -1,8 +1,7 @@
-# 常用开发命令入口（占位）
-# 注意：当前仓库仅包含结构骨架，以下命令多为预留。
+# 常用开发命令入口。
 # 注意：本文件中命令行前为 Tab 缩进。
 
-.PHONY: help new-service serve-pv serve-media test-media
+.PHONY: help new-service serve-pv serve-media test-media serve-cc test-cc
 
 help: ## 显示可用命令
 	@grep -E "^[a-zA-Z_-]+:.*?## " $(MAKEFILE_LIST) | awk "BEGIN {FS = \":.*?## \"}; {printf \"  make %-16s %s\\n\", $$1, $$2}"
@@ -18,3 +17,9 @@ serve-media: ## 启动门店媒体发布与展示服务
 
 test-media: ## 运行门店媒体服务测试
 	cd services/store_media && python -m pytest
+
+serve-cc: ## 启动 crm_connector 员工 CRM 连接器服务（默认 unconfigured profile）
+	cd services/crm_connector && uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
+
+test-cc: ## 运行 CRM Connector 服务测试
+	cd services/crm_connector && python -m pytest

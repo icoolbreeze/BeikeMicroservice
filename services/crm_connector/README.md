@@ -11,6 +11,29 @@
 - `/api/v1/mcp/tools`：待 MCP transport 暴露的工具元数据；
 - `/api/v1/modules`：CRM 导航模块及实现状态；
 - `/api/v1/crm/me`、`/api/v1/listings/rental/search`：已完成租赁房源的分层与输入/输出契约，走通真实上游 `KecomCrmClient` → `KecomSessionProvider.authorizedFetch` → `lease-pz.link.lianjia.com`。
+- `/api/v1/listings/rental/{listing_id}`：租赁房源详情端点，返回单条 `RentalListingResponse`。
+
+## crm-authd 命令行
+
+本服务除 FastAPI 主服务（默认 `8020`）外，还提供独立的 `crm-authd` 命令行，用于管理员工 CRM 认证材料并在本地保持会话。入口在 `pyproject.toml` 注册为 `crm-authd = "app.authd.cli:main"`，实现见 `app/authd/cli.py`。
+
+| 子命令 | 作用 |
+| --- | --- |
+| `crm-authd login` | 触发扫码登录引导，拿到上游凭证后用 Windows DPAPI 写入 `CC_CREDENTIAL_STORE_PATH`，并校验 `CC_BOUND_EMPLOYEE_PRINCIPAL` 是否与扫码主体一致 |
+| `crm-authd status` | 读取本地凭证并打印 `state`（`ready` / `expiring` / `auth_required`）、会话主体、过期时间、`credential_version` |
+| `crm-authd logout` | 调用 `bootstrap.revoke` 失效上游会话并清空本地凭证记录 |
+| `crm-authd serve` | 在 `CC_AUTHD_LISTEN_ADDRESS`（默认 `127.0.0.1:8021`）启动本地认证中心 HTTP 服务，并在同进程内运行 keepalive 后台线程 |
+
+`crm-authd serve` 暴露的端点（前缀 `/api/v1/auth`）：
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/v1/auth/status` | 当前认证状态、绑定员工、过期时间、最近一次 keepalive |
+| GET | `/api/v1/auth/poll` | 与 `status` 一致，为后续接入 SSE / tray UI 预留 |
+| GET | `/api/v1/auth/keepalive` | 手动触发一次 TGC 无感刷新并返回结果 |
+| GET | `/api/v1/auth/notify` | 预留给未来 tray UI 向 authd 推送通知（当前镜像 status） |
+
+> 认证材料只存放在 `CC_CREDENTIAL_STORE_PATH`（默认 `./run/credential_store.bin`），用 Windows DPAPI 加密；`crm-authd` 之外的主服务进程通过 `SessionProvider.authorizedFetch()` 间接使用，从不直接接触原始 cookie/token。
 
 ### 已验证的端到端链路
 
@@ -27,6 +50,8 @@
 cd services/crm_connector
 python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 ```
+
+默认 `CC_UPSTREAM_PROFILE=unconfigured`，主服务会以 stub provider 启动，可在 CI/开发环境直接跑通。接入真实 CRM 上游的方法见 `.env.example`：先把 `CC_UPSTREAM_PROFILE` 改为非 `unconfigured`，再在单独的 PowerShell 中执行 `crm-authd login` 完成扫码引导，凭证入库后用 `crm-authd serve`（监听 `127.0.0.1:8021`）保持会话。
 
 > Dockerfile 用于服务契约与基础运行验证；生产 Connector 仍应运行在云枢已接入的员工专属 Windows VM 中，不应把云枢或员工认证材料打包进镜像。
 

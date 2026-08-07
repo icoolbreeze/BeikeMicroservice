@@ -25,6 +25,7 @@
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/api/v1/verification` | 上传证件（multipart `file`），返回 `job_id`（202） |
+| GET | `/api/v1/verification/stats` | 服务累计受理次数，供页面顶部展示 |
 | GET | `/api/v1/verification/{id}/events` | SSE 实时进度/错误流，至终态关闭 |
 | GET | `/api/v1/verification/{id}/artifacts` | 产物清单 |
 | GET | `/api/v1/verification/{id}/download/{spec}` | 下载 `panel` / `full` / `zip` |
