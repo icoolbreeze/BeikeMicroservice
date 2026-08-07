@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 import re
 import time
 import urllib.parse
@@ -87,6 +88,8 @@ class _QrCodeHandle:
 @dataclass(frozen=True)
 class _ConfirmedResult:
     service_ticket: str
+    qrcode_id: str
+    login_ticket_id: str
     business_cookies: dict[str, str]
     refresh_cookies: dict[str, str]
 
@@ -124,17 +127,37 @@ class KeComQrBootstrapProvider:
     # -- CredentialBootstrapProvider ----------------------------------------
 
     def bootstrap(self) -> BootstrapResult:
-        handle = self._initialize()
-        self._qr.render(
-            handle.qrcode_content,
-            note=(
-                "请使用 Link/A+/D+/Studio/企微 扫描上方二维码登录。\n"
-                "Connector 轮询手机端确认状态……"
-            ),
-        )
-        confirmed = self._poll_until_confirmed(handle.qrcode_id)
-        business_cookies, refresh_cookies = self._exchange_ticket(confirmed.service_ticket)
-        return self._build_result(business_cookies, refresh_cookies)
+        refresh_attempt = 0
+        while True:
+            handle = self._initialize()
+            ordinal = refresh_attempt + 1
+            self._qr.render(
+                handle.qrcode_content,
+                note=(
+                    f"请使用 Link/A+/D+/Studio/企微 扫描第 {ordinal} 张二维码登录。\n"
+                    "Connector 轮询手机端确认状态……"
+                ),
+            )
+            try:
+                confirmed = self._poll_until_confirmed(handle)
+            except _BootstrapExpired:
+                refresh_attempt += 1
+                delay = self._qrcode_refresh_delay(refresh_attempt)
+                logger.info(
+                    "auth.bootstrap.qrcode_expired refresh_attempt=%s delay_seconds=%s",
+                    refresh_attempt,
+                    delay,
+                )
+                print("[*] QR code expired; refreshing automatically ...")
+                self._sleep(delay)
+                continue
+
+            business_cookies, refresh_cookies = self._exchange_ticket(
+                confirmed.service_ticket,
+                confirmed.qrcode_id,
+                confirmed.login_ticket_id,
+            )
+            return self._build_result(business_cookies, refresh_cookies)
 
     def refresh(self, current: ActiveCredential) -> BootstrapResult | None:
         refresh_cookies = self._deserialize_refresh_material(current.refresh_material)
@@ -146,26 +169,11 @@ class KeComQrBootstrapProvider:
         # leaking them onto the business domain later.
         self._seed_cookies(self._settings.crm_login_base, refresh_cookies)
 
-        # Step 1 — ask the SSO server for a fresh ST ticket using the existing TGC.
-        new_login_response = self._client.get(
-            f"{self._settings.crm_login_base}/login",
-            params={"service": self._settings.crm_service_url},
-            follow_redirects=False,
-        )
-        if new_login_response.status_code != 302:
-            logger.info("auth.refresh.rejected status=%s", new_login_response.status_code)
-            return None
-        location = new_login_response.headers.get("location", "")
-        match = _TICKET_RE.search(location)
-        if not match:
-            logger.info("auth.refresh.no_ticket location=%r", location)
-            return None
-        service_ticket = match.group(1)
-
-        # Step 2 — exchange the ticket at the business domain to get fresh
-        # business cookies. The refresh_cookies are merged in to keep the SSO
-        # linkage stable; the response Set-Cookie updates the jar.
-        business_cookies, refreshed_refresh_cookies = self._exchange_ticket(service_ticket)
+        # Step 1 — walk the same CAS chain the browser does: GET the lease business
+        # page with the TGC in jar; lease-pz redirects to login.ke.com, CAS mints
+        # a service-bound ST, and httpx follows the chain back to lease-pz which
+        # plants puzu_lease_token / UCID / csrfSecret.
+        business_cookies, refreshed_refresh_cookies = self._establish_business_session()
         return self._build_result(business_cookies, refreshed_refresh_cookies)
 
     def validate(self, credential_material: bytes) -> Principal:
@@ -195,9 +203,10 @@ class KeComQrBootstrapProvider:
             body = response.json()
         except json.JSONDecodeError as exc:
             raise _BootstrapError("accountRightInfo response is not JSON") from exc
+        KeComQrBootstrapProvider._log_confirmed_payload_shape(body)
         if body.get("code") not in (100000, 0):
             raise _BootstrapError(
-                f"accountRightInfo rejected material code={body.get('code')}"
+                f"accountRightInfo rejected material code={body.get('code')} body={body!r}"
             )
 
         display_name = self._decode_display_name(cookies)
@@ -261,14 +270,15 @@ class KeComQrBootstrapProvider:
                 )
         return None
 
-    def _poll_until_confirmed(self, qrcode_id: str) -> _ConfirmedResult:
-        # We do not know the exact field name the CONFIRMED response uses to
-        # carry the service ticket (the SDK drives a window.location.href
-        # jump immediately, which destroys the iframe before our CDP hook can
-        # read the body). We poll /qrcode/query until state=CONFIRMED, then
-        # synthesise the redirect URL ourselves and follow it to obtain the
-        # business-domain cookie jar. This matches observed behaviour across
-        # two real scan-and-confirm cycles.
+    def _poll_until_confirmed(
+        self, handle: _QrCodeHandle
+    ) -> _ConfirmedResult:
+        # Real upstream observation (2026-08-06): the CONFIRMED response body
+        # is exactly ``{"state": "CONFIRMED", "success": true}`` and carries
+        # **no ticket** field. The desktop passport-web flow then completes
+        # auth via POST /authentication/authenticate (see _authenticate_exchange).
+        # Reference: docs/crm-auth-flow-analysis.md §8.3.
+        qrcode_id = handle.qrcode_id
         deadline = self._clock() + timedelta(seconds=self._settings.bootstrap_poll_timeout_seconds)
         last_state = "CREATED"
         while self._clock() < deadline:
@@ -280,18 +290,30 @@ class KeComQrBootstrapProvider:
             payload = response.json()
             last_state = payload.get("state", "")
             if last_state == "CONFIRMED":
+                # Some SSO profiles still embed the ticket in the response;
+                # prefer the explicit ticket when present, else fall back to
+                # the desktop flow: POST /authentication/authenticate with the
+                # qrcode id and use serviceTicket.callbackUrl (see
+                # _exchange_ticket). Reference: docs/crm-auth-flow-analysis.md
+                # §8.3 and the passport-web loginRouter SDK.
                 ticket = self._extract_ticket_from_confirmed(payload)
-                if not ticket:
-                    raise _BootstrapError("CONFIRMED response missing ticket")
                 return _ConfirmedResult(
-                    service_ticket=ticket,
+                    service_ticket=ticket or "",
+                    qrcode_id=qrcode_id,
+                    login_ticket_id=handle.login_ticket_id,
                     business_cookies={},
                     refresh_cookies=dict(self._sso_cookies()),
                 )
             if last_state == "EXPIRED":
                 raise _BootstrapExpired("qrcode expired while polling")
             self._sleep(self._settings.bootstrap_poll_interval_seconds)
-        raise _BootstrapExpired(f"polling timed out in state={last_state}")
+        raise _BootstrapPollTimedOut(f"polling timed out in state={last_state}")
+
+    def _qrcode_refresh_delay(self, refresh_attempt: int) -> float:
+        """Bound exponential backoff between terminal QR refreshes."""
+        initial = max(self._settings.bootstrap_qrcode_refresh_initial_delay_seconds, 0.0)
+        exponent = min(max(refresh_attempt - 1, 0), 5)
+        return min(initial * (2**exponent), 30.0)
 
     @staticmethod
     def _extract_ticket_from_confirmed(payload: dict[str, Any]) -> str | None:
@@ -312,22 +334,134 @@ class KeComQrBootstrapProvider:
             match = _TICKET_RE.search(redirect)
             if match:
                 return match.group(1)
+        # Diagnostic: emit a redacted shape of the payload so we can identify
+        # the real ticket-bearing field without persisting any ticket value.
+        # Only logs key names, JSON type, and short non-sensitive prefixes.
+        KeComQrBootstrapProvider._log_confirmed_payload_shape(payload)
         return None
 
-    def _exchange_ticket(self, service_ticket: str) -> tuple[dict[str, str], dict[str, str]]:
-        # We use the service URL with the ticket appended. The CRM login page
-        # at lease-pz.link.lianjia.com validates the ticket server-side and
-        # responds with Set-Cookie for the business-domain HttpOnly cookies.
-        parsed = urllib.parse.urlsplit(self._settings.crm_service_url)
-        login_url = parsed._replace(
-            query=(parsed.query + "&" if parsed.query else "") + f"ticket={service_ticket}"
-        ).geturl()
-        response = self._client.get(
-            login_url,
-            follow_redirects=True,
-        )
-        # We do not require 200 here — the CAS-validated Set-Cookie lives in
-        # 302 responses too, and httpx.follow_redirects collapses them.
+    @staticmethod
+    def _log_confirmed_payload_shape(payload: dict[str, Any]) -> None:
+        """Redacted one-shot diagnostic; never logs ticket values."""
+        try:
+            shape: dict[str, str] = {}
+            for key, value in payload.items():
+                if isinstance(value, str):
+                    preview = value[:8].replace("\n", " ").replace("\r", " ")
+                    shape[key] = f"str(prefix={preview!r},len={len(value)})"
+                elif isinstance(value, (int, float, bool)):
+                    shape[key] = f"{type(value).__name__}({value!r})"
+                elif isinstance(value, dict):
+                    shape[key] = f"dict(keys={list(value.keys())[:8]!r})"
+                elif isinstance(value, list):
+                    shape[key] = f"list(len={len(value)})"
+                else:
+                    shape[key] = type(value).__name__
+            logger.warning("auth.bootstrap.confirmed_payload_shape shape=%s", shape)
+        except Exception:  # pragma: no cover - never fail the bootstrap path
+            logger.warning("auth.bootstrap.confirmed_payload_shape_log_failed", exc_info=True)
+
+    def _log_exchange_hop(self, hop: str, response: httpx.Response) -> None:
+        """Redacted diagnostic for the ticket-exchange redirect chain."""
+        try:
+            set_cookies: list[str] = []
+            for header_value in response.headers.get_list("set-cookie"):
+                name = header_value.split("=", 1)[0].strip()
+                set_cookies.append(name)
+            location = response.headers.get("location", "")
+            body_prefix = ""
+            try:
+                text = response.text
+                body_prefix = text[:200].replace("\n", " ").replace("\r", " ")
+            except Exception:
+                body_prefix = "<unreadable>"
+            logger.info(
+                "auth.bootstrap.exchange_hop hop=%s status=%s url=%s set_cookie_names=%s "
+                "location_len=%d body_prefix=%r",
+                hop,
+                response.status_code,
+                response.url,
+                set_cookies,
+                len(location),
+                body_prefix,
+            )
+            if hop == "sdk_confirm" and response.status_code == 200:
+                self._dump_exchange_body("sdk_confirm.html", response.text)
+            if hop == "lease_landing":
+                self._dump_exchange_body("lease_landing_headers.txt", "\n".join(f"{k}: {v}" for k, v in response.headers.multi_items()))
+        except Exception:  # pragma: no cover - never fail the bootstrap path
+            logger.warning("auth.bootstrap.exchange_hop_log_failed", exc_info=True)
+
+    def _dump_exchange_body(self, filename: str, text: str) -> None:
+        """Persist a full hop body for offline protocol analysis. Written into
+        the process working directory only (never logged)."""
+        try:
+            target = self._settings.credential_store_path
+            base = str(target)
+            if not base:
+                base = "."
+            if len(text) <= 1_000_000:
+                with open(os.path.join(os.path.dirname(base), filename), "w", encoding="utf-8") as fh:
+                    fh.write(text)
+        except Exception:  # pragma: no cover
+            pass
+
+    def _log_cookie_jar(self, marker: str) -> None:
+        """Redacted diagnostic: cookie names currently held in the jar."""
+        try:
+            names = sorted({c.name for c in self._client.cookies.jar if c.name})
+            logger.info("auth.bootstrap.cookie_jar marker=%s names=%s", marker, names)
+        except Exception:  # pragma: no cover - never fail the bootstrap path
+            logger.warning("auth.bootstrap.cookie_jar_log_failed", exc_info=True)
+
+    def _exchange_ticket(
+        self,
+        service_ticket: str,
+        qrcode_id: str = "",
+        login_ticket_id: str = "",
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        # ``service_ticket`` is a CAS ST ticket (``ST-...-ke.com``) when the
+        # upstream CONFIRMED response carried one. When it is empty (observed
+        # 2026-08-06: CONFIRMED body is exactly ``{state, success}``) we replay
+        # the desktop passport-web flow decoded from the loginRouter SDK:
+        #   POST /authentication/authenticate
+        #     {"service": <crm_service_url>, "context": {"deviceId","sign"},
+        #      "version": "2.0", "loginTicketId": <handle.login_ticket_id>,
+        #      "accountSystem": "employee", "mainAuthMethodName": "qrcode",
+        #      "credential": {"id": <qrcode_id>}}
+        #   → Set-Cookie: TGC/TGC_Secure on login.ke.com.
+        #
+        # The authenticate callback URL's ST is bound to ``crm_service_url``
+        # which does NOT match the service string lease-pz constructs for the
+        # page the user actually wants (``/rent/house/list?isSaaS=false``), so
+        # CAS validation fails and lease-pz returns its JS login page.
+        #
+        # The faithful CAS flow is the one the browser walks:
+        #   1. login.ke.com/login?service=<lease-pz's own /login?gotoURL=...
+        #      encoded url> (TGC already in jar via authenticate);
+        #   2. login.ke.com sees the TGC → mints an ST bound to that EXACT
+        #      service → 302 → lease-pz/login?gotoURL=...&ticket=ST;
+        #   3. lease-pz validates the ST (service string matches what it just
+        #      built) → Set-Cookie puzu_lease_token / UCID / csrfSecret / ...
+        #      → 302 → /rent/house/list (final 200).
+        # httpx follow_redirects walks the whole chain because each hop's
+        # cookies are scoped to its own domain (TGC stays on ke.com, the lease
+        # cookies land on lease-pz).
+        if service_ticket.startswith("http://") or service_ticket.startswith("https://"):
+            response = self._client.get(service_ticket, follow_redirects=True)
+        elif service_ticket:
+            # Treat incoming STs as bound to the business CAS client; exchange
+            # at the lease-pz login endpoint exactly the way the chain above
+            # would build it. (Refresh path provides a pre-minted ST.)
+            response = self._client.get(
+                self._settings.crm_service_url,
+                params={"ticket": service_ticket},
+                follow_redirects=True,
+            )
+        else:
+            self._authenticate_exchange(qrcode_id, login_ticket_id)
+            business, refresh = self._establish_business_session()
+            return business, refresh
         if response.status_code >= 400:
             raise _BootstrapError(
                 f"ticket exchange failed status={response.status_code}"
@@ -339,9 +473,132 @@ class KeComQrBootstrapProvider:
                 all_cookies[cookie.name] = cookie.value
         business = {name: all_cookies[name] for name in _BUSINESS_COOKIE_NAMES if name in all_cookies}
         refresh = {name: all_cookies[name] for name in _REFRESH_COOKIE_NAMES if name in all_cookies}
+        self._log_cookie_jar("post_exchange")
+
+        # Defensive tail: if the chain collapsed without planting puzu_lease_token
+        # (e.g. a session cookie scope surprise), capture the landing Set-Cookie
+        # headers so we can diagnose offline rather than retry blind.
+        if "puzu_lease_token" not in business:
+            self._dump_exchange_body(
+                "lease_landing_headers.txt",
+                "\n".join(f"{k}: {v}" for k, v in response.headers.multi_items()),
+            )
+
         if not business or "puzu_lease_token" not in business:
-            raise _BootstrapError("ticket exchange produced no business cookies")
+            raise _BootstrapError(
+                f"ticket exchange produced no business cookies (business={sorted(business)} names={sorted(all_cookies)})"
+            )
         return business, refresh
+
+    def _establish_business_session(self) -> tuple[dict[str, str], dict[str, str]]:
+        # Shared by bootstrap and refresh. Probed 2026-08-06: lease-pz's
+        # /rent/house/list SPA NEVER server-redirects to CAS (every header /
+        # cookie variant returns 200 and clears puzu_lease_token); the redirect
+        # to login.ke.com observed in the browser is JS-driven. So instead of
+        # GETting the list page we call the CAS front channel directly with the
+        # exact service string lease-pz's JS builds:
+        #   GET {crm_login_base}/login?service=<origin>/login?gotoURL=<enc>
+        # with the TGC in the jar → CAS validates TGC → 302 → lease-pz/login
+        # ?gotoURL=...&ticket=ST → lease-pz validates the ST against its own
+        # service string → Set-Cookie puzu_lease_token / UCID / csrfSecret →
+        # 302 → /rent/house/list?isSaaS=false (final 200, SPA).
+        #
+        # Docs §5.1 + confirmed 2026-08-06: that single lease-pz hop is NOT
+        # enough for the business APIs (accountRightInfo / houseList return
+        # 100001 请重新登录 even with a full puzu_lease_token jar). The browser
+        # SPA then fires a SECOND CAS-hop into house.link.lianjia.com/shiro-cas:
+        #   GET {crm_login_base}/login?service=house.link.lianjia.com/shiro-cas
+        # → 302 → house.link.lianjia.com/shiro-cas?ticket=ST → house.link plants
+        # `saas_token` (and HOUSEJSESSIONID). With saas_token in the jar the
+        # lease-pz business endpoints immediately return code=100000. Both hops
+        # use the same TGC (one QR scan) so this is zero-extra-scan.
+        business_service = (
+            f"{self._settings.crm_business_origin}/login"
+            "?gotoURL=%25252Frent%25252Fhouse%25252Flist%25253FisSaaS%25253Dfalse"
+        )
+        response = self._client.get(
+            f"{self._settings.crm_login_base}/login",
+            params={"service": business_service},
+            follow_redirects=True,
+        )
+        self._log_exchange_hop("lease_cas_chain", response)
+        if response.status_code >= 400:
+            raise _BootstrapError(
+                f"business session establishment failed status={response.status_code}"
+            )
+        # Docs §5.1: second CAS hop into house.link shiro-cas to plant saas_token
+        # (the cookie that lease-pz business endpoints /api/houseList/* require;
+        # without it they return 100001 请重新登录 even with a valid puzu_lease_token).
+        shiro_response = self._client.get(
+            f"{self._settings.crm_login_base}/login",
+            params={"service": "https://house.link.lianjia.com/shiro-cas"},
+            follow_redirects=True,
+        )
+        self._log_exchange_hop("house_link_shiro_cas", shiro_response)
+        if shiro_response.status_code >= 400:
+            raise _BootstrapError(
+                f"house.link shiro-cas hop failed status={shiro_response.status_code}"
+            )
+        all_cookies: dict[str, str] = {}
+        for cookie in self._client.cookies.jar:
+            if cookie.name is not None and cookie.value is not None:
+                all_cookies[cookie.name] = cookie.value
+        business = {name: all_cookies[name] for name in _BUSINESS_COOKIE_NAMES if name in all_cookies}
+        refresh = {name: all_cookies[name] for name in _REFRESH_COOKIE_NAMES if name in all_cookies}
+        self._log_cookie_jar("post_business_session")
+        token_value = business.get("puzu_lease_token", "")
+        if "puzu_lease_token" not in business or not token_value:
+            self._dump_exchange_body(
+                "lease_landing_headers.txt",
+                "\n".join(f"{k}: {v}" for k, v in response.headers.multi_items()),
+            )
+        if not business or "puzu_lease_token" not in business or not token_value:
+            raise _BootstrapError(
+                f"business session produced no business cookies (business={sorted(business)} names={sorted(all_cookies)})"
+            )
+        return business, refresh
+
+    def _authenticate_exchange(self, qrcode_id: str, login_ticket_id: str) -> None:
+        # Desktop passport-web flow on CONFIRMED (loginRouter SDK, 2026-08-06):
+        # POST /authentication/authenticate exchanges the confirmed qrcode for
+        # an SSO TGT (Set-Cookie: TGC/TGC_Secure on login.ke.com) which the
+        # subsequent /login?service= front-channel hop will use to mint the
+        # service ticket. The authenticate body also carries a callbackUrl,
+        # which is NOT the working cookie path (observations show it returns a
+        # JS login page with no Set-Cookie on the business domain).
+        auth_response = self._client.post(
+            f"{self._settings.crm_login_base}/authentication/authenticate",
+            json={
+                "service": self._settings.crm_service_url,
+                "context": {"deviceId": "default", "sign": "default"},
+                "version": "2.0",
+                "loginTicketId": login_ticket_id,
+                "accountSystem": "employee",
+                "mainAuthMethodName": "qrcode",
+                "credential": {"id": qrcode_id},
+            },
+            follow_redirects=False,
+        )
+        self._log_exchange_hop("authenticate", auth_response)
+        self._log_cookie_jar("post_authenticate")
+        if auth_response.status_code >= 400:
+            raise _BootstrapError(
+                f"authenticate failed status={auth_response.status_code}"
+            )
+        code = self._extract_authenticate_code(auth_response)
+        if code is not None and code not in (100000, 0, "100000", "0", "PASS", "pass"):
+            raise _BootstrapError(
+                f"authenticate rejected credential code={code} body={auth_response.text[:500]!r}"
+            )
+
+    def _extract_authenticate_code(self, response: httpx.Response) -> Any:
+        try:
+            body = response.json()
+        except json.JSONDecodeError:
+            return None
+        if isinstance(body, dict):
+            return body.get("code", body.get("status"))
+        return None
 
     # -- internal: material helpers ----------------------------------------
 
@@ -451,7 +708,11 @@ class _BootstrapError(RuntimeError):
 
 
 class _BootstrapExpired(_BootstrapError):
-    """Raised when qrcode polling exhausts its deadline."""
+    """Raised when the upstream explicitly reports the QR code expired."""
+
+
+class _BootstrapPollTimedOut(_BootstrapError):
+    """Raised when polling makes no terminal progress before its deadline."""
 
 
 class _QrRenderer:

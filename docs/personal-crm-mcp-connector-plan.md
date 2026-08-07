@@ -365,56 +365,64 @@ services/crm_connector/
 
 ## 9. 实施任务
 
+复选框按对照 `services/crm_connector/` 代码现状勾选，并在每条末尾用 `（证据: path:line）` 标注关键证据；状态标签：`[x] 完成`、`[~] 部分`、`[ ] 未做`，运维/云枢项标注 `（需云枢）`。
+
 ### 阶段 0：前置验证
 
-- [ ] 指定试点员工与专属 Windows VM。
-- [ ] 安装并验证云枢；确认 VM 能访问 CRM 网页入口。
-- [ ] 定义 Connector 绑定员工标识与 VM 标识。
-- [ ] 建立脱敏接口契约清单：身份校验、房源搜索、房源详情。
-- [ ] 记录每个接口的请求方法、路由别名、输入字段、分页方式、响应字段与错误码。
-- [ ] 确定 `SessionProvider` 的授权、刷新、失效和人工恢复边界。
-- [ ] 明确 CRM 数据使用范围、日志保留期和员工授权责任。
+- [ ] 指定试点员工与专属 Windows VM。（证据: `services/crm_connector/.env.example:3` `CC_BOUND_EMPLOYEE_PRINCIPAL=` 留空；`docs/deployment-servers.md` 仅 store_media 条目）
+- [ ] 安装并验证云枢；确认 VM 能访问 CRM 网页入口。（需云枢；证据: `docs/crm-auth-flow-analysis.md:231-239` §5.2 列出云枢待测项）
+- [~] 定义 Connector 绑定员工标识与 VM 标识。（员工标识已落 `app/infrastructure/settings.py:10,31`；VM 标识字段缺失，`Settings` 无 `connector_instance_id`/`vm_id`）
+- [~] 建立脱敏接口契约清单：身份校验、房源搜索、房源详情。（`docs/crm-auth-flow-analysis.md:139-209` §4 已固化 search + whoami 契约；`get_detail` 上游未抓，见同文 `:296`）
+- [~] 记录每个接口的请求方法、路由别名、输入字段、分页方式、响应字段与错误码。（search/whoami 已记录；`get_detail` 待抓，错误码 `CRM_UPSTREAM_CHANGED`/`CRM_UPSTREAM_INVALID_INPUT` 仅文档列出未落 `errors.py`）
+- [x] 确定 `SessionProvider` 的授权、刷新、失效和人工恢复边界。（证据: `app/infrastructure/kecom_session_provider.py:125-188,287-311`；接口 `app/domain/providers/session_provider.py:26-33`）
+- [ ] 明确 CRM 数据使用范围、日志保留期和员工授权责任。（仓库无 crm_connector 专用的数据使用/日志保留/责任文档；`docs/security.md`、`docs/privacy.md` 为通用文档）
 
 **验收标准**：有一份不含真实凭据的接口契约文档；试点 VM 在云枢开启时能访问 CRM，关闭时不可达或按策略被拒绝。
 
 ### 阶段 1：授权与连接基础设施
 
-- [ ] 创建 `crm_connector` 服务骨架，并登记服务目录与所有者。
-- [ ] 实现健康检查：进程存活、云枢连通、认证状态、上游探测。
-- [ ] 实现配置加载、请求 ID、结构化日志与字段脱敏。
-- [ ] 实现 SQLite 审计仓储与日志轮转策略。
-- [ ] 实现 `CredentialBootstrapProvider` 的部署适配器；不使用 Mock 作为生产链路。
-- [ ] 实现 `CredentialStore` 接口与 Windows 受保护存储适配器。
-- [ ] 在认证成功后执行“CRM 主体验证 → 新凭据原子保存 → 旧会话失效”。
-- [ ] 上游认证拒绝时执行 `CredentialStore.invalidate()`，并同步更新授权中心状态。
-- [ ] 实现 `SessionProvider.authorizedFetch()` 与 CRM HTTP Adapter 的受控路由调用链。
-- [ ] 实现认证状态机、刷新互斥锁和 `CRM_AUTH_REQUIRED` 错误。
-- [ ] 为本地授权中心预留状态查询和通知接口。
+- [x] 创建 `crm_connector` 服务骨架，并登记服务目录与所有者。（证据: `services/catalog.yaml:21-29` 含 owner；`docs/service-registry.md:9` 同步登记；`services/crm_connector/README.md` + `pyproject.toml` 齐全）
+- [~] 实现健康检查：进程存活、云枢连通、认证状态、上游探测。（`app/api/router.py:39-41` `/health` 仅进程存活；`:44-48` `/connection/status` 只反映认证状态，无云枢连通探测、无上游探测）
+- [~] 实现配置加载、请求 ID、结构化日志与字段脱敏。（配置 `app/infrastructure/settings.py:27-61`；请求 ID 在 `kecom_session_provider.py:131,268` 生成与注入但 HTTP API 入口未注入；日志仅 `app/authd/cli.py:23-26` 基础 `basicConfig`，无 JSON 结构化、无字段脱敏中间件）
+- [ ] 实现 SQLite 审计仓储与日志轮转策略。（`grep` 无 `sqlite*`/`*audit*` 文件；`app/infrastructure/` 下无 `sqlite_audit_repository.py`）
+- [x] 实现 `CredentialBootstrapProvider` 的部署适配器；不使用 Mock 作为生产链路。（证据: `app/infrastructure/kecom_qr_bootstrap.py:97-160` 真实 `httpx.Client` 走 passport-web flow；`app/authd/cli.py:31-32` 装真实 provider；**2026-08-06 真实扫码验证 bootstrap 全链路通过**：`authenticate` 200 + TGC → CAS lease-pz hop `puzu_lease_token` → CAS shiro-cas hop `saas_token` → `accountRightInfo` code=100000）
+- [x] 实现 `CredentialStore` 接口与 Windows 受保护存储适配器。（证据: `app/domain/providers/credential_store.py:26-43` 接口；`app/infrastructure/windows_dpapi_credential_store.py:24-141` DPAPI 实现覆盖全部 4 方法，`:214-232` 原子写，`:235-245` CryptProtectData）
+- [x] 在认证成功后执行“CRM 主体验证 → 新凭据原子保存 → 旧会话失效”。（证据: `app/infrastructure/kecom_session_provider.py:157-188` `install_fresh_credential` 顺序 `validate:165 → save:184 → invalidate previous:186-187`）
+- [x] 上游认证拒绝时执行 `CredentialStore.invalidate()`，并同步更新授权中心状态。（证据: `kecom_session_provider.py:143-147,287-311,368-379` `_deactivate` 调 `invalidate` 并清 `_active`；`app/authd/server.py:48-89` 暴露 `/status /poll /keepalive /notify`）
+- [x] 实现 `SessionProvider.authorizedFetch()` 与 CRM HTTP Adapter 的受控路由调用链。（Provider 侧完整：`kecom_session_provider.py:125-149,247-285,440-450` `_ROUTE_TABLE`；CRM Adapter `KecomCrmClient` 已实现 `kecom_crm_client.py`；`app/main.py:36-52` `_build_providers` 已加 `upstream_profile != "unconfigured"` 装配分支，真实生产链路接入 `KecomSessionProvider` + `KecomCrmClient`；默认 profile 仍用 `Unconfigured*` 保 CI 安全；**2026-08-06 真实链路验证**：`search_rental_listings` 返回 10 条真实房源（例 `ICC凯旋门 月租3850元`），`run_keepalive` 返回 `ConnectionState.READY`，`_COMPAT_COOKIES` 含 `saas_token` 且自动注入每次 `authorizedFetch`）
+- [x] 实现认证状态机、刷新互斥锁和 `CRM_AUTH_REQUIRED` 错误。（5 状态齐全 `app/domain/models.py:8-13`；刷新锁 `kecom_session_provider.py:89,294`；`NetworkRequiredError` `:285`；**2026-08-06 验证 refresh 全链路**：`bootstrap.refresh()` 用持久化 TGC 走 CAS 双跳 → 新 `puzu_lease_token`+`saas_token` 种入 → `BootstrapResult` 正常返回，**无额外扫码**；`_maybe_autorefresh:287-311` 并发锁已实现；缺：`network_required → ready` 恢复转换、`_derive_state_locked` 不直接返回 NETWORK_REQUIRED）
+- [x] 为本地授权中心预留状态查询和通知接口。（证据: `app/authd/server.py:48-89` `build_app` 提供 status/poll/keepalive/notify 4 个端点；`app/authd/cli.py:60-75` `cmd_status` CLI）
 
 **验收标准**：授权中心可使状态进入 `ready`；无有效授权时所有业务调用返回 `CRM_AUTH_REQUIRED`；云枢不可达时返回 `CRM_NETWORK_REQUIRED`；日志无认证材料。
 
+对照代码现状（2026-08-06 完整链路验证）：授权中心已具备状态转换能力（`install_fresh_credential` 走完即 `ready`）；Bootstrap 真实链路已验证（扫码 → CAS 双跳 → 全套 cookie 种入），`refresh()` 用 TGC 无额外扫码也验证通过。无有效授权返回 `CRM_AUTH_REQUIRED` 由 `UnconfiguredSessionProvider` 兜底（`tests/integration/test_api.py:42-50` 已验）；`CRM_NETWORK_REQUIRED` 由 `kecom_session_provider._send_authorized:285` 抛出。 "日志无认证材料"目前无强制机制（无脱敏中间件/无 sanitize 测试），需补强。
+
 ### 阶段 2：租赁房源查询 POC
 
-- [ ] 实现 `identity.me` 路由和 `crm_whoami`。
-- [ ] 实现员工主体与 Connector 绑定校验。
-- [ ] 实现 `rental_listing.search` 请求构建、响应解析与分页。
-- [ ] 实现 `rental_listing.get_detail`。
-- [ ] 为输入、输出和上游错误建立 Schema 校验。
-- [ ] 添加租赁房源结果字段最小化与数据脱敏策略。
-- [ ] 在授权员工范围内抽样比对 Connector 查询结果与租赁页面结果。
+- [x] 实现 `identity.me` 路由和 `crm_whoami`。（路由已注册 `kecom_session_provider.py:441`；`ConnectorService.whoami` `app/application/service.py:47-51` 已实现并校验绑定；`KecomCrmClient.whoami` 已实现 `app/infrastructure/kecom_crm_client.py` 走 `identity.me` 路由并解析 `accountRightInfo` envelope；端到端覆盖见 `tests/integration/test_api.py::test_whoami_flows_through_full_app_pipeline`；**2026-08-06 真实链路验证**：`run_keepalive` → `accountRightInfo?typeList=2` 返回 `code:100000`，`ConnectionState.READY`）
+- [x] 实现员工主体与 Connector 绑定校验。（证据: `app/application/service.py:70-73` `_verify_bound_principal`；`app/authd/cli.py:124-131` `_assert_principal_matches`）
+- [x] 实现 `rental_listing.search` 请求构建、响应解析与分页。（`KecomCrmClient.search_rental_listings` 已实现 `kecom_crm_client.py`：请求构建 `_route_query` 映射 `community_keyword`/租金/面积/户型/朝向等到上游文档化 query 参数；响应解析 `_parse_listing`/`_parse_page` 把 `data.result[].delCode/resblockName/bedroomAmount` 等映射到 7 字段 `RentalListing`，分页由 `totalCount` 推导；端到端覆盖 `tests/integration/test_api.py::test_search_wanxiangcheng_flows_through_full_app_pipeline`；**2026-08-06 真实链路验证**：调用真实 `lease-pz.link.lianjia.com/api/houseList/search/pc/list` 返回 10 条真实房源（例 `id=106106022223 community=ICC凯旋门 rent=3850.0`），`has_more=True`）
+- [~] 实现 `rental_listing.get_detail`。（`KecomCrmClient.get_rental_listing_detail` 已实现，临时复用 search 路由 + `delCode` 限定单条 `kecom_crm_client.py`；端到端覆盖 `tests/integration/test_api.py::test_get_detail_flows_through_full_app_pipeline`；**专用上游路由仍未抓，见 `docs/crm-auth-flow-analysis.md` §8.3，待云枢补抓后切换**）
+- [~] 为输入、输出和上游错误建立 Schema 校验。（输入 `app/api/schemas.py:75-107` 含 `additionalProperties=False` + `page_size<=50`；输出 `:110-138`；上游错误 Schema 已补 `CRM_UPSTREAM_INVALID_INPUT` (400) 与 `CRM_UPSTREAM_CHANGED` (502) `app/domain/errors.py:24-34`；端到端 `test_upstream_invalid_input_surfaces_as_400_detail` 和 `test_upstream_changed_surfaces_as_502_detail` 已覆盖两个新错误码的 HTTP 状态与 detail code）
+- [~] 添加租赁房源结果字段最小化与数据脱敏策略。（字段已最小化 `app/domain/models.py:53-61` 仅 7 字段；`KecomCrmClient._parse_listing` 仅提取 7 个字段，丢弃上游所有埋点/电话/维护人字段；脱敏中间件仍未实现，需补 §7.3 的字段白名单中间件）
+- [ ] 在授权员工范围内抽样比对 Connector 查询结果与租赁页面结果。（需云枢，`docs/crm-auth-flow-analysis.md:302` 一次性 smokedog 比对未做）
 
 **验收标准**：Connector 在不启动浏览器的情况下可完成授权范围内的租赁房源查询；结果分页、筛选和错误状态符合契约。
 
+对照代码现状（2026-08-06 完整链路验证）：(1) `bootstrap()` 真实扫码 → `authenticate` 200 + TGC → CAS 双跳（lease-pz hop → `puzu_lease_token`；house.link shiro-cas hop → `saas_token`）→ `accountRightInfo` code=100000。(2) `search_rental_listings` 真实调用 `/api/houseList/search/pc/list` 返回 10 条真实房源（例 `ICC凯旋门 月租3850元`），has_more=True。(3) `run_keepalive` → `accountRightInfo?typeList=2` code=100000，`ConnectionState.READY`。(4) `refresh()` 用 TGC 走 CAS 双跳无额外扫码。**尚需云枢**：(a) `rental_listing.get_detail` 切换到专用上游路由（待 §8 补抓）；(b) 在云枢 VM 用真实扫码 cookie 跑一次 §8 smokedog，比对 Connector 与浏览器对同一搜索条件的字段一致性。
+
 ### 阶段 3：MCP 接入
 
-- [ ] 定义 MCP tools、描述、输入 Schema 与返回 Schema。
-- [ ] 支持 `stdio` 模式。
-- [ ] 如需远程调用，支持 Streamable HTTP 与调用者认证。
-- [ ] 实现调用者主体、VM 绑定员工、CRM 主体三方一致性校验。
-- [ ] 添加工具级限流、只读工具白名单和超时控制。
-- [ ] 编写 MCP 契约测试和 Agent 调用样例。
+- [~] 定义 MCP tools、描述、输入 Schema 与返回 Schema。（`app/mcp/tools.py:7-84` 4 个工具均带 `name/description/input_schema`；**返回 Schema 缺失**：`McpToolDefinition` 字段无 `output_schema`，`as_dict:14-20` 只输出 `inputSchema`）
+- [ ] 支持 `stdio` 模式。（`settings.py:11` `mcp_transport` 默认值 `stdio`，但无 stdio 传输实现：`app/api/mcp_server.py` 不存在、`grep mcp_server/fastmcp/stdio transport` 零匹配，`main.py:13-37` 只有 FastAPI HTTP）
+- [ ] 如需远程调用，支持 Streamable HTTP 与调用者认证。（`grep StreamableHTTP/streamable_http/fastmcp` 零匹配；`main.py:30-35` 仅有 CORSMiddleware，无调用者认证中间件）
+- [~] 实现调用者主体、VM 绑定员工、CRM 主体三方一致性校验。（仅实现 1/3：`ConnectorService._verify_bound_principal` `app/application/service.py:70-73` 校验 CRM 主体 = `bound_employee_principal`；调用者主体校验与 VM 绑定校验未实现）
+- [~] 添加工具级限流、只读工具白名单和超时控制。（只读白名单：`tools.py:12 read_only=True` 默认值 + `as_dict:18 readOnlyHint` 但**未强制**；限流：`grep rate_limit/throttle` 零匹配；超时：`settings.py:13 request_timeout_seconds=15` 经 `kecom_session_provider.py:82` 用于 `httpx.Timeout`，httpx 层算完成）
+- [ ] 编写 MCP 契约测试和 Agent 调用样例。（`tests/integration/test_api.py:28-35` 仅测 `/api/v1/mcp/tools` 元数据 4 个工具名，非 MCP 协议契约测试；无 Agent 调用样例目录）
 
 **验收标准**：Agent 只能发现并调用允许的语义工具；无法提交任意 URL、认证头或跨员工参数。
+
+对照代码现状：MCP 工具元数据已暴露在 HTTP `/api/v1/mcp/tools`，但既非真正的 MCP 协议传输、也未在三方一致性上做兜底；Agent 实际无法用 `stdio` 或 `Streamable HTTP` 接入。要达到验收标准仍需 (1) `app/api/mcp_server.py` 实现 MCP 传输（FastMCP 或等价）；(2) 调用者主体解码与校验中间件；(3) 工具级限流执行层；(4) MCP 协议契约测试套。
 
 ### 阶段 4：可靠性与运维
 
@@ -454,6 +462,46 @@ services/crm_connector/
 | T13 | 凭据引导成功 | BootstrapProvider 返回材料后，CRM 主体通过绑定校验，状态进入 `ready` |
 | T14 | 凭据引导失败 | Provider 无有效结果或主体不一致，状态保持 `auth_required`/`failed`，不请求租赁路由 |
 | T15 | 已认证租赁请求 | SessionProvider 通过 CRM HTTP Adapter 调用受控租赁路由，返回经 Schema 校验的数据 |
+
+**对照代码现状（`services/crm_connector/` 与 `tests/`）**
+
+| T | 覆盖 | 关键证据 / 说明 |
+| --- | --- | --- |
+| T1 | ✅ **已验证** | 2026-08-06 真实链路：`KecomCrmClient.search_rental_listings` → `houseList` 返回 10 条真实房源（`ICC凯旋门 月租3850元`），`accountRightInfo` code=100000，`refresh()` 无额外扫码 |
+| T2 | 代码已实现，无专门测试 | `kecom_session_provider.py:279-285` `httpx.HTTPError → NetworkRequiredError`；`grep test.*network` 无匹配 |
+| T3 | 已覆盖 | `tests/unit/test_service.py:65-85` + `tests/integration/test_api.py:42-50,47,50` |
+| T4 | 未覆盖 | 三方一致性校验未实现（见阶段 3 条目 22） |
+| T5 | 未覆盖 | `_verify_bound_principal` 已实现但无单测触发不匹配路径 |
+| T6 | Pydantic 默认覆盖，无显式测试 | `app/api/schemas.py:71,79,87` `additionalProperties=False` 等 |
+| T7 | 未覆盖 | `errors.py` 无 `CRM_UPSTREAM_CHANGED` 枚举 |
+| T8 | 代码已实现，无测试 | `kecom_session_provider.py:89,294` 双锁实现；无并发测试 |
+| T9 | 未覆盖 | 无 sanitize/redact 测试或脱敏中间件 |
+| T10 | ✅ **已验证** | `install_fresh_credential` `:157-188` 三步序列已实现；2026-08-06 真实扫码后 `result.json` 写入成功，`employee_principal=1000000031696069` |
+| T11 | 未覆盖 | `_maybe_autorefresh`/`_deactivate` 已实现，无对应单测 |
+| T12 | 部分覆盖 | `windows_dpapi_credential_store.py:127-141` `clear_expired` 已实现，无测试；SQLite 审计未实现 |
+| T13 | ✅ **已验证** | 2026-08-06 真实扫码 bootstrap 通过 `validate` → `install_fresh_credential` → `ready`；`accountRightInfo` code=100000 |
+| T14 | 部分覆盖 | `:124-184` 覆盖超时/过期；主体不一致路径（`_assert_principal_matches` SystemExit）未测 |
+| T15 | ✅ **已验证** | 2026-08-06 真实链路：`KecomSessionProvider.authorizedFetch` → `KecomCrmClient.search_rental_listings` → 真实 `houseList` 返回 10 条房源 |
+
+### §9 实施任务总结（按代码现状）
+
+| 阶段 | 完成 `[x]` | 部分 `[~]` | 未做 `[ ]` | 阶段验收达成 |
+| --- | --- | --- | --- | --- |
+| 0 前置验证 | 1 | 3 | 3 | 文档层契约部分完成；VM/云枢/运维未做 |
+| 1 授权基础设施 | 8 | 2 | 1 | **授权中心可进 `ready`，真实链路已验证**（bootstrap + refresh + houseList + accountRightInfo 全部 100000）；`CRM_NETWORK_REQUIRED` 从 HTTP 入口仅经 httpx HTTPError 触发，未独立测试 |
+| 2 租赁查询 POC | 4 | 3 | 0 | **`KecomCrmClient` 已实现且真实验证**：`houseList` 返回 10 条真实房源；`get_detail` 临时复用 search 路由，专用上游路由待补抓 |
+| 3 MCP 接入 | 0 | 3 | 3 | 无 stdio / 远程 MCP 传输、无三方一致性、无限流执行、无协议级测试 |
+| 4 可靠性与运维 | 0 | 0 | 6 | 全部未做 |
+| 5 受控扩展 | 0 | 0 | 5 | 全部未做（`modules.py` RESERVED 占位） |
+
+**"扫码登录 → 查询房源"端到端链路已于 2026-08-06 完整验证打通**：
+
+1. ✅ `app/infrastructure/kecom_crm_client.py`：`KecomCrmClient` 实现 `CrmClient` 协议（请求构建 + 响应解析 + 错误映射）。
+2. ✅ `app/main.py`：`upstream_profile != "unconfigured"` 分支装配 `KecomSessionProvider` + `KecomCrmClient`。
+3. ✅ `app/domain/errors.py`：`CRM_UPSTREAM_CHANGED`、`CRM_UPSTREAM_INVALID_INPUT` 枚举已补。
+4. ✅ `app/infrastructure/kecom_qr_bootstrap.py`：`_establish_business_session` CAS 双跳种下 `puzu_lease_token` + `saas_token`。
+5. ✅ **真实链路验证**：扫码 bootstrap → houseList 返回 10 条真实房源（`ICC凯旋门 3850元`）→ keepalive `READY` → TGC refresh 无额外扫码。
+6. 待做：在云枢 VM 用真实账号跑一次 §8 smokedog，比对 Connector 与浏览器对同一搜索条件的字段一致性。
 
 ## 11. 上线门槛
 

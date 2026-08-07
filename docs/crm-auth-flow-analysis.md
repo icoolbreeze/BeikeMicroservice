@@ -1,7 +1,7 @@
 # CRM 认证流程分析（实测）
 
-- 状态：事实已收集，运行时验证有限
-- 日期：2026-08-06
+- 状态：事实已收集，完整链路已用真实扫码验证（bootstrap + refresh + houseList + accountRightInfo）
+- 日期：2026-08-06（初稿），2026-08-06T22:04Z（完整链路验证）
 - 适用：`services/crm_connector` 的 `CredentialBootstrapProvider`、`CredentialStore`、`SessionProvider`、CRM HTTP Adapter 实现
 - 关联：[`personal-crm-mcp-connector-plan.md`](personal-crm-mcp-connector-plan.md)、[`security.md`](security.md)
 
@@ -94,18 +94,52 @@ CRM 使用 CAS 风格的 SSO，与 OAuth Bearer 无关。鉴权全部基于 Http
 - 轮询节流：实测 Web SDK 约 3s 间隔；Connector 实现应取 3–5s，并对 `EXPIRED` 重试 30s 指数退避后再调 `initialize`。
 - ⚠️ **未直接抓到 CONFIRMED 响应体**：第一轮测试 Chrome Network 未保留 iframe 内的 XHR；第二轮在 `__qrLogs` 中捕获到 `CREATED` → `BINDING` 全过程，但因为 CONFIRMED 后 SDK 立即触发 `window.location.href` 跳转，iframe 被销毁，`__qrLogs` 归零。下文 2.4 通过**第二次 CONFIRMED 后的 referer 反推**得到了与 2.4 一致的事实。
 
-### 2.4 CONFIRMED → 跳转 `lease-pz.link.lianjia.com/login?...&ticket=...`（换 cookie）
+### 2.4 CONFIRMED → `POST /authentication/authenticate` → CAS front-channel → cookie 注入
 
-CONFIRMED 触发 SDK 用 `service` 参数 + ticket 拼装跳转 URL：
+> **2026-08-06 验证更新**：CONFIRMED 后并非由浏览器直接跳转 `lease-pz/login?...&ticket=...`，而是经过 **passport-web flow**（桌面端 JS SDK `loginRouter`），分两步完成：
 
-```
-https://lease-pz.link.lianjia.com/login?gotoURL=%252F&ticket=ST-<数字>-<base62>-ke.com
-```
+**第一步：`POST /authentication/authenticate`（换取 ke.com SSO TGT）**
+
+- 完整 URL：`https://login.ke.com/authentication/authenticate`
+- 请求体：
+  ```json
+  {
+    "service": "https://lease-pz.link.lianjia.com/login?gotoURL=%252F",
+    "context": { "deviceId": "default", "sign": "default" },
+    "version": "2.0",
+    "loginTicketId": "<initialize 返回的 loginTicketId>",
+    "accountSystem": "employee",
+    "mainAuthMethodName": "qrcode",
+    "credential": { "id": "<二维码 ID>" }
+  }
+  ```
+- 200 响应体（Schema 已固化）：
+  ```jsonc
+  {
+    "status": "PASS",                     // PASS = 成功
+    "serviceTicket": {
+      "id": "ST-<数字>-<base62>-ke.com",  // ★ CAS service ticket
+      "createdAt": "<ISO8601>"
+    },
+    "loginTicket": { "id": "...", "createdAt": "..." },
+    "extraData": { "corpId": "", "userTag": "0" }
+  }
+  ```
+- **Set-Cookie（ke.com 域）**：`TGC`、`TGC_Secure`（HttpOnly）、`login_ucid`（明文 UCID）、`security_ticket`（HttpOnly）、`lianjia_ssid`。
+- 注意：CONFIRMED 轮询响应体本身为 `{"state":"CONFIRMED","success":true}`，**不含 ticket**。Service ticket 由 authenticate 端点返回。
+
+**第二步：`GET /login?service=<lease-pz 的登录 URL>`（CAS front-channel 签发 ST）**
+
+- 完整 URL：`https://login.ke.com/login?service=https%3A%2F%2Flease-pz.link.lianjia.com%2Flogin%3FgotoURL%3D%25252Frent%25252Fhouse%25252Flist%25253FisSaaS%25253Dfalse`
+- 请求 Cookie：`TGC=<TGT-...>; TGC_Secure=<...>; security_ticket=<...>; login_ucid=<UCID>`
+- 302 → `https://lease-pz.link.lianjia.com/login?gotoURL=%25252Frent%25252Fhouse%25252Flist%25253FisSaaS%25253Dfalse&ticket=ST-<数字>-<base62>-ke.com`
+
+**第三步：`GET lease-pz.link.lianjia.com/login?gotoURL=...&ticket=<ST>`（换业务域 cookie）**
 
 - `ticket` 形如 `ST-<数字>-<base62 串>-ke.com`，由 CAS Server 颁发的一次性 service ticket。
-- SDK 直接 `window.location.href = service + "?gotoURL=" + escape(goto) + "&ticket=" + ticket`，无需额外签名或 state。
-- 该请求由浏览器顶层导航触发；**响应通过 `Set-Cookie` 注入业务域全部 HttpOnly 认证 cookie**（见 §3 表）。
+- 该请求由 httpx 自动跟随 302 触发；**响应通过 `Set-Cookie` 注入业务域全部 HttpOnly 认证 cookie**（见 §3 表）。
 - 落地 URL 在实例中是 `https://lease-pz.link.lianjia.com/rent/house/list?isSaaS=false`。
+- ⚠️ **lease-pz 的 `/rent/house/list` 是 SPA shell，不返回 302 到 CAS**——任何 UA/cookie/header 组合都返回 200。浏览器里的 CAS 跳转是 JS 驱动的，不是服务端重定向。因此 Connector 直接调用 CAS front-channel（`login.ke.com/login?service=...`），而不是 GET 列表页等重定向。
 
 ## 3. 凭据集合（Cookie 集）
 
@@ -120,7 +154,7 @@ https://lease-pz.link.lianjia.com/login?gotoURL=%252F&ticket=ST-<数字>-<base62
 | `Lianjia_curWorkCity` / `Lianjia_BUcid` | `lease-pz.link.lianjia.com` | 是 | 当前工作城市 / 主体 | 纳入 `credential_material` |
 | `lianjia_ssid` | `.lianjia.com` / `.ke.com` | 否 | 30 分钟滑窗会话 ID，每次响应刷新 `Max-Age=1800` | `session_id` 候选；用于活性探测 |
 | `lianjia_uuid` | `.lianjia.com` | 否 | 设备埋点 | 保留以最大化兼容 |
-| `saas_token` | `lease-pz.link.lianjia.com` | 否 | SaaS 层会话 token | 保留以最大化兼容 |
+| `saas_token` | `house.link.lianjia.com` | 否 | SaaS 层会话 token（shiro-cas 二跳种下） | ★ **必需**：`accountRightInfo`/`houseList` 缺此 cookie 返回 100001；纳入 `credential_material` |
 | `login_ucid` | `login.ke.com` | 否 | ke.com 域已知 UCID | 用于 SSO 续航识别 |
 | `TGC` / `TGC_Secure` | `login.ke.com` | 是 | CAS Ticket Granting Cookie；可反复为任意 service 签发 ST ticket | ★ 续期关键（见 §5），不直接用于业务调用 |
 | `security_ticket` | `login.ke.com` | 是 | ke.com 域辅助签名/续期 | 同上 |
@@ -131,8 +165,8 @@ https://lease-pz.link.lianjia.com/login?gotoURL=%252F&ticket=ST-<数字>-<base62
 
 Connector 的 `authorizedFetch` 推荐这样的最小集策略：
 
-- **必需**：`puzu_lease_token` (+`_secure`)、`UCID` (+`_secure`)、`csrfSecret`。
-- **兼容附带**：`Lianjia_u_info`、`Lianjia_curWorkCity`、`Lianjia_BUcid`、`lianjia_ssid`、`lianjia_uuid`、`saas_token`。
+- **必需**：`puzu_lease_token` (+`_secure`)、`UCID` (+`_secure`)、`csrfSecret`、`saas_token`。
+- **兼容附带**：`Lianjia_u_info`、`Lianjia_curWorkCity`、`Lianjia_BUcid`、`lianjia_ssid`、`lianjia_uuid`、`login_ucid`。
 - **非业务路径**：建议**不要**携带 `sensorsdata2015jssdkcross`、`sajssdk_2015_cross_new_user`、`autoLogout` 等埋点 cookie，以减少审计面。
 - **续期独占**：`TGC`、`TGC_Secure`、`security_ticket` 由 `crm-authd` 单独持有，不进入业务 `SessionProvider.authorizedFetch` 的 cookie jar。
 
@@ -205,38 +239,64 @@ Connector 的 `authorizedFetch` 推荐这样的最小集策略：
 | --- | --- | --- |
 | `100000` | 加载成功 | `Ready` |
 | `403` + `用户未登录` | 缺失/失效业务 cookie | `CRM_AUTH_REQUIRED`，触发 bootstrap 或 refresh |
-| `100001` | 业务参数错（例 `key列表不能为空`） | `CRM_UPSTREAM_INVALID_INPUT`，不重试 |
+| `100001` | `请重新登录`（缺 `saas_token`）/ 业务参数错 | `CRM_AUTH_REQUIRED` 当 msg 含 `登录`；否则 `CRM_UPSTREAM_INVALID_INPUT`，不重试 |
 | 未知 4xx / 5xx | 上游不可用或契约变化 | `CRM_UPSTREAM_CHANGED`，记录脱敏诊断 |
 
 ## 5. 续期（refresh）路径
 
-### 5.1 已观察到的 CAS 二次签发（不需再次扫码）
+### 5.1 CAS 双跳签发（已验证，不需再次扫码）
 
-业务落地后，页面会触发对 `house.link.lianjia.com/search/...` 的访问，引发：
+> **2026-08-06T22:04Z 完整验证**：bootstrap 和 refresh 均已在真实环境走通 CAS 双跳链路，证实 `saas_token` 是业务 API 的硬性前提。
+
+**第一跳：lease-pz CAS chain（种 `puzu_lease_token`）**
 
 ```
-GET https://login.ke.com/login?service=https://house.link.lianjia.com/shiro-cas
+GET https://login.ke.com/login?service=https%3A%2F%2Flease-pz.link.lianjia.com%2Flogin%3FgotoURL%3D%25252Frent%25252Fhouse%25252Flist%25253FisSaaS%25253Dfalse
+Cookie: TGC=<TGT-...-ke.com>; TGC_Secure=<TGT-...>; security_ticket=<...>; login_ucid=<UCID>
+→ 302 Location: https://lease-pz.link.lianjia.com/login?gotoURL=...&ticket=ST-<数字>-<base62>-ke.com
+→ 200  Set-Cookie: puzu_lease_token, puzu_lease_token_secure, UCID, UCID_secure, csrfSecret, Lianjia_u_info, ...
+```
+
+**第二跳：house.link shiro-cas（种 `saas_token`）**
+
+```
+GET https://login.ke.com/login?service=https%3A%2F%2Fhouse.link.lianjia.com%2Fshiro-cas
 Cookie: TGC=<TGT-...-ke.com>; TGC_Secure=<TGT-...>; security_ticket=<...>; login_ucid=<UCID>
 → 302 Location: https://house.link.lianjia.com/shiro-cas?ticket=ST-<数字>-<base62>-ke.com
+→ 302 Location: http://house.link.lianjia.com/
+→ 301 → https://house.link.lianjia.com/
+→ 302 Location: /search/sale/default/gdiv_mt
+→ 200  Set-Cookie: saas_token, HOUSEJSESSIONID
 ```
 
-即 **只要 ke.com 域持有 `TGC`+`TGC_Secure`+`security_ticket`，就可以反复为任意 service 签发一次性 ST ticket，无需重复扫码**。这意味着：
+**验证结论**：
+- **仅有 `puzu_lease_token`，`accountRightInfo`/`houseList` 返回 `code:100001`（请重新登录）。**
+- **补上 `saas_token` 后，`accountRightInfo`（`?typeList=2`）和 `houseList` 翻成 `code:100000`。**
+- `headerData` 不需要 `saas_token`，总是 `100000`。
+- 两跳共用同一 `TGC`，零额外扫码。
+- `saas_token` 由 `house.link.lianjia.com/shiro-cas` 种下，由 `_establish_business_session` 统一收集。
 
-- Connector 的 `bootstrap()` 在首次扫码拿到 cookie 后，应同时把 ke.com 域的 SSO 续航 cookie 也纳入持久化（仅 `crm-authd` 持有）。
-- `refresh(current)` 实现可以是：
-  1. `GET https://login.ke.com/login?service=https://lease-pz.link.lianjia.com/login?gotoURL=%252F`（带 TGC），从 302 Location 取新 `ticket`。
-  2. `GET https://lease-pz.link.lianjia.com/login?gotoURL=%252F&ticket=<新ST>`，从 `Set-Cookie` 提取业务域受保护 cookie，替换 `credential_material`。
-  3. 失败（302 仍指向登录页、cookie 缺失）则降级为 `CRM_AUTH_REQUIRED`，要求员工再扫码。
+**实现的 refresh 链路**（`_establish_business_session` 共享给 `bootstrap` 和 `refresh`）：
 
-### 5.2 待在云枢环境验证的边界
+1. `GET {crm_login_base}/login?service=<lease-pz 自建串>`（带 TGC）→ 302 → lease-pz/login?ticket=ST → 200 + Set-Cookie `puzu_lease_token`/`UCID`/`csrfSecret` 等。
+2. `GET {crm_login_base}/login?service=https://house.link.lianjia.com/shiro-cas`（带 TGC）→ 302 → house.link/shiro-cas?ticket=ST → Set-Cookie `saas_token`/`HOUSEJSESSIONID`。
+3. 失败（302 仍指向登录页、cookie 缺失）则降级为 `CRM_AUTH_REQUIRED`，要求员工再扫码。
 
-下列情况在本机的 CDP 测试中无法验证，必须迁到已接入云枢的 VM、用 Python httpx 实施 A 路径重放才能确认：
+### 5.2 已验证结论与剩余待测项
 
-- `TGC` / `security_ticket` 是否长期有效，过期时间或刷新触发条件；
-- `puzu_lease_token` 实际过期时间（推测数小时）；与 `lianjia_ssid` 滑窗 30 分钟的关系；
-- 仅 `TGC` + `security_ticket` 是否足以触发 refresh；是否存在与 ke.com 服务端的 sliding session 信号；
-- 若 refresh 失败，CAS 是否会要求二次扫码（即降级回 §2 全流程）；
-- 数美风控 (`public-digc.ke.com/h5/v4/cf`、`/h5/v2/g`) 在非浏览器客户端是否影响结果。浏览器内抓到这两个调用，是埋点而非签名接口；最坏情况下 Python 客户端不带这些 cookie 也能完成 SSO，但需实测确认。
+2026-08-06 完整链路验证已确认：
+
+- ✅ `TGC`+`TGC_Secure`+`security_ticket` 在 Python httpx 客户端中可无浏览器 refresh，**无需**任何设备指纹 / `public-digc.ke.com` cookie。数美风控调用 (endpoint `/cf`、`/g`) 是埋点而非签名接口，非浏览器客户端不带这些 cookie 也能完成全部业务调用。
+- ✅ `refresh(current)` 实现已验证：用持久化 TGC cookie 走 CAS 双跳 → 重新拿到 `puzu_lease_token`+`saas_token` → 返回新 `BootstrapResult`，无额外扫码。
+- ✅ `saas_token` 是业务 API 硬性前提，由 `_establish_business_session` 第二跳种下，已纳入 `_BUSINESS_COOKIE_NAMES` 和 `_COMPAT_COOKIES`（`authorizedFetch` 自动注入）。
+- ✅ `accountRightInfo`（`?typeList=2`）返回 `code:100000`，`data` 含权限信息 dict。
+- ✅ `houseList`（`/api/houseList/search/pc/list`）返回 `code:100000`，`data.result` 为房源列表数组，`data.totalCount` 为总数。实测返回 10 条真实房源。
+
+剩余待在云枢环境验证的边界：
+
+- `TGC` / `security_ticket` 长期有效性与过期时间（推测数小时 ~ 数天），即何时会失败并需要重新扫码；
+- `puzu_lease_token` 实际过期时间；与 `lianjia_ssid` 滑窗 30 分钟的关系；
+- `logout`/`revoke` 的真实 Cookie 失效行为（`POST /logout` 是否清除 TGC）—— 当前实现已调 `/logout` 端点但未验证效果。
 
 ## 6. 主体验证（`crm_whoami`）
 
@@ -257,12 +317,12 @@ Connector 必须在 `whoami()` 后比较响应中的 `ucid` 与 `BOUND_EMPLOYEE_
 
 ### 7.1 `domain/providers/credential_bootstrap_provider.py`
 
-接口已定义（`bootstrap`、`refresh`、`validate`、`revoke`）。新增 `infrastructure/kecom_qr_bootstrap.py`：
+接口已定义（`bootstrap`、`refresh`、`validate`、`revoke`）。已实现 `infrastructure/kecom_qr_bootstrap.py`（`KeComQrBootstrapProvider`）：
 
-- `bootstrap()`: `httpx` 调 §2.1 → 渲染 `qrCodeContent` → 等待人工扫码 → 轮询 §2.3 → 取 `CONFIRMED` 响应里的 `ticket` → §2.4 换 cookie → 同时保存 ke.com 域 SSO 续航 cookie（TGC 等）到受保护存储 → 返回 `BootstrapResult(credential_material=<业务 cookie jar bytes>, expires_at=<lng>, credential_version=<int>)`。
-- `refresh(current)`: 用持久化的 TGC cookie 调 §5.1 Step 1–2 → 重新拿到 cookie → 返回新的 `BootstrapResult`；失败返回 `None` 或抛错。
-- `validate(credential_material)`: 解析 cookie jar → 调 `accountRightInfo` 等接口 → 返回 `Principal`（`employee_principal=UCID`）。
-- `revoke(current)`: 调 `POST https://login.ke.com/logout`（待实测）使 TGC 失效，同时 `CredentialStore.invalidate`。
+- `bootstrap()`: `httpx` 调 §2.1 → 渲染 `qrCodeContent` → 等待人工扫码 → 轮询 §2.3 → `CONFIRMED` → `POST /authentication/authenticate` 拿 TGC + serviceTicket → CAS 双跳（§5.1）换业务 cookie → 返回 `BootstrapResult(credential_material=<业务 cookie jar bytes>, expires_at=<lng>, credential_version=1, refresh_material=<TGC 等续航 cookie bytes>)`。
+- `refresh(current)`: 用持久化的 TGC cookie 调 §5.1 双跳 → 重新拿到业务 cookie → 返回新 `BootstrapResult`；失败返回 `None` 或抛错。
+- `validate(credential_material)`: 解析 cookie jar → 调 `accountRightInfo?typeList=2` → 返回 `Principal`（`employee_principal=UCID`）。
+- `revoke(current)`: 调 `POST https://login.ke.com/logout` 使 TGC 失效，同时 `CredentialStore.invalidate`。
 
 `httpx` 请求必须：
 - 设置合理超时（init 10s、polling 3s、ticket 换 cookie 10s）；
@@ -301,14 +361,22 @@ Windows 受保护存储：
 - 集成测试：跳过真实 ke.com（不在 CI 网络可达范围），仅覆盖"已注入 cookie 后的 `authorizedFetch` → CRM 适配 → Schema 校验"路径。
 - 在云枢 VM 上做一次性 smokedog 比对：Connector 与浏览器对同一查询条件的结果集逐项比对，确认无字段缺失或权限差异。
 
-## 8. 已知未知项（下一轮需在云枢环境验证）
+## 8. 已知未知项（已收窄）
 
-1. `puzu_lease_token` 的过期时间与刷新触发条件；
-2. 仅 `TGC`+`security_ticket` 是否足以无浏览器 refresh；
-3. `ticket` 字段在 CONFIRMED 响应体中的真实字段名（`ticket`？`st`？`redirectUrl`？）—— 可用 `mitmproxy` 或一台 LICEE 授权的工具在云枢 VM 上重放捕获，但绝不在仓库或日志中保留样本；
-4. `rental_listing.get_detail` 的真实上游路由、请求与响应 Schema；
-5. 是否存在未观察到的设备指纹强校验（`public-digc.ke.com` 的 `/h5/v4/cf`、`/h5/v2/g`）；
-6. logout/`revoke` 的真实 Cookie 失效行为（`POST /logout` 是否清除 TGC）。
+2026-08-06 完整链路验证后已解决的问题：
+
+- ✅ ~~`ticket` 字段在 CONFIRMED 响应体中的真实字段名~~：CONFIRMED 响应体本身**不含 ticket**，仅 `{"state":"CONFIRMED","success":true}`。Service ticket 由后续的 `POST /authentication/authenticate` 返回（`serviceTicket.id`）。
+- ✅ ~~仅 `TGC`+`security_ticket` 是否足以无浏览器 refresh~~：是，已验证。httpx 客户端用 TGC cookie 可完成 CAS 双跳刷新，无需浏览器或设备指纹。
+- ✅ ~~`saas_token` 如何获取~~：由 CAS 第二跳 `house.link.lianjia.com/shiro-cas` 种下，不是直接登录产物。已在 `_establish_business_session` 中自动完成。
+- ✅ ~~是否存在未观察到的设备指纹强校验~~：不存在。`public-digc.ke.com` 是埋点面板不重要。Python httpx 不带任何指纹即可完成全部调进调用。
+- ✅ ~~`houseList` 产与否~~：已验证 `/api/houseList/search/pc/list` 返回 100000 + 真实房源数据。
+
+剩余待确认项：
+
+1. `puzu_lease_token` 与 `saas_token` 的过期时间与刷新触发条件；
+2. `TGC` / `security_ticket` 长期有效期；
+3. `rental_listing.get_detail` 的真实上游路由、请求与响应 Schema（当前临时复用 search 路由 + `delCode`）；
+4. `logout`/`revoke` 的真实 Cookie 失效行为（`POST /logout` 是否清除 TGC）—— 当前实现已调 `/logout` 端点但未验证效果。
 
 ## 9. 安全约束（与前述文档对齐）
 

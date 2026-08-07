@@ -21,6 +21,7 @@ class Settings:
     authd_listen_address: str = "127.0.0.1:8021"
     bootstrap_poll_interval_seconds: float = 3.0
     bootstrap_poll_timeout_seconds: float = 300.0
+    bootstrap_qrcode_refresh_initial_delay_seconds: float = 1.0
     refresh_keepalive_interval_seconds: float = 1500.0
 
 
@@ -54,6 +55,9 @@ def load_settings() -> Settings:
         ),
         bootstrap_poll_timeout_seconds=float(
             os.getenv("CC_BOOTSTRAP_POLL_TIMEOUT_SECONDS", "300")
+        ),
+        bootstrap_qrcode_refresh_initial_delay_seconds=float(
+            os.getenv("CC_BOOTSTRAP_QRCODE_REFRESH_INITIAL_DELAY_SECONDS", "1")
         ),
         refresh_keepalive_interval_seconds=float(
             os.getenv("CC_KEEPALIVE_INTERVAL_SECONDS", "1500")
