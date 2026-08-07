@@ -418,7 +418,7 @@ services/crm_connector/
 - [ ] 如需远程调用，支持 Streamable HTTP 与调用者认证。（当前范围仅本地 stdio 接入；`mcp.server` 的 `server.run` 亦支持 `streamable-http`，远程部署前需补调用者认证中间件，`main.py` 目前只有 CORSMiddleware）
 - [~] 实现调用者主体、VM 绑定员工、CRM 主体三方一致性校验。（实现 2/3：`ConnectorService._verify_bound_principal` `app/application/service.py` 校验 CRM 主体 = `bound_employee_principal`；调用者主体经 `_caller_subject()`（`getpass.getuser()`）作为 MCP 工具限流身份；VM 绑定校验（云枢）未实现）
 - [x] 添加工具级限流、只读工具白名单和超时控制。（只读：全部工具 `ToolAnnotations(read_only_hint=True)` 标注 + `tools.py` `read_only=True` 默认；限流：`app/mcp/rate_limit.py` 滑动窗口 `RateLimiter`，`crm_connection_status` 不限额，其余 3 个按调用者主体受 `CC_MCP_RATE_LIMIT_PER_MIN` 限制，超限返回 `RATE_LIMITED`；超时：`request_timeout_seconds=15` 经 `kecom_session_provider.py` 用于 `httpx.Timeout`）
-- [~] 编写 MCP 契约测试和 Agent 调用样例。（`tests/integration/test_mcp.py` 11 个：工具发现/只读标注/状态不限额/三条业务管线/上游错误映射/未知字段拒绝/认证拦截/限流/Schema 元数据/stdio 子进程入口；`tests/unit/test_rate_limit.py` 4 个；Agent 调用样例目录仍待补充）
+- [x] 编写 MCP 契约测试和 Agent 调用样例。（`tests/integration/test_mcp.py` 11 个：工具发现/只读标注/状态不限额/三条业务管线/上游错误映射/未知字段拒绝/认证拦截/限流/Schema 元数据/stdio 子进程入口；`tests/unit/test_rate_limit.py` 4 个；Agent 调用样例 `examples/mcp_client.py`（status/whoami/search/detail/demo 子命令），2026-08-07 以真实 DPAPI 凭据经 stdio 跑通全链路，仓库根 `.mcp.json` 已注册 Claude Code 项目级 MCP server）
 
 **验收标准**：Agent 只能发现并调用允许的语义工具；无法提交任意 URL、认证头或跨员工参数。
 

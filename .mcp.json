@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "crm-connector": {
+      "command": "python",
+      "args": ["-m", "app.mcp.server"],
+      "cwd": "C:/Users/shipi/vswp/BeikeMicroservice/services/crm_connector",
+      "env": {
+        "CC_UPSTREAM_PROFILE": "kecom-prod",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    }
+  }
+}

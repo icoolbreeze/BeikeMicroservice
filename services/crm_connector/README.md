@@ -83,6 +83,14 @@ python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 - 未配置凭据时业务工具返回 `CRM_AUTH_REQUIRED`，不会访问上游；
 - 凭据只经 `SessionProvider.authorizedFetch()` 注入，MCP 响应与日志不含任何认证材料。
 
+命令行验证与调用样例：`examples/mcp_client.py`（`status` / `whoami` / `search` / `detail` / `demo` 全链路子命令），不依赖 Claude Code：
+
+```powershell
+CC_UPSTREAM_PROFILE=kecom-prod python examples/mcp_client.py demo --keyword 万象城
+```
+
+仓库根 `.mcp.json` 已将 `crm-connector` 注册为项目级 MCP server（stdio + `kecom-prod` profile），重新启动 Claude Code 后即可直接使用 `crm_*` / `rental_listing_*` 工具。
+
 > Dockerfile 用于服务契约与基础运行验证；生产 Connector 仍应运行在云枢已接入的员工专属 Windows VM 中，不应把云枢或员工认证材料打包进镜像。
 
 ## 分层
