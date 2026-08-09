@@ -93,6 +93,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
         "listing_id": "RC-1", "community": "万象城一期",
         "layout": "2室1厅", "area_sqm": 80.0, "monthly_rent_yuan": 3500.0,
         "orientation": "南", "visible_scope": "my_maintained",
+        "del_type": None,
     }
     # The request reached SessionProvider with the documented upstream params.
     assert len(session.calls) == 1

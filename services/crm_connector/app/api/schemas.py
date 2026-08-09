@@ -134,13 +134,13 @@ ListingConditionValue = str | int | float | list[str | int | float]
 # arbitrary query proxy.
 _LISTING_CONDITION_KEYS = frozenset({
     "area", "bathroomAmount", "bedroomAmount", "bizCircleId", "buildingType",
-    "delSourceType", "delType", "entryTime", "externalAppearance", "fitment",
-    "floor", "houseAge", "houseCurrentStatus", "houseGrade", "houseUsage",
-    "hqiPictureScore", "hqiScoreRangeType", "key", "label", "layoutType",
-    "orientation", "ownerWeChatStatus", "paymentMode", "paymentType", "preserveHouse",
-    "price", "prospect", "relationRange", "rentPeriod", "rentSell", "rentType",
-    "role", "shengXinZuLabel", "toiletType", "trusteeshipNegotiateStatus",
-    "visitTime", "vrStatus",
+    "delSourceType", "delType", "districtId", "entryTime", "externalAppearance",
+    "fitment", "floor", "houseAge", "houseCurrentStatus", "houseGrade",
+    "houseUsage", "hqiPictureScore", "hqiScoreRangeType", "key", "label",
+    "layoutType", "orientation", "ownerWeChatStatus", "paymentMode",
+    "paymentType", "preserveHouse", "price", "prospect", "relationRange",
+    "rentPeriod", "rentSell", "rentType", "role", "shengXinZuLabel",
+    "toiletType", "trusteeshipNegotiateStatus", "visitTime", "vrStatus",
 })
 
 
@@ -356,14 +356,11 @@ class RentalListingSearchRequest(BaseModel):
     )
     community_keyword: str | None = Field(default=None, max_length=128)
     listing_id: str | None = Field(default=None, max_length=64)
-    maintainer: str | None = Field(default=None, max_length=128)
     scope: Literal["my_maintained", "shared", "role_visible"] = "my_maintained"
-    districts: list[str] = Field(default_factory=list, max_length=20)
     monthly_rent_yuan: NumericRange | None = None
     area_sqm: NumericRange | None = None
     rooms: list[int] = Field(default_factory=list, max_length=8)
     orientations: list[str] = Field(default_factory=list, max_length=10)
-    tags: list[str] = Field(default_factory=list, max_length=20)
     condition_filters: dict[str, ListingConditionValue] = Field(
         default_factory=dict,
         max_length=37,
@@ -409,9 +406,7 @@ class RentalListingSearchRequest(BaseModel):
             community_keyword=self.community_keyword,
             resblock_ids=tuple(dict.fromkeys(self.resblock_ids)),
             listing_id=self.listing_id,
-            maintainer=self.maintainer,
             scope=self.scope,
-            districts=tuple(self.districts),
             monthly_rent_yuan=(
                 (self.monthly_rent_yuan.min, self.monthly_rent_yuan.max)
                 if self.monthly_rent_yuan
@@ -420,7 +415,6 @@ class RentalListingSearchRequest(BaseModel):
             area_sqm=(self.area_sqm.min, self.area_sqm.max) if self.area_sqm else None,
             rooms=tuple(self.rooms),
             orientations=tuple(self.orientations),
-            tags=tuple(self.tags),
             page=self.page,
             page_size=self.page_size,
             condition_filters=tuple(condition_filters.items()),
@@ -435,6 +429,7 @@ class RentalListingResponse(BaseModel):
     monthly_rent_yuan: float | None = None
     orientation: str | None = None
     visible_scope: str
+    del_type: int | None = None
 
     @classmethod
     def from_domain(cls, listing: RentalListing) -> "RentalListingResponse":

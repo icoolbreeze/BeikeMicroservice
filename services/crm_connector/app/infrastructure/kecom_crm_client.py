@@ -40,7 +40,14 @@ _CODE_UNAUTHORIZED = 403
 # Fixed upstream query parameters documented in §4 "GET /api/houseList/search/pc/list".
 _SEARCH_SCENE_CODE = "puzu_mix_list_pc"
 _SEARCH_CLIENT_OS = 3
-_SEARCH_RELATION_RANGE_MY = 1
+
+# scope -> upstream relationRange (from the live 范围 catalog: 1 维护盘,
+# 4 店共享池, 9 角色房源).  The old code hard-coded 1 and never read scope.
+_SCOPE_TO_RELATION_RANGE = {
+    "my_maintained": 1,
+    "shared": 4,
+    "role_visible": 9,
+}
 
 
 def _route_query(filters: RentalListingFilters) -> dict[str, str | int]:
@@ -53,7 +60,7 @@ def _route_query(filters: RentalListingFilters) -> dict[str, str | int]:
     params: dict[str, str | int] = {
         "pageIndex": filters.page,
         "pageSize": filters.page_size,
-        "relationRange": _SEARCH_RELATION_RANGE_MY,
+        "relationRange": _SCOPE_TO_RELATION_RANGE.get(filters.scope, 1),
         "sceneCode": _SEARCH_SCENE_CODE,
         "clientOsType": _SEARCH_CLIENT_OS,
     }
@@ -66,10 +73,6 @@ def _route_query(filters: RentalListingFilters) -> dict[str, str | int]:
         params["resblockId"] = ",".join(filters.resblock_ids)
     if filters.listing_id:
         params["delCode"] = filters.listing_id
-    if filters.maintainer:
-        params["maintainUcName"] = filters.maintainer
-    if filters.districts:
-        params["districts"] = ",".join(filters.districts)
     if filters.monthly_rent_yuan is not None:
         lo, hi = filters.monthly_rent_yuan
         if lo is not None:
@@ -86,8 +89,6 @@ def _route_query(filters: RentalListingFilters) -> dict[str, str | int]:
         params["bedroomAmount"] = ",".join(str(r) for r in filters.rooms)
     if filters.orientations:
         params["orientation"] = ",".join(filters.orientations)
-    if filters.tags:
-        params["tags"] = ",".join(filters.tags)
     params.update(dict(filters.condition_filters))
     return params
 
@@ -426,6 +427,8 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         monthly_rent_yuan=_as_float(row.get("price")),
         orientation=orientation,
         visible_scope=scope,
+        # 2 = 普租, 5 = 托管. Only 普租 ids resolve via detailHead.
+        del_type=_as_int(row.get("delType")),
     )
 
 
@@ -444,7 +447,13 @@ def _parse_detail_head(body: Mapping[str, Any]) -> RentalListing:
     # behaviour that returned ICC凯旋门 for a trusteeship-domain id).
     data = body.get("data")
     if not isinstance(data, Mapping) or not data:
-        raise UpstreamInvalidInputError("upstream has no such listing (detailHead data is empty)")
+        # Empty data is the upstream's "no such listing" answer. In practice
+        # this covers trusteeship (托管, delType=5) ids: detailHead only serves
+        # the 普租 domain, so callers should not attempt detail on 托管 ids.
+        raise UpstreamInvalidInputError(
+            "no detailHead record for this id; trusteeship (托管) listings are "
+            "not covered by the 普租 detail endpoint"
+        )
     del_code = _as_int(data.get("delCode"))
     if del_code is None:
         raise UpstreamChangedError("detailHead response 'data' has no delCode")

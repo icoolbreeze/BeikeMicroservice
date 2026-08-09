@@ -39,14 +39,11 @@ class RentalListingFilters:
     community_keyword: str | None
     resblock_ids: tuple[str, ...]
     listing_id: str | None
-    maintainer: str | None
     scope: str
-    districts: tuple[str, ...]
     monthly_rent_yuan: tuple[float | None, float | None] | None
     area_sqm: tuple[float | None, float | None] | None
     rooms: tuple[int, ...]
     orientations: tuple[str, ...]
-    tags: tuple[str, ...]
     page: int
     page_size: int
     condition_filters: tuple[tuple[str, str | int | float], ...] = ()
@@ -73,6 +70,9 @@ class RentalListing:
     monthly_rent_yuan: float | None
     orientation: str | None
     visible_scope: str
+    # Upstream delType: 2 = 普租, 5 = 托管.  Only 普租 houses have a
+    # detailHead record; callers should not attempt detail for 托管 ids.
+    del_type: int | None = None
 
 
 @dataclass(frozen=True)

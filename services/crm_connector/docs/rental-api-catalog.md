@@ -44,8 +44,15 @@ CRM
 `rental_listing_search.condition_filters` 用于这些页面原生筛选。调用方必须先读取
 `rental_listing_filter_options`，再传入其中的键和值；连接器只接受这份已核验目录中的键，
 不会把 MCP 变成任意上游参数代理。已用真实 CRM 验证的组合包括：
-`rentType=002`（合租）、`bedroomAmount=2`（两室）、`orientation=100500000003`（南向）和
-`price=0:3000`（3000 元以下）。
+`rentType=002`（合租）、`bedroomAmount=2`（两室）、`orientation=100500000003`（南向）、
+`price=0:3000`（3000 元以下）、`label=81`（宠物友好）和 `districtId=510107`（武侯区）。
+标签类条件必须走 `condition_filters.label`（如 `label=81` 宠物友好、`label=2` VR房）；
+顶层不存在 `tags` 参数（上游会静默忽略）。
+
+`scope` 映射到页面原生「范围」条件：`my_maintained`→`relationRange=1`（维护盘，默认）、
+`shared`→4（店共享池）、`role_visible`→9（角色房源）。区县筛选使用
+`condition_filters.districtId`（如 `510107` 武侯、`510113` 青白江），顶层无 `districts`
+参数。
 
 预算算法：普通租赁下限 = 预算 ÷ 2；上限 = 预算 + `clamp(预算 × 25%, 200, 500)`。例如
 700 元为 `350:900`，2000 元为 `1000:2500`，3000 元为 `1500:3500`。若客户明确为合租，
@@ -61,7 +68,8 @@ CRM
 不再复用房源列表搜索）。detailHead 的字段名与列表不同：`housePrice`/`houseArea`/
 `livingroomAmount`/`oriented`，映射为 `monthly_rent_yuan`/`area_sqm`/`layout`/`orientation`。
 
-ID 语义：列表与地图返回的 `delCode` 属于普租域。地图 `actionUrl` 中部分 ID（如
-10611245074901）属于托管域房源，在普租域详情中不存在；detailHead 对这类 ID 返回空
-`data`，连接器将其报告为“房源编码错误，房源不存在”（invalid-input 错误），绝不回退到
-搜索返回的其它房源。
+ID 语义：列表返回的每条房源带有 `del_type`（上游 `delType`）：`2` = 普租、
+`5` = 托管。detailHead 只覆盖普租域；托管房源的 ID（如 10611245074901）在详情端点
+返回空 `data`，连接器将其报告为 invalid-input 错误（消息明确提示托管房源不受普租详情
+端点支持），绝不回退到搜索返回的其它房源。因此对 `del_type=5` 的列表结果不应再发起
+详情查询。

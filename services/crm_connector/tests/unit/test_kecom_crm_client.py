@@ -76,14 +76,11 @@ def _filters(**overrides: Any) -> RentalListingFilters:
         community_keyword=None,
         resblock_ids=(),
         listing_id=None,
-        maintainer=None,
         scope="my_maintained",
-        districts=(),
         monthly_rent_yuan=None,
         area_sqm=None,
         rooms=(),
         orientations=(),
-        tags=(),
         page=1,
         page_size=20,
     )
@@ -103,7 +100,6 @@ def test_route_query_emits_fixed_params_and_maps_filters() -> None:
         area_sqm=(70, 110),
         rooms=[2, 3],
         orientations=["南", "南北"],
-        tags=["地铁房"],
         page=2,
         page_size=10,
     ))
@@ -119,9 +115,18 @@ def test_route_query_emits_fixed_params_and_maps_filters() -> None:
     assert query["areaMax"] == 110
     assert query["bedroomAmount"] == "2,3"
     assert query["orientation"] == "南,南北"
-    assert query["tags"] == "地铁房"
     # No listing_id/maintainer -> keys absent, never None.
     assert "delCode" not in query and "maintainUcName" not in query
+    # The dead tags param must never be emitted; labels go via condition_filters.
+    assert "tags" not in query
+
+
+def test_route_query_maps_scope_to_page_native_relation_range() -> None:
+    assert _route_query(_filters(scope="my_maintained"))["relationRange"] == 1
+    assert _route_query(_filters(scope="shared"))["relationRange"] == 4
+    assert _route_query(_filters(scope="role_visible"))["relationRange"] == 9
+    # Unknown scope degrades to the default 维护盘 range.
+    assert _route_query(_filters(scope="bogus"))["relationRange"] == 1
 
 
 def test_route_query_maps_exact_community_ids_to_page_native_resblock_id() -> None:
@@ -257,6 +262,7 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
         "resblockName": "万象城一期",
         "bedroomAmount": 3, "hallAmount": 1, "bathroomAmount": 1,
         "area": 89.5, "price": 4500, "orientation": ["南"],
+        "delType": 2,
     }
     listing = _parse_listing(row, scope="my_maintained")
     assert listing.listing_id == "RC-1"
@@ -266,6 +272,13 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
     assert listing.monthly_rent_yuan == 4500.0
     assert listing.orientation == "南"
     assert listing.visible_scope == "my_maintained"
+    # delType distinguishes 普租 (2) from 托管 (5); detailHead only serves 普租.
+    assert listing.del_type == 2
+
+
+def test_parse_listing_exposes_trusteeship_del_type() -> None:
+    listing = _parse_listing({"delType": 5}, scope="my_maintained")
+    assert listing.del_type == 5
 
 
 def test_parse_listing_handles_missing_fields_without_crashing() -> None:
@@ -276,6 +289,7 @@ def test_parse_listing_handles_missing_fields_without_crashing() -> None:
     assert listing.area_sqm is None
     assert listing.monthly_rent_yuan is None
     assert listing.orientation is None
+    assert listing.del_type is None
 
 
 def test_parse_page_returns_paged_domain_with_has_more() -> None:
