@@ -2,7 +2,19 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from app.domain.models import Principal, RentalListing, RentalListingFilters, RentalListingPage
+from app.domain.models import (
+    Principal,
+    RentalListingFilterOption,
+    RentalListing,
+    RentalListingFilters,
+    RentalListingPage,
+    RentalMapBubble,
+    RentalMapBubbleFilters,
+    RentalMapPage,
+    RentalMapSearchFilters,
+    RentalMapSuggestion,
+    RentalMapSuggestionFilters,
+)
 
 
 class CrmClient(Protocol):
@@ -14,5 +26,19 @@ class CrmClient(Protocol):
     def search_rental_listings(self, filters: RentalListingFilters) -> RentalListingPage:
         """Return a page of rental listings within the upstream user's permissions."""
 
+    def rental_listing_filter_options(self) -> tuple[RentalListingFilterOption, ...]:
+        """Return the current 房源列表 filter catalog from the CRM."""
+
     def get_rental_listing_detail(self, listing_id: str) -> RentalListing:
         """Return a single rental listing within the upstream user's permissions."""
+
+    def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
+        """Search rental houses by viewport or a set of drawn-circle communities."""
+
+    def rental_map_bubbles(self, filters: RentalMapBubbleFilters) -> tuple[RentalMapBubble, ...]:
+        """Return district, business-circle, or community map bubbles."""
+
+    def rental_map_suggest(
+        self, filters: RentalMapSuggestionFilters
+    ) -> tuple[RentalMapSuggestion, ...]:
+        """Resolve a map search phrase into typed geographic targets."""

@@ -38,3 +38,24 @@ class UpstreamChangedError(ConnectorError):
 
     code = "CRM_UPSTREAM_CHANGED"
     status_code = 502
+
+
+class QrLoginError(ConnectorError):
+    """A QR-code login session could not be started or polled as requested."""
+
+    code = "CRM_QR_LOGIN_ERROR"
+    status_code = 400
+
+
+class QrLoginConflictError(QrLoginError):
+    """A QR login cannot start right now (already ready or already in progress)."""
+
+    code = "CRM_QR_LOGIN_CONFLICT"
+    status_code = 409
+
+
+class QrLoginNotFoundError(QrLoginError):
+    """The referenced QR login session does not exist (or was pruned)."""
+
+    code = "CRM_QR_LOGIN_NOT_FOUND"
+    status_code = 404

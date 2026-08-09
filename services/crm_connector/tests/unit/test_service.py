@@ -51,6 +51,7 @@ class FakeCrmClient:
 def filters() -> RentalListingFilters:
     return RentalListingFilters(
         community_keyword=None,
+        resblock_ids=(),
         listing_id=None,
         maintainer=None,
         scope="my_maintained",

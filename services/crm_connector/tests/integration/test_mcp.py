@@ -87,15 +87,18 @@ def _first_text(result) -> str:
 
 
 @pytest.mark.anyio(backend="asyncio")
-async def test_tool_discovery_exposes_four_tools_with_read_only_hint(tmp_path) -> None:
+async def test_tool_discovery_exposes_map_tools_with_read_only_hint(tmp_path) -> None:
     server = _wired_server(StubSession(), tmp_path)
     async with Client(server) as client:
         tools = await client.list_tools()
         assert sorted(tool.name for tool in tools.tools) == [
             "crm_connection_status",
             "crm_whoami",
+            "rental_listing_filter_options",
             "rental_listing_get_detail",
             "rental_listing_search",
+            "rental_map_nearby_search",
+            "rental_map_suggest",
         ]
         assert all(
             tool.annotations is not None and tool.annotations.read_only_hint
@@ -162,6 +165,49 @@ async def test_search_flows_through_real_pipeline(tmp_path) -> None:
         assert body["items"][0]["monthly_rent_yuan"] == 3500.0
         assert session.calls[0].route == "rental_listing.search"
         assert session.calls[0].query["communityKeyword"] == "万象城"
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_nearby_map_tool_follows_draw_circle_pipeline(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "rental_map.suggest", 200,
+        {"code": 0, "data": {"list": [{
+            "itemType": "bizcircle", "itemId": "biz-wxc", "itemName": "万象城",
+            "pointLat": 30.65, "pointLng": 104.1,
+        }]}},
+    )
+    session.enqueue(
+        "rental_map.bubbles", 200,
+        {"code": 0, "data": {"bubbleList": [{
+            "id": "rb-1", "name": "万象城一期", "latitude": 30.651, "longitude": 104.101,
+        }]}},
+    )
+    session.enqueue(
+        "rental_map.search_circle", 200,
+        {"code": 0, "data": {"list": [{
+            "delCode": "RC-map-1", "title": "万象城附近套二", "desc": "2室1厅",
+        }], "total": 1}},
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "rental_map_nearby_search",
+            {"input": {
+                "location": "万象城", "radius_meters": 1000,
+                "price_min_yuan": 1800, "price_max_yuan": 2200, "rooms": [2],
+                "rental_modes": ["whole_rent"],
+            }},
+        )
+        assert result.is_error is False
+        body = _text(result)
+        assert body["matched_community_count"] == 1
+        assert body["result"]["items"][0]["listing_id"] == "RC-map-1"
+        assert [call.route for call in session.calls] == [
+            "rental_map.suggest", "rental_map.bubbles", "rental_map.search_circle",
+        ]
+        assert session.calls[2].query["condition"] == "obrp1800oerp2200l2rt001"
 
 
 @pytest.mark.anyio(backend="asyncio")
@@ -270,6 +316,12 @@ def test_tool_metadata_exposes_input_and_output_schemas() -> None:
     # Unrelated tools have no input parameters.
     assert by_name["crm_connection_status"].input_schema["properties"] == {}
     assert by_name["crm_whoami"].input_schema["properties"] == {}
+    nearby = by_name["rental_map_nearby_search"]
+    assert "input" in nearby.input_schema["properties"]
+    assert nearby.output_schema is not None
+    assert "matched_community_count" in nearby.output_schema["properties"]
+    assert nearby.module_id == "property.rental.map_search"
+    assert by_name["rental_listing_search"].module_id == "property.rental.listing_search"
 
 
 @pytest.mark.anyio(backend="asyncio")
@@ -297,8 +349,11 @@ async def test_stdio_transport_serves_tools_from_real_entry_point(tmp_path) -> N
             assert sorted(tool.name for tool in tools.tools) == [
                 "crm_connection_status",
                 "crm_whoami",
+                "rental_listing_filter_options",
                 "rental_listing_get_detail",
                 "rental_listing_search",
+                "rental_map_nearby_search",
+                "rental_map_suggest",
             ]
             result = await session.call_tool("crm_connection_status", {})
             assert result.is_error is False

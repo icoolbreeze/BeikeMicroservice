@@ -17,14 +17,22 @@ from mcp.types import ToolAnnotations
 from app.api.schemas import (
     ConnectionStatusResponse,
     PrincipalResponse,
+    RentalListingFilterOptionResponse,
     RentalListingPageResponse,
     RentalListingResponse,
+    RentalMapNearbySearchResponse,
+    RentalMapSuggestionResponse,
 )
 from app.bootstrap import build_service
 from app.domain.errors import ConnectorError
 from app.infrastructure.settings import Settings, load_settings
 from app.mcp.rate_limit import RateLimiter
-from app.mcp.schemas import RentalListingDetailInput, RentalListingSearchInput
+from app.mcp.schemas import (
+    RentalListingDetailInput,
+    RentalListingSearchInput,
+    RentalMapNearbySearchInput,
+    RentalMapSuggestionInput,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +89,30 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
             raise _tool_error(exc) from exc
 
     @server.tool(
+        name="rental_listing_filter_options",
+        description=(
+            "Return the current 房源列表（全部房源） filter catalog and valid "
+            "page-native condition values."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def rental_listing_filter_options() -> list[RentalListingFilterOptionResponse]:
+        _require_quota(_caller_subject())
+        try:
+            options = service.rental_listing_filter_options()
+            return [RentalListingFilterOptionResponse.from_domain(option) for option in options]
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
         name="rental_listing_search",
-        description="Search rental listings using structured, permission-scoped filters.",
+        description=(
+            "Search rental listings using structured, permission-scoped filters. "
+            "For an exact community, call rental_map_suggest first and pass the "
+            "selected resblock item_id in resblock_ids. "
+            "budget_yuan calculates price as [budget/2, budget + clamp(25%, 200, 500)]; "
+            "shared rent omits the lower bound."
+        ),
         annotations=ToolAnnotations(read_only_hint=True),
     )
     def rental_listing_search(input: RentalListingSearchInput) -> RentalListingPageResponse:
@@ -103,6 +133,40 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         try:
             listing = service.get_rental_listing_detail(input.listing_id)
             return RentalListingResponse.from_domain(listing)
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
+        name="rental_map_suggest",
+        description="Resolve a rental-map landmark, business circle, or community name.",
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def rental_map_suggest(input: RentalMapSuggestionInput) -> list[RentalMapSuggestionResponse]:
+        _require_quota(_caller_subject())
+        try:
+            results = service.rental_map_suggest(input.to_domain(service.default_city_id))
+            return [RentalMapSuggestionResponse.from_domain(item) for item in results]
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
+        name="rental_map_nearby_search",
+        description=(
+            "Find rentals near a named place using community centroids within a radius. "
+            "For a stated budget, use [budget/2, budget + clamp(25%, 200, 500)]; "
+            "shared rent omits the lower bound."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def rental_map_nearby_search(
+        input: RentalMapNearbySearchInput,
+    ) -> RentalMapNearbySearchResponse:
+        _require_quota(_caller_subject())
+        try:
+            result = service.search_rental_map_nearby(
+                input.to_domain(service.default_city_id)
+            )
+            return RentalMapNearbySearchResponse.from_domain(result)
         except ConnectorError as exc:
             raise _tool_error(exc) from exc
 

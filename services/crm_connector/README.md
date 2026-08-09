@@ -9,9 +9,39 @@
 
 - `/api/v1/health`：服务健康检查；
 - `/api/v1/connection/status`：认证与连接状态；
+- `/api/v1/auth/login`：未登录时发起扫码登录（返回 `login_id` 与二维码内容），手机扫码确认后服务自动安装凭证并切到 `ready`；
+- `/api/v1/auth/login/{login_id}`：轮询扫码登录状态（`pending` / `ready` / `failed` / `cancelled`）；
+- `/api/v1/auth/login/{login_id}/qrcode.png`：当前二维码的 PNG 图片（可直接在浏览器展示）；
+- `/api/v1/auth/login/{login_id}/cancel`：取消进行中的扫码登录；
 - `/api/v1/mcp/tools`：与 MCP transport 同源的工具元数据（`app/mcp/tools.py`，经 `/tools/list` 暴露）；
 - `/api/v1/crm/me`、`/api/v1/listings/rental/search`：已完成租赁房源的分层与输入/输出契约，走通真实上游 `KecomCrmClient` → `KecomSessionProvider.authorizedFetch` → `lease-pz.link.lianjia.com`。
 - `/api/v1/listings/rental/{listing_id}`：租赁房源详情端点，返回单条 `RentalListingResponse`。
+
+## 服务内扫码登录
+
+主服务（默认 `8020`）运行时若未登录，会**自动弹出原生二维码窗口**（Windows Tk，与 `crm-authd login` 同款），员工直接扫码即可，无需浏览器；由 `CC_QR_LOGIN_AUTO_START`（默认开）控制。实现见 `app/application/qr_login.py`（`QrLoginManager`）：
+
+- 每次登录尝试使用独立的 `KeComQrBootstrapProvider`（全新 httpx client jar），多个尝试互不串 TGC cookie；同时只允许一个 `pending` 尝试，重复发起返回 `409 CRM_QR_LOGIN_CONFLICT`；
+- 二维码过期后由 bootstrap 流程自动刷新并重新弹窗显示新码；
+- 登录成功走 `install_fresh_credential`（validate → 原子保存 → 作废旧凭证）并校验 `CC_BOUND_EMPLOYEE_PRINCIPAL` 与扫码主体一致；
+- 弹窗由后台线程驱动（`pump` 轮询 Tk 事件），扫码确认后自动关闭；
+- 默认 `unconfigured` profile 下不弹窗，登录端点返回 `501 CRM_UPSTREAM_NOT_CONFIGURED`。
+
+HTTP 端点仍可用作状态查询 / 替代展示（无需依赖浏览器即可完成登录）：
+
+```powershell
+# 1. 查看登录状态
+curl http://127.0.0.1:8020/api/v1/connection/status
+# 2. 手动触发扫码登录（默认会自动触发，端点同样可用）
+curl -X POST http://127.0.0.1:8020/api/v1/auth/login
+# {"login_id":"...","state":"pending","qrcode":"https://t.lianjia.com/...","note":"...","message":""}
+# 3. 可选：浏览器打开二维码图片
+curl -o qr.png http://127.0.0.1:8020/api/v1/auth/login/<login_id>/qrcode.png
+# 4. 轮询直至 ready（手机确认后自动完成）
+curl http://127.0.0.1:8020/api/v1/auth/login/<login_id>
+# 5. 取消登录
+curl -X POST http://127.0.0.1:8020/api/v1/auth/login/<login_id>/cancel
+```
 
 ## crm-authd / crm-mcp 命令行
 
@@ -55,7 +85,7 @@ cd services/crm_connector
 python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 ```
 
-默认 `CC_UPSTREAM_PROFILE=unconfigured`，主服务会以 stub provider 启动，可在 CI/开发环境直接跑通。接入真实 CRM 上游的方法见 `.env.example`：先把 `CC_UPSTREAM_PROFILE` 改为非 `unconfigured`，再在单独的 PowerShell 中执行 `crm-authd login` 完成扫码引导，凭证入库后用 `crm-authd serve`（监听 `127.0.0.1:8021`）保持会话。
+默认 `CC_UPSTREAM_PROFILE=kecom-prod`：服务启动即接线真实 ke.com SSO，未登录（`auth_required`）时自动弹出原生二维码窗口，扫码确认后凭证入库、会话变 `ready`。CI/纯本地开发可用 `CC_UPSTREAM_PROFILE=unconfigured` 换回 stub provider 直接跑通；`crm-authd login` / `crm-authd serve`（监听 `127.0.0.1:8021`）仍可单独用于扫码引导与会话保持。
 
 ## MCP 接入
 

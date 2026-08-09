@@ -10,9 +10,13 @@ from app.domain.errors import (
 )
 from app.domain.models import (
     ConnectionState,
+    MapBounds,
     Principal,
     ProviderStatus,
     RentalListingFilters,
+    RentalMapBubbleFilters,
+    RentalMapSearchFilters,
+    RentalMapSuggestionFilters,
 )
 from app.domain.providers.session_provider import AuthorizedRequest, UpstreamResponse
 from app.infrastructure.kecom_crm_client import (
@@ -20,6 +24,12 @@ from app.infrastructure.kecom_crm_client import (
     _build_detail_request,
     _build_search_request,
     _build_whoami_request,
+    _build_map_bubbles_request,
+    _build_map_search_request,
+    _build_map_suggest_request,
+    _parse_map_bubbles,
+    _parse_map_page,
+    _parse_map_suggestions,
     _parse_listing,
     _parse_page,
     _parse_principal,
@@ -64,6 +74,7 @@ class CapturingSession:
 def _filters(**overrides: Any) -> RentalListingFilters:
     base = RentalListingFilters(
         community_keyword=None,
+        resblock_ids=(),
         listing_id=None,
         maintainer=None,
         scope="my_maintained",
@@ -113,6 +124,13 @@ def test_route_query_emits_fixed_params_and_maps_filters() -> None:
     assert "delCode" not in query and "maintainUcName" not in query
 
 
+def test_route_query_maps_exact_community_ids_to_page_native_resblock_id() -> None:
+    query = _route_query(_filters(resblock_ids=("1611063740147", "1620035540190520")))
+
+    assert query["resblockId"] == "1611063740147,1620035540190520"
+    assert "communityKeyword" not in query
+
+
 def test_build_search_request_uses_rental_search_route() -> None:
     request = _build_search_request(_filters(community_keyword="万象城"))
     assert request.route == "rental_listing.search"
@@ -135,6 +153,65 @@ def test_build_whoami_request_uses_identity_me_route() -> None:
     assert request.route == "identity.me"
     assert request.method == "GET"
     assert request.query["typeList"] == "2"
+
+
+def _map_bounds() -> MapBounds:
+    return MapBounds(104.0, 104.1, 30.6, 30.7)
+
+
+def _map_search_filters(*, mode: str = "viewport") -> RentalMapSearchFilters:
+    return RentalMapSearchFilters(
+        city_id="510100", data_source="ZF", bounds=_map_bounds(), page=2,
+        mode=mode, condition_tokens=("obrp1800", "oerp2200", "l2"),
+        result_type="1", resblock_id=None, resblock_ids=("rb-1", "rb-2"),
+    )
+
+
+def test_map_request_builders_use_allowlisted_routes_and_parameters() -> None:
+    viewport = _build_map_search_request(_map_search_filters())
+    assert viewport.route == "rental_map.search"
+    assert viewport.query["condition"] == "obrp1800oerp2200l2"
+    assert viewport.query["minLongitude"] == 104.0
+
+    circle = _build_map_search_request(_map_search_filters(mode="circle"))
+    assert circle.route == "rental_map.search_circle"
+    assert circle.query["resblockIds"] == "rb-1,rb-2"
+
+    bubbles = _build_map_bubbles_request(RentalMapBubbleFilters(
+        city_id="510100", data_source="ZF", bounds=_map_bounds(),
+        group_type="community", group_id=None, condition_tokens=("l2",),
+    ))
+    assert bubbles.route == "rental_map.bubbles"
+    assert bubbles.query["groupType"] == "community"
+
+    suggest = _build_map_suggest_request(RentalMapSuggestionFilters(
+        city_id="510100", data_source="ZF", query="万象城",
+    ))
+    assert suggest.route == "rental_map.suggest"
+    assert suggest.query["pageSize"] == 30
+
+
+def test_map_parsers_map_list_bubbles_and_suggestions() -> None:
+    page = _parse_map_page(
+        {"code": 0, "data": {"list": [{"delCode": "RC-1", "title": "万象城套二",
+        "desc": "2室1厅", "tags": ["近地铁"], "priceStr": "2000元/月"}], "total": 1}},
+        _map_search_filters(), "map-request",
+    )
+    assert page.items[0].listing_id == "RC-1"
+    assert page.items[0].tags == ("近地铁",)
+
+    bubbles = _parse_map_bubbles(
+        {"code": 0, "data": {"bubbleList": [{"id": "rb-1", "name": "万象城一期",
+        "latitude": 30.65, "longitude": 104.1, "count": 9}]}}, "community",
+    )
+    assert bubbles[0].bubble_id == "rb-1"
+    assert bubbles[0].latitude == 30.65
+
+    suggestions = _parse_map_suggestions(
+        {"code": 0, "data": {"list": [{"itemType": "bizcircle", "itemId": "biz-1",
+        "itemName": "万象城", "pointLat": 30.65, "pointLng": 104.1}]}},
+    )
+    assert suggestions[0].name == "万象城"
 
 
 # -- response parsing --------------------------------------------------------
@@ -330,15 +407,34 @@ def test_whoami_routes_through_identity_me() -> None:
 # -- integration: main.py wiring ---------------------------------------------
 
 
-def test_main_uses_unconfigured_providers_by_default() -> None:
+def test_main_uses_unconfigured_providers_when_profile_forced() -> None:
     from app.infrastructure.settings import Settings
     from app.main import create_app
 
-    app = create_app(Settings())
-    # default profile -> unconfigured stubs -> connection_status auth_required
+    app = create_app(Settings(
+        upstream_profile="unconfigured",
+        qr_login_auto_start=False,
+    ))
+    # unconfigured profile -> unconfigured stubs -> connection_status auth_required
     status = app.state.crm_connector_service.connection_status()
     assert status.state.value == "auth_required"
     assert app.state.crm_credential_store is None
+
+
+def test_main_defaults_to_real_profile(tmp_path) -> None:
+    from app.infrastructure.settings import Settings
+    from app.main import create_app
+
+    settings = Settings(
+        credential_store_path=str(tmp_path / "cred.bin"),
+        qr_login_auto_start=False,
+    )
+    assert settings.upstream_profile == "kecom-prod"
+    app = create_app(settings)
+    from app.infrastructure.kecom_session_provider import KecomSessionProvider
+
+    assert isinstance(app.state.crm_session_provider, KecomSessionProvider)
+    assert app.state.crm_qr_login_manager is not None
 
 
 def test_main_wires_real_providers_when_profile_set(tmp_path) -> None:
@@ -349,6 +445,7 @@ def test_main_wires_real_providers_when_profile_set(tmp_path) -> None:
         upstream_profile="kecom-prod",
         credential_store_path=str(tmp_path / "cred.bin"),
         bound_employee_principal="employee-1",
+        qr_login_auto_start=False,
     )
     app = create_app(settings)
 
@@ -374,6 +471,7 @@ def test_wired_app_search_returns_auth_required_when_no_credential(tmp_path) -> 
         upstream_profile="kecom-prod",
         credential_store_path=str(tmp_path / "cred.bin"),
         bound_employee_principal="employee-1",
+        qr_login_auto_start=False,
     )
     app = create_app(settings)
     # Without bootstrap, a wired app must still refuse search with the same

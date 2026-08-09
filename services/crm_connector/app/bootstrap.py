@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from app.application.service import ConnectorService
+from app.domain.providers.crm_client import CrmClient
+from app.domain.providers.session_provider import SessionProvider
 from app.infrastructure.kecom_crm_client import KecomCrmClient
 from app.infrastructure.kecom_qr_bootstrap import KeComQrBootstrapProvider
 from app.infrastructure.kecom_session_provider import KecomSessionProvider
@@ -14,15 +16,14 @@ from app.infrastructure.windows_dpapi_credential_store import WindowsDpapiCreden
 UNCONFIGURED_PROFILE = "unconfigured"
 
 
-def build_providers(settings: Settings):
+def build_providers(settings: Settings) -> tuple[SessionProvider, CrmClient]:
     """Select session/CRM providers based on ``upstream_profile``.
 
-    The default ``unconfigured`` profile keeps the safe stubs so the FastAPI
-    app and MCP server can boot in CI without any real CRM upstream. Any
-    other profile is treated as "this VM is wired to ke.com SSO": a real
-    ``KecomSessionProvider`` backed by the Windows DPAPI credential store
-    and a ``KecomCrmClient`` that drives the upstream through that session
-    boundary.
+    The default profile is the real ke.com SSO wiring (``kecom-prod``), so a
+    plain service start pops the native QR login window whenever no active
+    credential exists. Set ``CC_UPSTREAM_PROFILE=unconfigured`` to keep the
+    safe stubs instead, which lets the FastAPI app and MCP server boot in CI
+    without any real CRM upstream.
     """
     if settings.upstream_profile == UNCONFIGURED_PROFILE:
         return UnconfiguredSessionProvider(), UnconfiguredCrmClient()

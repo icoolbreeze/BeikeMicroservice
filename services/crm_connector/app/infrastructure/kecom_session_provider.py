@@ -263,8 +263,13 @@ class KecomSessionProvider:
     ) -> httpx.Response:
         cookies = _decode_material(active.credential_material)
         method = request.method.upper()
-        path, requires_city_header = _resolve_route(request.route)
-        url = f"{self._settings.crm_business_origin}{path}"
+        path, requires_city_header, origin = _resolve_route(request.route)
+        base_url = (
+            self._settings.crm_map_origin
+            if origin == "map"
+            else self._settings.crm_business_origin
+        )
+        url = f"{base_url}{path}"
 
         # Optional query string. We enforce a primitive whitelist on keys
         # so callers can't smuggle arbitrary params to undocumented routes.
@@ -277,6 +282,14 @@ class KecomSessionProvider:
         body = request.body if method in ("POST", "PUT") else None
 
         headers = self._default_headers()
+        if origin == "map":
+            # Keep the browser map SDK's fixed headers inside the auth boundary.
+            headers["referer"] = f"{self._settings.crm_business_origin}/rent/house/map"
+            headers["plat"] = "B"
+            headers["appId"] = "228"
+            map_token = cookies.get("puzu_lease_token")
+            if map_token:
+                headers["user-token"] = map_token
         if requires_city_header:
             headers[_DEFAULT_CITY_HEADER] = self._settings.crm_default_city_code
         headers["x-request-id"] = request_id
@@ -416,9 +429,9 @@ class KecomSessionProvider:
             return False
         code = body.get("code")
         msg = body.get("msg")
-        if code == 403:
+        if code in (403, "403", 31002, "31002"):
             return True
-        if isinstance(msg, str) and "未登录" in msg:
+        if isinstance(msg, str) and ("未登录" in msg or "请先登录" in msg):
             return True
         return False
 
@@ -452,13 +465,42 @@ def _utc_now() -> datetime:
 # before any caller can use them; this is the 'controlled routes' boundary
 # promised by the architecture document §4.4.
 _ROUTE_TABLE = {
-    "identity.me": (_KEEPALIVE_PATH, True),
-    "rental_listing.search": ("/api/houseList/search/pc/list", True),
-    "rental_listing.get_detail": ("/api/houseList/search/pc/list", True),  # TODO: fix path once §8 verified
+    "identity.me": (_KEEPALIVE_PATH, True, "business"),
+    "rental_listing.search": ("/api/houseList/search/pc/list", True, "business"),
+    "rental_listing.filter_options": (
+        "/api/houseList/search/pc/searchOption",
+        True,
+        "business",
+    ),
+    "rental_listing.get_detail": (
+        "/api/houseList/search/pc/list",
+        True,
+        "business",
+    ),  # TODO: fix path once §8 verified
+    "rental_map.search": (
+        "/proxyApi/i.c-pc-webapi.ke.com/map/houselist",
+        False,
+        "map",
+    ),
+    "rental_map.search_circle": (
+        "/proxyApi/i.c-pc-webapi.ke.com/map/drawhouselist",
+        False,
+        "map",
+    ),
+    "rental_map.bubbles": (
+        "/proxyApi/i.c-pc-webapi.ke.com/map/bubblelist",
+        False,
+        "map",
+    ),
+    "rental_map.suggest": (
+        "/proxyApi/i.c-pc-webapi.ke.com/map/sug",
+        False,
+        "map",
+    ),
 }
 
 
-def _resolve_route(route: str) -> tuple[str, bool]:
+def _resolve_route(route: str) -> tuple[str, bool, str]:
     if route not in _ROUTE_TABLE:
         raise ValueError(f"unknown authorized route: {route!r}")
     return _ROUTE_TABLE[route]

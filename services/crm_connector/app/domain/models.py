@@ -37,6 +37,7 @@ class Principal:
 @dataclass(frozen=True)
 class RentalListingFilters:
     community_keyword: str | None
+    resblock_ids: tuple[str, ...]
     listing_id: str | None
     maintainer: str | None
     scope: str
@@ -48,6 +49,19 @@ class RentalListingFilters:
     tags: tuple[str, ...]
     page: int
     page_size: int
+    condition_filters: tuple[tuple[str, str | int | float], ...] = ()
+
+
+@dataclass(frozen=True)
+class RentalListingFilterOption:
+    """One server-defined condition from the 房源列表 filter catalog."""
+
+    key: str | None
+    name: str
+    value: str | int | float | None
+    selection_type: str
+    default_value: str | int | float | None
+    children: tuple["RentalListingFilterOption", ...]
 
 
 @dataclass(frozen=True)
@@ -68,3 +82,114 @@ class RentalListingPage:
     page_size: int
     has_more: bool
     request_id: str
+
+
+@dataclass(frozen=True)
+class MapBounds:
+    min_longitude: float
+    max_longitude: float
+    min_latitude: float
+    max_latitude: float
+
+
+@dataclass(frozen=True)
+class RentalMapSearchFilters:
+    city_id: str
+    data_source: str
+    bounds: MapBounds
+    page: int
+    mode: str
+    condition_tokens: tuple[str, ...]
+    result_type: str | None
+    resblock_id: str | None
+    resblock_ids: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class RentalMapListing:
+    listing_id: str
+    title: str
+    description: str
+    tags: tuple[str, ...]
+    price_text: str | None
+    unit_price_text: str | None
+
+
+@dataclass(frozen=True)
+class RentalMapPage:
+    items: tuple[RentalMapListing, ...]
+    page: int
+    total: int
+    has_more: bool
+    mode: str
+    request_id: str
+
+
+@dataclass(frozen=True)
+class RentalMapBubbleFilters:
+    city_id: str
+    data_source: str
+    bounds: MapBounds
+    group_type: str
+    group_id: str | None
+    condition_tokens: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class RentalMapBubble:
+    bubble_id: str
+    name: str
+    group_type: str
+    latitude: float | None
+    longitude: float | None
+    count: int | None
+    count_text: str | None
+    price_text: str | None
+
+
+@dataclass(frozen=True)
+class RentalMapSuggestionFilters:
+    city_id: str
+    data_source: str
+    query: str
+
+
+@dataclass(frozen=True)
+class RentalMapSuggestion:
+    item_type: str
+    item_type_name: str | None
+    item_id: str
+    name: str
+    count_text: str | None
+    latitude: float | None
+    longitude: float | None
+
+
+@dataclass(frozen=True)
+class RentalMapNearbySearchFilters:
+    """Human-oriented search centred on a resolved map location.
+
+    The map upstream only accepts a collection of community identifiers for
+    drawn-area searches.  ``radius_meters`` is therefore applied to community
+    centroids by the application service before requesting the house list.
+    """
+
+    city_id: str
+    data_source: str
+    location: str
+    center_latitude: float | None
+    center_longitude: float | None
+    radius_meters: int
+    price_min_yuan: int | None
+    price_max_yuan: int | None
+    rooms: tuple[int, ...]
+    rental_modes: tuple[str, ...]
+    page: int
+
+
+@dataclass(frozen=True)
+class RentalMapNearbySearchResult:
+    center: RentalMapSuggestion
+    radius_meters: int
+    matched_community_count: int
+    result: RentalMapPage

@@ -18,7 +18,7 @@ serve-media: ## 启动门店媒体发布与展示服务
 test-media: ## 运行门店媒体服务测试
 	cd services/store_media && python -m pytest
 
-serve-cc: ## 启动 crm_connector 员工 CRM 连接器服务（默认 unconfigured profile）
+serve-cc: ## 启动 crm_connector 员工 CRM 连接器服务（默认 kecom-prod profile，未登录自动弹窗扫码）
 	cd services/crm_connector && uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 
 test-cc: ## 运行 CRM Connector 服务测试

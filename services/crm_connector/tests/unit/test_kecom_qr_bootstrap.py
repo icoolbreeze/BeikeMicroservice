@@ -40,9 +40,17 @@ class _Recorder:
 
     def __init__(self) -> None:
         self.calls: list[tuple[str, str]] = []
+        self.close_calls = 0
+        self.pump_calls = 0
 
     def render(self, payload: str, *, note: str) -> None:
         self.calls.append((payload, note))
+
+    def pump(self) -> None:
+        self.pump_calls += 1
+
+    def close(self) -> None:
+        self.close_calls += 1
 
 
 def _build_client(handler: httpx.MockTransport | None = None) -> httpx.Client:
@@ -115,6 +123,7 @@ def test_initialize_extracts_qrcode_and_renders_payload() -> None:
 
     result = provider.bootstrap()
     assert recorder.calls and recorder.calls[0][0] == "https://t.lianjia.com/XXXXXX"
+    assert recorder.close_calls == 1  # confirmed scan closes the local QR window
     material = json.loads(result.credential_material.decode("utf-8"))
     assert material["puzu_lease_token"] == "tok"
     assert material["UCID"] == "1000000031696069"

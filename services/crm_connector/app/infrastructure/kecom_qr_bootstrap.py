@@ -10,7 +10,6 @@ import time
 import urllib.parse
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from typing import Any, Callable
 
 import httpx
@@ -151,15 +150,43 @@ class KeComQrBootstrapProvider:
                     delay,
                 )
                 print("[*] QR code expired; refreshing automatically ...")
-                self._sleep(delay)
+                self._close_qr()
+                self._sleep_with_qr_pump(delay)
                 continue
+            except Exception:
+                self._close_qr()
+                raise
 
+            # The phone has confirmed the scan. Close the local QR window
+            # before completing the ticket exchange so it never lingers over
+            # the employee's desktop after a successful scan.
+            self._close_qr()
             business_cookies, refresh_cookies = self._exchange_ticket(
                 confirmed.service_ticket,
                 confirmed.qrcode_id,
                 confirmed.login_ticket_id,
             )
             return self._build_result(business_cookies, refresh_cookies)
+
+    def _sleep_with_qr_pump(self, seconds: float) -> None:
+        """Keep a local QR dialog responsive while polling in this thread."""
+        remaining = max(seconds, 0.0)
+        while remaining > 0:
+            self._pump_qr()
+            step = min(remaining, 0.25)
+            self._sleep(step)
+            remaining -= step
+        self._pump_qr()
+
+    def _pump_qr(self) -> None:
+        pump = getattr(self._qr, "pump", None)
+        if callable(pump):
+            pump()
+
+    def _close_qr(self) -> None:
+        close = getattr(self._qr, "close", None)
+        if callable(close):
+            close()
 
     def refresh(self, current: ActiveCredential) -> BootstrapResult | None:
         refresh_cookies = self._deserialize_refresh_material(current.refresh_material)
@@ -308,7 +335,7 @@ class KeComQrBootstrapProvider:
                 )
             if last_state == "EXPIRED":
                 raise _BootstrapExpired("qrcode expired while polling")
-            self._sleep(self._settings.bootstrap_poll_interval_seconds)
+            self._sleep_with_qr_pump(self._settings.bootstrap_poll_interval_seconds)
         raise _BootstrapPollTimedOut(f"polling timed out in state={last_state}")
 
     def _qrcode_refresh_delay(self, refresh_attempt: int) -> float:
@@ -721,13 +748,19 @@ class _QrRenderer:
     def render(self, payload: str, *, note: str) -> None:  # pragma: no cover - protocol marker
         raise NotImplementedError
 
+    def pump(self) -> None:
+        """Process pending UI events while the bootstrap poller is waiting."""
+
+    def close(self) -> None:
+        """Release any local QR presentation after the scan completes."""
+
 
 class _TerminalQrRenderer(_QrRenderer):
     """Render the qrcode content to the terminal via qrcode_terminal.
 
     The renderer is intentionally stateless and thread-unsafe — it is only
     called from the bootstrap path which runs synchronously in crm-authd.
-    Falls back to a one-line URL print if qrcode_terminal is unavailable.
+    Emits a clear local error if the terminal QR renderer is unavailable.
     """
 
     def render(self, payload: str, *, note: str) -> None:
@@ -735,8 +768,7 @@ class _TerminalQrRenderer(_QrRenderer):
             import qrcode  # type: ignore[import-not-found, import-untyped]
             import qrcode_terminal.qr_terminal as term  # type: ignore[import-not-found, import-untyped]
         except ImportError:
-            print(payload)
-            print(note)
+            print("[!] Terminal QR renderer is unavailable; use the Windows login dialog.")
             return
 
         qr = qrcode.QRCode(
@@ -752,43 +784,135 @@ class _TerminalQrRenderer(_QrRenderer):
         term.print_ascii(qr, out=buffer)
         print(buffer.getvalue())
         print(note)
-        print(f"qrCodeContent: {payload}")
 
 
 class _PopupQrRenderer(_QrRenderer):
-    """Windows popup renderer: open the QR payload in an image viewer.
+    """A self-contained Windows QR dialog owned by ``crm-authd``.
 
-    Pillow renders the payload into ``run/qr_<epoch-ms>.png`` and
-    ``os.startfile`` opens it with the system default image viewer, so the
-    employee can scan from their phone while the CLI keeps polling. Each QR
-    refresh writes a new file and prunes the previous PNGs so run/ stays
-    clean. Falls back to a one-line URL print when Pillow or ``os.startfile``
-    is unavailable (e.g. non-Windows hosts).
+    The previous renderer opened a PNG in the user's default image viewer,
+    which could neither show login progress nor close itself after the phone
+    confirmed the scan. This renderer keeps a small Tk dialog in the CLI
+    thread and lets the polling loop pump its events. No QR image or payload
+    is written to disk or echoed to the terminal.
     """
 
-    def __init__(self, output_dir: Path) -> None:
-        self._output_dir = output_dir
+    def __init__(self) -> None:
+        self._root: Any | None = None
+        self._image_label: Any | None = None
+        self._note_label: Any | None = None
+        self._photo: Any | None = None
+        self._tk: Any | None = None
+        self._fallback = _TerminalQrRenderer()
 
     def render(self, payload: str, *, note: str) -> None:
-        startfile = getattr(os, "startfile", None)
         try:
+            import tkinter as tk
+            from PIL import ImageTk  # type: ignore[import-not-found]
             import qrcode  # type: ignore[import-not-found, import-untyped]
-            from qrcode.image.pil import PilImage  # type: ignore[import-not-found, import-untyped]
         except ImportError:
-            startfile = None
-        if startfile is None:
-            print(payload)
-            print(note)
+            print("[*] Desktop QR window is unavailable; rendering in this terminal.")
+            self._fallback.render(payload, note=note)
             return
 
-        self._output_dir.mkdir(parents=True, exist_ok=True)
-        target = self._output_dir / f"qr_{time.time_ns() // 1_000_000}.png"
-        qrcode.make(payload, image_factory=PilImage).save(target)
-        for stale in self._output_dir.glob("qr_*.png"):
-            if stale != target:
-                stale.unlink(missing_ok=True)
-        startfile(str(target))
-        print(f"qrCodeContent: {payload}")
+        try:
+            if self._root is None:
+                self._create_window(tk)
+            qr = qrcode.QRCode(
+                version=None,
+                error_correction=qrcode.constants.ERROR_CORRECT_M,
+                box_size=8,
+                border=3,
+            )
+            qr.add_data(payload)
+            qr.make(fit=True)
+            image = qr.make_image(fill_color="#111827", back_color="white").get_image()
+            self._photo = ImageTk.PhotoImage(image)
+            self._image_label.configure(image=self._photo)
+            self._note_label.configure(text=note)
+            self._root.deiconify()
+            self._root.lift()
+            self._root.attributes("-topmost", True)
+            self._root.after(250, lambda: self._root and self._root.attributes("-topmost", False))
+            self.pump()
+        except Exception as exc:  # pragma: no cover - desktop-specific fallback
+            logger.warning("auth.qr_popup.unavailable class=%s", exc.__class__.__name__)
+            self.close()
+            self._fallback.render(payload, note=note)
+
+    def pump(self) -> None:
+        if self._root is None:
+            return
+        try:
+            self._root.update_idletasks()
+            self._root.update()
+        except Exception:  # pragma: no cover - user closed the native window
+            self._clear_window()
+
+    def close(self) -> None:
+        if self._root is None:
+            return
+        try:
+            self._root.destroy()
+        except Exception:  # pragma: no cover - native window already closed
+            pass
+        finally:
+            self._clear_window()
+
+    def _create_window(self, tk: Any) -> None:
+        self._tk = tk
+        root = tk.Tk()
+        root.title("CRM 扫码登录")
+        root.configure(bg="#F8FAFC")
+        root.resizable(False, False)
+        root.geometry("430x570")
+        root.protocol("WM_DELETE_WINDOW", root.iconify)
+
+        container = tk.Frame(root, bg="#F8FAFC", padx=28, pady=24)
+        container.pack(fill="both", expand=True)
+        tk.Label(
+            container,
+            text="扫码登录 CRM",
+            font=("Microsoft YaHei UI", 18, "bold"),
+            bg="#F8FAFC",
+            fg="#111827",
+        ).pack()
+        tk.Label(
+            container,
+            text="请使用 Link、A+、D+、Studio 或企业微信扫码",
+            font=("Microsoft YaHei UI", 10),
+            bg="#F8FAFC",
+            fg="#64748B",
+            pady=8,
+        ).pack()
+        card = tk.Frame(container, bg="white", padx=18, pady=18, highlightthickness=1)
+        card.pack(pady=8)
+        self._image_label = tk.Label(card, bg="white")
+        self._image_label.pack()
+        self._note_label = tk.Label(
+            container,
+            justify="center",
+            wraplength=350,
+            font=("Microsoft YaHei UI", 10),
+            bg="#F8FAFC",
+            fg="#334155",
+            pady=12,
+        )
+        self._note_label.pack()
+        tk.Label(
+            container,
+            text="手机确认后，此窗口会自动关闭。",
+            font=("Microsoft YaHei UI", 9),
+            bg="#F8FAFC",
+            fg="#94A3B8",
+        ).pack(pady=(4, 0))
+        self._root = root
+
+    def _clear_window(self) -> None:
+        self._root = None
+        self._image_label = None
+        self._note_label = None
+        self._photo = None
+        self._tk = None
 
 
 def _default_renderer(settings: Settings) -> _QrRenderer:
@@ -799,5 +923,5 @@ def _default_renderer(settings: Settings) -> _QrRenderer:
     console encoding; other hosts keep the terminal ASCII renderer.
     """
     if sys.platform == "win32":
-        return _PopupQrRenderer(Path(settings.credential_store_path).parent)
+        return _PopupQrRenderer()
     return _TerminalQrRenderer()
