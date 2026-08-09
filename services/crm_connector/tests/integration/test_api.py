@@ -138,14 +138,11 @@ def test_get_detail_flows_through_full_app_pipeline(tmp_path) -> None:
     session.enqueue(
         "rental_listing.get_detail", 200,
         {
-            "code": 100000, "msg": "ok",
+            "code": 100000, "msg": "加载成功",
             "data": {
-                "result": [
-                    {"delCode": "RC-42", "resblockName": "万象城天曜",
-                     "bedroomAmount": 3, "hallAmount": 2, "bathroomAmount": 2,
-                     "area": 145.0, "price": 9000, "orientation": ["东南"]},
-                ],
-                "totalCount": 1,
+                "delCode": 106128814453, "resblockName": "双桥路南一街",
+                "bedroomAmount": 3, "livingroomAmount": 2, "bathroomAmount": 2,
+                "houseArea": 145.0, "housePrice": 9000, "oriented": ["东南"],
             },
         },
     )
@@ -155,16 +152,16 @@ def test_get_detail_flows_through_full_app_pipeline(tmp_path) -> None:
 
     assert response.status_code == 200
     listing = response.json()
-    assert listing["listing_id"] == "RC-42"
-    assert listing["community"] == "万象城天曜"
+    # listing_id comes from the upstream's authoritative delCode
+    assert listing["listing_id"] == "106128814453"
+    assert listing["community"] == "双桥路南一街"
     assert listing["layout"] == "3室2厅2卫"
     assert listing["area_sqm"] == 145.0
     assert listing["monthly_rent_yuan"] == 9000.0
     assert listing["orientation"] == "东南"
     assert len(session.calls) == 1
     assert session.calls[0].route == "rental_listing.get_detail"
-    assert session.calls[0].query["delCode"] == "RC-42"
-    assert session.calls[0].query["pageSize"] == 1
+    assert session.calls[0].query == {"delCode": "RC-42"}
 
 
 def test_listing_filter_options_and_native_conditions_flow_through_api(tmp_path) -> None:

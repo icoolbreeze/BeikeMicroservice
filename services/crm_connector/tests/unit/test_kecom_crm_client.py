@@ -139,13 +139,12 @@ def test_build_search_request_uses_rental_search_route() -> None:
     assert request.body is None
 
 
-def test_build_detail_request_reuses_search_with_single_id() -> None:
+def test_build_detail_request_is_direct_detailhead_call() -> None:
     request = _build_detail_request("RC123456")
     assert request.route == "rental_listing.get_detail"
-    assert request.query["delCode"] == "RC123456"
-    assert request.query["pageSize"] == 1
-    # scope defaults to my_maintained in domain model
-    assert request.query["sceneCode"] == "puzu_mix_list_pc"
+    assert request.method == "GET"
+    assert request.query == {"delCode": "RC123456"}
+    assert request.body is None
 
 
 def test_build_whoami_request_uses_identity_me_route() -> None:
@@ -212,6 +211,41 @@ def test_map_parsers_map_list_bubbles_and_suggestions() -> None:
         "itemName": "万象城", "pointLat": 30.65, "pointLng": 104.1}]}},
     )
     assert suggestions[0].name == "万象城"
+
+
+def test_map_listing_extracts_id_from_action_url_when_no_id_field() -> None:
+    # The live drawhouselist rows carry no delCode/houseId/id; the only
+    # identifier is the trailing path segment of actionUrl.
+    page = _parse_map_page(
+        {"code": 0, "data": {"list": [{
+            "actionUrl": "https://trusteeship.link.lianjia.com/house/detail/10611245074901",
+            "title": "整租·三街坊社区 2室1厅",
+            "desc": "新华公园/54m²/2室1厅/东北",
+            "priceStr": "2150元/月",
+        }], "total": 1}},
+        _map_search_filters(), "map-request",
+    )
+    assert page.items[0].listing_id == "10611245074901"
+
+
+def test_map_listing_prefers_explicit_id_over_action_url() -> None:
+    page = _parse_map_page(
+        {"code": 0, "data": {"list": [{
+            "delCode": "RC-1",
+            "actionUrl": "https://trusteeship.link.lianjia.com/house/detail/OTHER-9",
+            "title": "整租·万象城套二",
+        }], "total": 1}},
+        _map_search_filters(), "map-request",
+    )
+    assert page.items[0].listing_id == "RC-1"
+
+
+def test_map_listing_id_stays_empty_without_any_source() -> None:
+    page = _parse_map_page(
+        {"code": 0, "data": {"list": [{"title": "整租·无名房源"}]}},
+        _map_search_filters(), "map-request",
+    )
+    assert page.items[0].listing_id == ""
 
 
 # -- response parsing --------------------------------------------------------
@@ -316,41 +350,48 @@ def test_search_rental_listings_through_session_boundary() -> None:
     assert page.items[0].monthly_rent_yuan == 3500.0
 
 
-def test_get_rental_listing_detail_returns_first_match() -> None:
+def test_get_rental_listing_detail_parses_detail_head() -> None:
     session = CapturingSession()
     session.enqueue(
         "rental_listing.get_detail",
         200,
         {
-            "code": 100000, "msg": "ok",
+            "code": 100000, "msg": "加载成功",
             "data": {
-                "result": [
-                    {"delCode": "RC-1", "resblockName": "万象城一期",
-                     "bedroomAmount": 2, "hallAmount": 1, "area": 80.0, "price": 3500},
-                ],
-                "totalCount": 1,
+                "delCode": 106128814453, "resblockName": "双桥路南一街",
+                "bedroomAmount": 2, "livingroomAmount": 1, "bathroomAmount": 1,
+                "houseArea": 51.23, "housePrice": 1350, "oriented": ["南"],
+                "resblockId": 16000000145204, "houseGrade": "B",
             },
         },
     )
     client = KecomCrmClient(session)
 
-    listing = client.get_rental_listing_detail("RC-1")
+    listing = client.get_rental_listing_detail("106128814453")
 
     assert session.calls[0].route == "rental_listing.get_detail"
-    assert session.calls[0].query["delCode"] == "RC-1"
-    assert listing.listing_id == "RC-1"
-    assert listing.community == "万象城一期"
+    assert session.calls[0].query == {"delCode": "106128814453"}
+    assert listing.listing_id == "106128814453"
+    assert listing.community == "双桥路南一街"
+    assert listing.layout == "2室1厅1卫"
+    assert listing.area_sqm == 51.23
+    assert listing.monthly_rent_yuan == 1350
+    assert listing.orientation == "南"
+    assert listing.visible_scope == "detail"
 
 
-def test_get_detail_raises_changed_when_upstream_returns_empty() -> None:
+def test_get_detail_raises_invalid_input_when_data_empty() -> None:
+    # Empty data is the upstream's explicit "no such listing" answer
+    # (e.g. trusteeship-domain ids that do not exist in the 普租 domain);
+    # it must fail loudly instead of falling back to a wrong house.
     session = CapturingSession()
     session.enqueue(
         "rental_listing.get_detail", 200,
-        {"code": 100000, "msg": "ok", "data": {"result": [], "totalCount": 0}},
+        {"code": 100000, "msg": "加载成功", "data": {}},
     )
     client = KecomCrmClient(session)
-    with pytest.raises(UpstreamChangedError):
-        client.get_rental_listing_detail("missing-id")
+    with pytest.raises(UpstreamInvalidInputError):
+        client.get_rental_listing_detail("10611245074901")
 
 
 def test_business_code_100001_maps_to_invalid_input() -> None:

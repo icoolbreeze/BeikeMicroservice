@@ -216,14 +216,11 @@ async def test_detail_flows_through_real_pipeline(tmp_path) -> None:
     session.enqueue(
         "rental_listing.get_detail", 200,
         {
-            "code": 100000, "msg": "ok",
+            "code": 100000, "msg": "加载成功",
             "data": {
-                "result": [
-                    {"delCode": "RC-42", "resblockName": "万象城天曜",
-                     "bedroomAmount": 3, "hallAmount": 2, "bathroomAmount": 2,
-                     "area": 145.0, "price": 9000, "orientation": ["东南"]},
-                ],
-                "totalCount": 1,
+                "delCode": 106128814453, "resblockName": "双桥路南一街",
+                "bedroomAmount": 3, "livingroomAmount": 2, "bathroomAmount": 2,
+                "houseArea": 145.0, "housePrice": 9000, "oriented": ["东南"],
             },
         },
     )
@@ -236,11 +233,12 @@ async def test_detail_flows_through_real_pipeline(tmp_path) -> None:
         )
         assert result.is_error is False
         listing = _text(result)
-        assert listing["listing_id"] == "RC-42"
-        assert listing["community"] == "万象城天曜"
+        # listing_id comes from the upstream's authoritative delCode
+        assert listing["listing_id"] == "106128814453"
+        assert listing["community"] == "双桥路南一街"
         assert listing["layout"] == "3室2厅2卫"
         assert session.calls[0].route == "rental_listing.get_detail"
-        assert session.calls[0].query["delCode"] == "RC-42"
+        assert session.calls[0].query == {"delCode": "RC-42"}
 
 
 @pytest.mark.anyio(backend="asyncio")

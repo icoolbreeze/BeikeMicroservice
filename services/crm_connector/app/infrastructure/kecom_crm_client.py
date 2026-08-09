@@ -113,30 +113,13 @@ def _build_filter_options_request() -> AuthorizedRequest:
 
 
 def _build_detail_request(listing_id: str) -> AuthorizedRequest:
-    # rental_listing.get_detail reuses the search endpoint with delCode until
-    # the dedicated upstream route is captured (docs §8.4). We restrict the
-    # upstream call to a single-listing query so the result is predictable.
-    filters = RentalListingFilters(
-        community_keyword=None,
-        resblock_ids=(),
-        listing_id=listing_id,
-        maintainer=None,
-        scope="my_maintained",
-        districts=(),
-        monthly_rent_yuan=None,
-        area_sqm=None,
-        rooms=(),
-        orientations=(),
-        tags=(),
-        page=1,
-        page_size=1,
-    )
-    request = _build_search_request(filters)
+    # Captured from the live detail page (docs §8.4): the page calls
+    # /api/puzu/house/detail/detailHead?delCode=<id> for the house record.
     return AuthorizedRequest(
         route="rental_listing.get_detail",
-        method=request.method,
-        query=request.query,
-        body=request.body,
+        method="GET",
+        query={"delCode": listing_id},
+        body=None,
         request_id=str(uuid.uuid4()),
     )
 
@@ -286,6 +269,19 @@ def _map_int(value: Any) -> int | None:
     return None
 
 
+def _extract_id_from_action_url(value: Any) -> str | None:
+    """Pull the house id from the map card's ``actionUrl`` link.
+
+    The map upstream carries the listing identifier only inside the card
+    action URL (``https://trusteeship.link.lianjia.com/house/detail/<id>``);
+    the row has no ``delCode``/``houseId``/``listingId``/``id`` field.
+    """
+    text = _map_text(value)
+    if not text:
+        return None
+    return text.rstrip("/").split("/")[-1] or None
+
+
 def _parse_map_listing(row: Mapping[str, Any]) -> RentalMapListing:
     raw_tags = row.get("tags") or []
     tags: list[str] = []
@@ -299,7 +295,11 @@ def _parse_map_listing(row: Mapping[str, Any]) -> RentalMapListing:
                 tags.append(text)
     return RentalMapListing(
         listing_id=_map_text(
-            row.get("delCode") or row.get("houseId") or row.get("listingId") or row.get("id")
+            row.get("delCode")
+            or row.get("houseId")
+            or row.get("listingId")
+            or row.get("id")
+            or _extract_id_from_action_url(row.get("actionUrl"))
         )
         or "",
         title=_map_text(row.get("title") or row.get("houseTitle")) or "",
@@ -432,6 +432,53 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
 def _as_float(value: Any) -> float | None:
     if isinstance(value, (int, float)):
         return float(value)
+    return None
+
+
+def _parse_detail_head(body: Mapping[str, Any]) -> RentalListing:
+    # Captured from the live detail page (docs §8.4): detailHead returns the
+    # house record under ``data`` with its own field names (housePrice,
+    # houseArea, livingroomAmount, oriented). An empty ``data`` object is the
+    # upstream's explicit "no such listing" answer — never fall back to a
+    # search-returned listing for a different house (the pre-detailHead
+    # behaviour that returned ICC凯旋门 for a trusteeship-domain id).
+    data = body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        raise UpstreamInvalidInputError("upstream has no such listing (detailHead data is empty)")
+    del_code = _as_int(data.get("delCode"))
+    if del_code is None:
+        raise UpstreamChangedError("detailHead response 'data' has no delCode")
+    bedroom = _as_int(data.get("bedroomAmount"))
+    hall = _as_int(data.get("livingroomAmount"))
+    bathroom = _as_int(data.get("bathroomAmount"))
+    layout_parts = []
+    if bedroom is not None:
+        layout_parts.append(f"{bedroom}室")
+    if hall is not None:
+        layout_parts.append(f"{hall}厅")
+    if bathroom is not None:
+        layout_parts.append(f"{bathroom}卫")
+    return RentalListing(
+        listing_id=str(del_code),
+        community=_opt_str(data.get("resblockName")) or "",
+        layout="".join(layout_parts) or None,
+        area_sqm=_as_float(data.get("houseArea")),
+        monthly_rent_yuan=_as_float(data.get("housePrice")),
+        orientation=_parse_orientation(data.get("oriented")),
+        # detailHead has no list scope; "detail" marks the direct-detail view.
+        visible_scope="detail",
+    )
+
+
+def _parse_orientation(value: Any) -> str | None:
+    if isinstance(value, (list, tuple)) and value:
+        return ",".join(str(item) for item in value)
+    if isinstance(value, Mapping):
+        directs = value.get("directs")
+        if isinstance(directs, (list, tuple)) and directs:
+            return ",".join(str(item) for item in directs)
+    if isinstance(value, str) and value:
+        return value
     return None
 
 
@@ -589,6 +636,9 @@ class KecomCrmClient:
         return _parse_filter_options(body)
 
     def get_rental_listing_detail(self, listing_id: str) -> RentalListing:
+        # Direct detailHead call (docs §8.4) instead of a search round-trip:
+        # search with listing_id may return a different house when the id is
+        # from the trusteeship domain, so an unknown id must fail loudly here.
         request = _build_detail_request(listing_id)
         response = self._session.authorized_fetch(request)
         if response.status_code != 200:
@@ -597,28 +647,7 @@ class KecomCrmClient:
             )
         body = _coerce_mapping(response.body)
         _raise_for_business_code(body)
-        page = _parse_page(
-            body,
-            RentalListingFilters(
-                community_keyword=None,
-                resblock_ids=(),
-                listing_id=listing_id,
-                maintainer=None,
-                scope="my_maintained",
-                districts=(),
-                monthly_rent_yuan=None,
-                area_sqm=None,
-                rooms=(),
-                orientations=(),
-                tags=(),
-                page=1,
-                page_size=1,
-            ),
-            request.request_id,
-        )
-        if not page.items:
-            raise UpstreamChangedError(f"upstream returned no listing for id={listing_id!r}")
-        return page.items[0]
+        return _parse_detail_head(body)
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
         request = _build_map_search_request(filters)

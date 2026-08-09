@@ -473,10 +473,10 @@ _ROUTE_TABLE = {
         "business",
     ),
     "rental_listing.get_detail": (
-        "/api/houseList/search/pc/list",
-        True,
+        "/api/puzu/house/detail/detailHead",
+        False,
         "business",
-    ),  # TODO: fix path once §8 verified
+    ),  # captured from the live detail page (docs §8.4)
     "rental_map.search": (
         "/proxyApi/i.c-pc-webapi.ke.com/map/houselist",
         False,

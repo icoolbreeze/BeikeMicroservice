@@ -53,3 +53,15 @@ CRM
 连接器生成该区间，且不能同时传入 `condition_filters.price`。
 
 不会改变地图找房的路由或筛选语义。
+
+## 房源详情
+
+`rental_listing_get_detail` 直接调用页面详情路由
+`GET /api/puzu/house/detail/detailHead?delCode=<id>`（2026-08-09 从真实详情页抓包确认，
+不再复用房源列表搜索）。detailHead 的字段名与列表不同：`housePrice`/`houseArea`/
+`livingroomAmount`/`oriented`，映射为 `monthly_rent_yuan`/`area_sqm`/`layout`/`orientation`。
+
+ID 语义：列表与地图返回的 `delCode` 属于普租域。地图 `actionUrl` 中部分 ID（如
+10611245074901）属于托管域房源，在普租域详情中不存在；detailHead 对这类 ID 返回空
+`data`，连接器将其报告为“房源编码错误，房源不存在”（invalid-input 错误），绝不回退到
+搜索返回的其它房源。
