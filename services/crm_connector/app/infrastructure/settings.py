@@ -26,6 +26,11 @@ class Settings:
     bootstrap_poll_timeout_seconds: float = 300.0
     bootstrap_qrcode_refresh_initial_delay_seconds: float = 1.0
     refresh_keepalive_interval_seconds: float = 1500.0
+    # Service-mode session watchdog: keeps the uvicorn process probing and
+    # re-triggering QR login when credentials go stale mid-run (the
+    # KeepaliveTimer in crm-authd serve does not exist in this process).
+    session_watchdog_enabled: bool = True
+    session_watchdog_check_interval_seconds: float = 60.0
 
 
 def load_settings() -> Settings:
@@ -69,5 +74,10 @@ def load_settings() -> Settings:
         ),
         refresh_keepalive_interval_seconds=float(
             os.getenv("CC_KEEPALIVE_INTERVAL_SECONDS", "1500")
+        ),
+        session_watchdog_enabled=os.getenv("CC_SESSION_WATCHDOG_ENABLED", "1").strip()
+        .lower() not in ("0", "false", "no", "off"),
+        session_watchdog_check_interval_seconds=float(
+            os.getenv("CC_SESSION_WATCHDOG_CHECK_INTERVAL_SECONDS", "60")
         ),
     )

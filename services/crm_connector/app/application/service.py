@@ -12,6 +12,8 @@ from app.domain.errors import (
 from app.domain.models import (
     ConnectionState,
     ConnectionStatus,
+    ListingDetailInfo,
+    ListingProspect,
     MapBounds,
     Principal,
     RentalListingFilterOption,
@@ -51,6 +53,7 @@ class ConnectorService:
             bound_employee_principal=self._settings.bound_employee_principal or None,
             mcp_transport=self._settings.mcp_transport,
             checked_at=datetime.now(UTC),
+            credential_expires_at=provider_status.expires_at,
         )
 
     def modules(self) -> tuple[CrmModule, ...]:
@@ -73,6 +76,14 @@ class ConnectorService:
     def get_rental_listing_detail(self, listing_id: str) -> RentalListing:
         self._require_ready()
         return self._crm_client.get_rental_listing_detail(listing_id)
+
+    def get_rental_listing_prospect(self, listing_id: str) -> ListingProspect:
+        self._require_ready()
+        return self._crm_client.get_rental_listing_prospect(listing_id)
+
+    def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+        self._require_ready()
+        return self._crm_client.get_rental_listing_house_info(listing_id)
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
         self._require_ready()
@@ -181,6 +192,7 @@ class ConnectorService:
             center=center,
             radius_meters=filters.radius_meters,
             matched_community_count=len(community_ids),
+            community_ids=community_ids,
             result=result,
         )
 

@@ -272,6 +272,16 @@ def test_needs_login_reflects_session_state() -> None:
     assert manager.needs_login() is False
 
 
+def test_needs_login_false_while_scan_pending() -> None:
+    gate = threading.Event()
+    manager, _, _ = _manager(gate=gate)
+    first = manager.start()
+    assert manager.needs_login() is False  # a scan is already pending
+    gate.set()
+    _wait_for(manager, first.login_id, state=QrLoginState.READY.value)
+    assert manager.needs_login() is True  # pending attempt finished
+
+
 def test_auto_start_skips_when_ready() -> None:
     session = FakeSession(state=ConnectionState.READY)
     manager, _, _ = _manager(session=session)

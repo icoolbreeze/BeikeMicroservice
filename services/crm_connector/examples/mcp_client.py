@@ -9,6 +9,7 @@ Usage (run from ``services/crm_connector``):
     python examples/mcp_client.py whoami
     python examples/mcp_client.py search --keyword 万象城 [--page 1] [--page-size 3]
     python examples/mcp_client.py detail --listing-id <id>
+    python examples/mcp_client.py prospect --listing-id <id>  # 实勘照片记录
     python examples/mcp_client.py demo            # tools -> status -> whoami -> search -> detail
 
 The server subprocess inherits this process's environment, so enable the
@@ -114,6 +115,12 @@ async def _run(args: argparse.Namespace) -> bool:
                         }
                     },
                 )
+            elif args.command == "prospect":
+                payload = await _call_json(
+                    session,
+                    "rental_listing_get_prospect",
+                    {"input": {"listing_id": args.listing_id}},
+                )
             else:  # detail
                 payload = await _call_json(
                     session,
@@ -143,6 +150,9 @@ def _parser() -> argparse.ArgumentParser:
 
     detail = sub.add_parser("detail", help="fetch one rental listing")
     detail.add_argument("--listing-id", required=True)
+
+    prospect = sub.add_parser("prospect", help="fetch one listing's 实勘 photo record")
+    prospect.add_argument("--listing-id", required=True)
 
     demo = sub.add_parser("demo", help="full chain: tools -> status -> whoami -> search -> detail")
     demo.add_argument("--keyword", default="万象城")

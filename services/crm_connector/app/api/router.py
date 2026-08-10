@@ -8,6 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from app.api.schemas import (
     ConnectionStatusResponse,
     HealthResponse,
+    ListingDetailInfoResponse,
+    ListingProspectResponse,
     ModuleResponse,
     PrincipalResponse,
     QrLoginStartResponse,
@@ -24,6 +26,7 @@ from app.api.schemas import (
 from app.application.qr_login import QrLoginManager
 from app.application.service import ConnectorService
 from app.domain.errors import ConnectorError, UpstreamNotConfiguredError
+from app.domain.models import ConnectionState
 from app.mcp.tools import tool_definitions
 
 router = APIRouter(prefix="/api/v1")
@@ -61,8 +64,25 @@ def invoke(call: Callable[[], ResultT]) -> ResultT:
 
 
 @router.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse(status="ok", service="crm_connector")
+def health(
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> HealthResponse:
+    """Liveness + credential-readiness probe.
+
+    HTTP 200 with ``status: "ok"`` means the process is alive; the
+    credential fields report whether the stored CRM authorization still
+    falls within its validity period.
+    """
+    status = svc.connection_status()
+    return HealthResponse(
+        status="ok",
+        service="crm_connector",
+        connection_state=status.state.value,
+        credential_valid=status.state
+        in (ConnectionState.READY, ConnectionState.EXPIRING),
+        credential_expires_at=status.credential_expires_at,
+        checked_at=status.checked_at,
+    )
 
 
 @router.get("/connection/status", response_model=ConnectionStatusResponse)
@@ -154,6 +174,34 @@ def get_rental_listing_detail(
 ) -> RentalListingResponse:
     return RentalListingResponse.from_domain(
         invoke(lambda: svc.get_rental_listing_detail(listing_id))
+    )
+
+
+@router.get("/listings/rental/{listing_id}/prospect", response_model=ListingProspectResponse)
+def get_rental_listing_prospect(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> ListingProspectResponse:
+    """Detail-page 实勘 record: survey photos, floor plan, edit permission.
+
+    ``has_survey_photo=false`` with an empty ``photos`` list is a valid
+    answer — the house has not been surveyed yet.
+    """
+    return ListingProspectResponse.from_domain(
+        invoke(lambda: svc.get_rental_listing_prospect(listing_id))
+    )
+
+
+@router.get("/listings/rental/{listing_id}/house-info", response_model=ListingDetailInfoResponse)
+def get_rental_listing_house_info(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> ListingDetailInfoResponse:
+    """Detail-page information beyond detailHead: labels, 小区/楼栋
+    attributes, and the HQI quality score (``hqi`` is null when the house
+    has no score record yet)."""
+    return ListingDetailInfoResponse.from_domain(
+        invoke(lambda: svc.get_rental_listing_house_info(listing_id))
     )
 
 

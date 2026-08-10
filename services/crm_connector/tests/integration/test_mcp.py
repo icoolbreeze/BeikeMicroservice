@@ -96,6 +96,8 @@ async def test_tool_discovery_exposes_map_tools_with_read_only_hint(tmp_path) ->
             "crm_whoami",
             "rental_listing_filter_options",
             "rental_listing_get_detail",
+            "rental_listing_get_house_info",
+            "rental_listing_get_prospect",
             "rental_listing_search",
             "rental_map_nearby_search",
             "rental_map_suggest",
@@ -203,6 +205,7 @@ async def test_nearby_map_tool_follows_draw_circle_pipeline(tmp_path) -> None:
         assert result.is_error is False
         body = _text(result)
         assert body["matched_community_count"] == 1
+        assert body["community_ids"] == ["rb-1"]
         assert body["result"]["items"][0]["listing_id"] == "RC-map-1"
         assert [call.route for call in session.calls] == [
             "rental_map.suggest", "rental_map.bubbles", "rental_map.search_circle",
@@ -239,6 +242,122 @@ async def test_detail_flows_through_real_pipeline(tmp_path) -> None:
         assert listing["layout"] == "3室2厅2卫"
         assert session.calls[0].route == "rental_listing.get_detail"
         assert session.calls[0].query == {"delCode": "RC-42"}
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_get_prospect_tool_serves_survey_record(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "rental_listing.detail_prospect", 200,
+        {
+            "code": 100000, "msg": "加载成功",
+            "data": {
+                "canEditProspect": False,
+                "houseFrameImageResp": {"imageUrl": "https://img.ke.com/huxing.png"},
+                "houseProspectImageList": [
+                    {"prospectPicUrl": "https://img.ke.com/real-1.jpg",
+                     "roomName": "客厅", "imageType": "REAL",
+                     "uploadUserName": "张三", "createTime": 1750000000000},
+                ],
+            },
+        },
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "rental_listing_get_prospect",
+            {"input": {"listing_id": "RC-42"}},
+        )
+        assert result.is_error is False
+        prospect = _text(result)
+        assert prospect["listing_id"] == "RC-42"
+        assert prospect["has_survey_photo"] is True
+        assert prospect["photos"][0]["image_type"] == "REAL"
+        assert session.calls[0].route == "rental_listing.detail_prospect"
+        assert session.calls[0].query == {"delCode": "RC-42"}
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_get_prospect_tool_reports_not_surveyed_without_error(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "rental_listing.detail_prospect", 200,
+        {"code": 100000, "msg": "加载成功",
+         "data": {"canEditProspect": False, "houseProspectImageList": []}},
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "rental_listing_get_prospect",
+            {"input": {"listing_id": "106128814453"}},
+        )
+        assert result.is_error is False
+        prospect = _text(result)
+        assert prospect["has_survey_photo"] is False
+        assert prospect["photos"] == []
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_get_house_info_tool_aggregates_detail_info(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000, "data": {"resblockName": "成发紫东阳光", "tiHuRatio": "2梯5户"},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["电梯房", "VR房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000, "data": {"totalScoreValue": "38"},
+    })
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000, "data": {
+            "delCode": "RC-42",
+            "importantModules": [{
+                "completenessRate": "完备率：9/9(100%)",
+                "fields": [{"fieldName": "装修情况", "displayValue": "精装", "complete": True}],
+            }],
+            "remark": "钥匙在门店", "allFieldMaintainRate": 75,
+            "importantFieldMaintainRate": 100, "ownerLowestPrice": 2900,
+        },
+    })
+    session.enqueue("rental_listing.get_follow", 200, {
+        "code": 100000, "data": {
+            "totalCount": 1, "result": [{
+                "followUpContent": "真实在租房东，租带卖，附近最有性价比的电梯套三",
+                "followTypeStr": "普通跟进", "creatorName": "万世平",
+                "roleTypeStr": "维护人", "createTime": 1785403336000,
+                "followLabel": ["真实在租"], "followLabelCode": "IN_RENT",
+                "remarks": "业主脾气好", "onTop": True, "onTopTime": 1785403336000,
+            }],
+        },
+    })
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "rental_listing_get_house_info",
+            {"input": {"listing_id": "RC-42"}},
+        )
+        assert result.is_error is False
+        info = _text(result)
+        assert info["listing_id"] == "RC-42"
+        assert info["labels"] == ["电梯房", "VR房"]
+        assert info["property_info"]["ti_hu_ratio"] == "2梯5户"
+        assert info["hqi"]["total_score"] == "38"
+        assert info["maintain"]["modules"][0]["fields"][0]["display_value"] == "精装"
+        assert info["maintain"]["remark"] == "钥匙在门店"
+        assert info["follows"][0]["content"] == "真实在租房东，租带卖，附近最有性价比的电梯套三"
+        assert info["follows"][0]["remarks"] == "业主脾气好"
+        assert info["follows"][0]["on_top"] is True
+        assert [call.route for call in session.calls] == [
+            "rental_listing.get_hdic_info",
+            "rental_listing.get_house_label",
+            "rental_listing.get_hqi_tab",
+            "rental_listing.get_maintain_info",
+            "rental_listing.get_follow",
+        ]
 
 
 @pytest.mark.anyio(backend="asyncio")
@@ -318,6 +437,7 @@ def test_tool_metadata_exposes_input_and_output_schemas() -> None:
     assert "input" in nearby.input_schema["properties"]
     assert nearby.output_schema is not None
     assert "matched_community_count" in nearby.output_schema["properties"]
+    assert "community_ids" in nearby.output_schema["properties"]
     assert nearby.module_id == "property.rental.map_search"
     assert by_name["rental_listing_search"].module_id == "property.rental.listing_search"
 
@@ -349,6 +469,8 @@ async def test_stdio_transport_serves_tools_from_real_entry_point(tmp_path) -> N
                 "crm_whoami",
                 "rental_listing_filter_options",
                 "rental_listing_get_detail",
+                "rental_listing_get_house_info",
+                "rental_listing_get_prospect",
                 "rental_listing_search",
                 "rental_map_nearby_search",
                 "rental_map_suggest",

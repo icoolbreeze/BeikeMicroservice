@@ -38,3 +38,6 @@ class SessionProvider(Protocol):
 
     def authorized_fetch(self, request: AuthorizedRequest) -> UpstreamResponse:
         """Send an allow-listed request without disclosing authentication material."""
+
+    def run_keepalive(self) -> None:
+        """Probe identity, extend the ssid window, and refresh via TGC on failure."""

@@ -21,7 +21,13 @@
 4. 以这些社区 ID 查询房源。
 
 因此结果是 **社区中心点半径** 检索，不是房源坐标的精确圆形检索。响应的
-`approximation` 固定为 `community_centroid`，并返回匹配社区数。
+`approximation` 固定为 `community_centroid`，并返回匹配社区数
+（`matched_community_count`）与匹配社区 ID 列表（`community_ids`）。
+
+`community_ids` 与内部画圈查询使用的社区集合一致（Haversine 圆内过滤、
+去重、上限 200）。把 `community_ids` 作为 `resblock_ids` 传给
+`rental_listing_search`，即可在保持圆内语义的同时使用列表侧全量筛选目录
+（`condition_filters`、`budget_yuan` 等），例如“圆内 + 宠物友好 + 套二”。
 
 示例：
 
@@ -41,4 +47,8 @@
 `rental_modes` 的 `whole_rent` 或 `shared_rent`。合租默认不设置最低价，除非客户明确提出。
 
 如调用方已通过可信地理编码服务得到坐标，可同时传入 `center_latitude` 与
-`center_longitude`；两个字段必须成对提供，并使用同一坐标系。
+`center_longitude`；两个字段必须成对提供，并使用与上游相同的坐标系。
+
+> 上游地图为**百度地图（BD-09）**：建议直接使用 `rental_map_suggest`
+> 返回的坐标做回退，不要混用其他地图服务的坐标（如高德 GCJ-02 与
+> BD-09 在成都地区有数百米偏移，服务端不校验坐标系，混用会静默偏航）。

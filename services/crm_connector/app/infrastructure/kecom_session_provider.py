@@ -120,7 +120,9 @@ class KecomSessionProvider:
                 )
 
             state, message = self._derive_state_locked(active)
-            return ProviderStatus(state, message)
+            return ProviderStatus(
+                state, message, expires_at=active.expires_at
+            )
 
     def authorized_fetch(self, request: AuthorizedRequest) -> UpstreamResponse:
         # Validate against the route allow-list: SessionProvider never
@@ -252,9 +254,12 @@ class KecomSessionProvider:
                 return ProviderStatus(
                     ConnectionState.READY,
                     "CRM authorization refreshed via TGC after keepalive failure",
+                    expires_at=refreshed.expires_at,
                 )
             state, message = self._derive_state_locked(active)
-            return ProviderStatus(state, message)
+            return ProviderStatus(
+                state, message, expires_at=active.expires_at
+            )
 
     # -- internals: send + refresh -----------------------------------------
 
@@ -477,6 +482,36 @@ _ROUTE_TABLE = {
         False,
         "business",
     ),  # captured from the live detail page (docs §8.4)
+    "rental_listing.detail_prospect": (
+        "/api/puzu/house/detail/detailProspect",
+        False,
+        "business",
+    ),  # captured from the live detail page (docs §房源详情)
+    "rental_listing.get_hdic_info": (
+        "/api/puzu/house/detail/detailHdicInfo",
+        False,
+        "business",
+    ),  # 小区/楼栋属性 (docs §房源详细信息)
+    "rental_listing.get_house_label": (
+        "/api/puzu/house/detail/getHouseLabel",
+        False,
+        "business",
+    ),  # 房源标签 (docs §房源详细信息)
+    "rental_listing.get_hqi_tab": (
+        "/api/puzu/house/detail/detailHqiTab",
+        False,
+        "business",
+    ),  # HQI 质量评分 (docs §房源详细信息)
+    "rental_listing.get_maintain_info": (
+        "/api/puzuHouse/puzu/house/detail/app/getMaintainInfo",
+        False,
+        "business",
+    ),  # 维护信息（getMaintainInfo，docs §房源详细信息）
+    "rental_listing.get_follow": (
+        "/api/puzu/house/detail/detailFollow",
+        False,
+        "business",
+    ),  # 跟进记录（detailFollow，docs §房源详细信息）
     "rental_map.search": (
         "/proxyApi/i.c-pc-webapi.ke.com/map/houselist",
         False,

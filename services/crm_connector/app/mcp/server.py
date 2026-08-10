@@ -16,6 +16,8 @@ from mcp.types import ToolAnnotations
 
 from app.api.schemas import (
     ConnectionStatusResponse,
+    ListingDetailInfoResponse,
+    ListingProspectResponse,
     PrincipalResponse,
     RentalListingFilterOptionResponse,
     RentalListingPageResponse,
@@ -133,6 +135,59 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         try:
             listing = service.get_rental_listing_detail(input.listing_id)
             return RentalListingResponse.from_domain(listing)
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
+        name="rental_listing_get_prospect",
+        description=(
+            "Return one rental listing's detail-page 实勘 record: survey photos, "
+            "floor plan, and edit permission. has_survey_photo=false with an "
+            "empty photos list means the house has not been surveyed yet."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def rental_listing_get_prospect(
+        input: RentalListingDetailInput,
+    ) -> ListingProspectResponse:
+        _require_quota(_caller_subject())
+        try:
+            prospect = service.get_rental_listing_prospect(input.listing_id)
+            return ListingProspectResponse.from_domain(prospect)
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
+        name="rental_listing_get_house_info",
+        description=(
+            "Return one rental listing's detail-page information beyond the "
+            "head record: labels (电梯房/VR房/…), 小区/楼栋 attributes "
+            "(楼型、梯户比、物业费、水电气、车位比、停车费…), the HQI "
+            "quality score, the 维护信息 (家具/家电/租期/装修/入住时间/备注… "
+            "with render-ready display values), and the 跟进记录 (follows) — "
+            "the keeper's field notes on the house's latest state, useful for "
+            "vetting a listing before showing it. Verified across 50 real "
+            "listings (2026-08-09), follow content carries: viewing logistics "
+            "(密码锁/实体钥匙, 钥匙在哪个门店, 随时可看 vs 需提前通知, "
+            "可否马上看房), price leverage (业主底价/佣金让步/杂费明细 like "
+            "水电气物业网费), rental status (在租 vs 续租/空置/转租/预计空出, "
+            "租带卖), restrictions and risks (暂不推荐原因, 限性别/不养宠/"
+            "年付要求), and call/visit logs (回访结果, 电话接通/拒接/关机). "
+            "Each record has type (普通跟进/录音跟进), author, role, time, "
+            "labels (真实在租… — listing genuineness signal), remarks, and "
+            "on_top marking the pinned important follow-up. Full history is "
+            "returned (up to 100 records). hqi is null when the house has no "
+            "score record yet; follows is empty when no follow-up exists."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def rental_listing_get_house_info(
+        input: RentalListingDetailInput,
+    ) -> ListingDetailInfoResponse:
+        _require_quota(_caller_subject())
+        try:
+            info = service.get_rental_listing_house_info(input.listing_id)
+            return ListingDetailInfoResponse.from_domain(info)
         except ConnectorError as exc:
             raise _tool_error(exc) from exc
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import UTC, datetime
 from typing import Any, Mapping
 
 from app.domain.errors import (
@@ -10,8 +11,19 @@ from app.domain.errors import (
     UpstreamInvalidInputError,
 )
 from app.domain.models import (
+    FollowRecord,
+    HqiHeatItem,
+    HqiScore,
+    HqiSuggestion,
+    ListingDetailInfo,
+    ListingMaintainInfo,
+    ListingPropertyInfo,
+    ListingProspect,
+    MaintainField,
+    MaintainModule,
     MapBounds,
     Principal,
+    ProspectPhoto,
     RentalListingFilterOption,
     RentalListing,
     RentalListingFilters,
@@ -120,6 +132,88 @@ def _build_detail_request(listing_id: str) -> AuthorizedRequest:
         route="rental_listing.get_detail",
         method="GET",
         query={"delCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_detail_prospect_request(listing_id: str) -> AuthorizedRequest:
+    # Captured from the live detail page (docs §房源详情): the page calls
+    # /api/puzu/house/detail/detailProspect?delCode=<id> for the 实勘 record.
+    return AuthorizedRequest(
+        route="rental_listing.detail_prospect",
+        method="GET",
+        query={"delCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_hdic_info_request(listing_id: str) -> AuthorizedRequest:
+    # Captured from the live detail page (docs §房源详细信息): the page calls
+    # /api/puzu/house/detail/detailHdicInfo?delCode=<id> for the
+    # 小区/楼栋 property attributes.
+    return AuthorizedRequest(
+        route="rental_listing.get_hdic_info",
+        method="GET",
+        query={"delCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_house_label_request(listing_id: str) -> AuthorizedRequest:
+    # Captured from the live detail page (docs §房源详细信息): the page calls
+    # /api/puzu/house/detail/getHouseLabel?delCode=<id> for the house labels.
+    return AuthorizedRequest(
+        route="rental_listing.get_house_label",
+        method="GET",
+        query={"delCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_maintain_info_request(listing_id: str) -> AuthorizedRequest:
+    # Captured from the live detail page (docs §房源详细信息): the page calls
+    # /api/puzuHouse/puzu/house/detail/app/getMaintainInfo?delCode=<id> for
+    # the 维护信息 section (家具/家电/租期/装修/入住时间/备注…). Probed
+    # 2026-08-09: plain delCode suffices, no isApp / city header needed.
+    return AuthorizedRequest(
+        route="rental_listing.get_maintain_info",
+        method="GET",
+        query={"delCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_follow_request(listing_id: str) -> AuthorizedRequest:
+    # Captured from the live detail page (docs §房源详细信息): the page calls
+    # /api/puzu/house/detail/detailFollow?delCode=<id> for the 跟进记录 list.
+    # Probed 2026-08-09: plain delCode suffices; missing id returns
+    # code=100001 房源编码错误 (same invalid-input semantics as detailHead).
+    # pageSize=100 so the 跟进 history (latest status, key situation, 可否看房)
+    # is returned in full: a 50-house sample (2026-08-09) hit 82 records on one
+    # listing, so the default page of 8 and even 50 truncate real histories.
+    return AuthorizedRequest(
+        route="rental_listing.get_follow",
+        method="GET",
+        query={"delCode": listing_id, "pageSize": "100"},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_hqi_tab_request(listing_id: str) -> AuthorizedRequest:
+    # Captured from the live detail page (docs §房源详细信息): the page calls
+    # /api/puzu/house/detail/detailHqiTab?isApp=false&delCode=<id> for the
+    # HQI score. isApp=false is REQUIRED — without it the upstream rejects
+    # the call with 缺少必要的入参 (probed 2026-08-09).
+    return AuthorizedRequest(
+        route="rental_listing.get_hqi_tab",
+        method="GET",
+        query={"delCode": listing_id, "isApp": "false"},
         body=None,
         request_id=str(uuid.uuid4()),
     )
@@ -476,6 +570,22 @@ def _parse_detail_head(body: Mapping[str, Any]) -> RentalListing:
         orientation=_parse_orientation(data.get("oriented")),
         # detailHead has no list scope; "detail" marks the direct-detail view.
         visible_scope="detail",
+        # Detail-only fields from the same detailHead record (docs §房源详情).
+        maintain_org=_opt_str(data.get("orgName")),
+        source=_opt_str(data.get("delResourceSub")),
+        floor_desc=_opt_str(data.get("floorDesc")),
+        total_floors=_as_int(data.get("totalFloor")),
+        listed_days=_as_int(data.get("alreadyCreateDays")),
+        house_grade=_opt_str(data.get("houseGrade")),
+        follow_total=_as_int(data.get("followTotal")),
+        follow_last_7d=_as_int(data.get("followNum7Days")),
+        showing_total=_as_int(data.get("showingTotal")),
+        showing_last_7d=_as_int(data.get("showingNum7Days")),
+        external_url_ke=_opt_str(data.get("keUrl")),
+        external_url_lianjia=_opt_str(data.get("lianJiaUrl")),
+        has_key=_as_bool(data.get("haveKey")),
+        del_status_text=_opt_str(data.get("delStatusString")),
+        house_id=str(data["houseId"]) if data.get("houseId") is not None else None,
     )
 
 
@@ -561,6 +671,288 @@ def _as_int(value: Any) -> int | None:
     return None
 
 
+def _as_bool(value: Any) -> bool | None:
+    return value if isinstance(value, bool) else None
+
+
+def _as_positive_flag(value: Any) -> bool | None:
+    """Upstream isPositive arrives as int 1/0, not JSON true/false."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value == 1
+    return None
+
+
+def _ts_to_datetime(value: Any) -> datetime | None:
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value / 1000, tz=UTC)
+    return None
+
+
+def _parse_prospect(body: Mapping[str, Any], listing_id: str) -> ListingProspect:
+    """Parse the detail-page 实勘 record (docs §房源详情).
+
+    An empty ``houseProspectImageList`` is the upstream's honest "not yet
+    surveyed" answer for a valid 普租 house — it is NOT an error. Only a
+    missing/empty ``data`` object means the id is not served by the 普租
+    detail domain (e.g. 托管 ids), mirroring detailHead.
+    """
+    data = body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        raise UpstreamInvalidInputError(
+            "no detailProspect record for this id; trusteeship (托管) listings "
+            "are not covered by the 普租 detail endpoint"
+        )
+    photos: list[ProspectPhoto] = []
+    raw_photos = data.get("houseProspectImageList")
+    if isinstance(raw_photos, list):
+        for item in raw_photos:
+            if not isinstance(item, Mapping):
+                continue
+            url = _opt_str(item.get("prospectPicUrl"))
+            if not url:
+                continue
+            photos.append(
+                ProspectPhoto(
+                    url=url,
+                    room_name=_opt_str(item.get("roomName")),
+                    image_type=_opt_str(item.get("imageType")) or "",
+                    upload_user=_opt_str(item.get("uploadUserName")),
+                    created_at=_ts_to_datetime(item.get("createTime")),
+                )
+            )
+    frame = data.get("houseFrameImageResp")
+    floor_plan_url = (
+        _opt_str(frame.get("imageUrl")) if isinstance(frame, Mapping) else None
+    )
+    return ListingProspect(
+        listing_id=listing_id,
+        photos=tuple(photos),
+        floor_plan_url=floor_plan_url,
+        can_edit=_as_bool(data.get("canEditProspect")),
+        has_survey_photo=any(photo.image_type == "REAL" for photo in photos),
+    )
+
+
+def _parse_property_info(body: Mapping[str, Any], listing_id: str) -> ListingPropertyInfo:
+    """Parse detailHdicInfo — the detail page's 小区/楼栋 attributes.
+
+    An empty/missing ``data`` means the id is not served by the 普租 detail
+    domain, mirroring detailHead and detailProspect.
+    """
+    data = body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        raise UpstreamInvalidInputError(
+            "no detailHdicInfo record for this id; trusteeship (托管) listings "
+            "are not covered by the 普租 detail endpoint"
+        )
+    return ListingPropertyInfo(
+        listing_id=listing_id,
+        # 小区信息
+        community=_opt_str(data.get("resblockName")),
+        district=_opt_str(data.get("districtName")),
+        biz_circle=_opt_str(data.get("bizCircleName")),
+        tenement_fee=_opt_str(data.get("tenementFeeStr")),
+        kindergarten=_clean_opt_str(data.get("kindergarten")),
+        # 建筑信息
+        building_type=_opt_str(data.get("buildTypeName")),
+        building_structure=_opt_str(data.get("buildingStructureName")),
+        building_year=(
+            None if data.get("buildingYear") in (None, 0) else _as_int(data.get("buildingYear"))
+        ),
+        property_purpose=_opt_str(data.get("statFunctionName")),
+        deal_property=_opt_str(data.get("dealPropertyName")),
+        age_limit=_opt_str(data.get("propertyAgeLimitName")),
+        disgust_desc=_clean_opt_str(data.get("disgustDesc")),
+        haunted_desc=_clean_opt_str(data.get("hauntedDesc")),
+        # 生活信息
+        elevator=_opt_str(data.get("elevatorCntStr")),
+        ti_hu_ratio=_opt_str(data.get("tiHuRatio")),
+        water_type=_opt_str(data.get("waterTypeName")),
+        electric_type=_opt_str(data.get("electricTypeName")),
+        heating=_opt_str(data.get("heatingTypeName")),
+        heating_fee=_clean_opt_str(data.get("heatingFeeStr")),
+        gas=_opt_str(data.get("gasStr")),
+        gas_fee=_clean_opt_str(data.get("gasFeeStr")),
+        hot_water=_clean_opt_str(data.get("hotWaterStr")),
+        hot_water_fee=_clean_opt_str(data.get("hotWaterFeeStr")),
+        middle_water=_clean_opt_str(data.get("middleWaterStr")),
+        middle_water_fee=_clean_opt_str(data.get("middleWaterFeeStr")),
+        parking_ratio=_opt_str(data.get("carRatio")),
+        parking_fee=_opt_str(data.get("parkingFee")),
+        parking_above_ground=_clean_opt_str(data.get("carUpCntStr")),
+        parking_underground=_clean_opt_str(data.get("carDownCntStr")),
+        green_rate=_as_float(data.get("greenRate")),
+        cubage_rate=_as_float(data.get("cubageRate")),
+    )
+
+
+def _parse_house_labels(body: Mapping[str, Any]) -> tuple[str, ...]:
+    """Parse getHouseLabel — a plain list of label strings.
+
+    An empty list is a valid answer (verified live: some houses only carry
+    a couple of labels, some none).
+    """
+    raw = body.get("data")
+    if not isinstance(raw, list):
+        return ()
+    labels = [str(item) for item in raw if isinstance(item, str) and item]
+    return tuple(dict.fromkeys(labels))
+
+
+def _parse_hqi_score(body: Mapping[str, Any], listing_id: str) -> HqiScore | None:
+    """Parse detailHqiTab — the HQI quality-score record.
+
+    An empty ``data`` object is the upstream's honest "no HQI record yet"
+    answer (verified live: 106128807039 returns ``{}`` while
+    106128274229 returns a full record), so it maps to ``None`` rather
+    than an error — unlike detailHead where empty data means "unknown id".
+    """
+    data = body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        return None
+
+    heat_items: list[HqiHeatItem] = []
+    raw_heat = data.get("chotDataList")
+    if isinstance(raw_heat, list):
+        for item in raw_heat:
+            if not isinstance(item, Mapping):
+                continue
+            name = _opt_str(item.get("dataName"))
+            if not name:
+                continue
+            heat_items.append(
+                HqiHeatItem(
+                    name=name,
+                    value=_opt_str(item.get("dataValue")),
+                    fluctuate=_opt_str(item.get("fluctuateVal")),
+                    positive=_as_positive_flag(item.get("isPositive")),
+                )
+            )
+
+    suggestions: list[HqiSuggestion] = []
+    raw_suggestions = data.get("optimizeSuggestionList")
+    if isinstance(raw_suggestions, list):
+        for item in raw_suggestions:
+            if not isinstance(item, Mapping):
+                continue
+            suggestions.append(
+                HqiSuggestion(
+                    item=_opt_str(item.get("optimizeItemName")),
+                    suggestion=_opt_str(item.get("suggestionDesc")),
+                )
+            )
+
+    rank_prefix = _opt_str(data.get("rankDescPrefix")) or ""
+    rank_suffix = _opt_str(data.get("rankDescSuffix")) or ""
+    rank_text = f"{rank_prefix}{rank_suffix}" if (rank_prefix or rank_suffix) else None
+    return HqiScore(
+        total_score=_opt_str(data.get("totalScoreValue")),
+        level=_opt_str(data.get("totalScoreLevel")),
+        next_level=_opt_str(data.get("nextLevelName")),
+        rank_text=rank_text,
+        pending_optimize=_opt_str(data.get("pendingOptimizeDesc")),
+        heat_items=tuple(heat_items),
+        suggestions=tuple(suggestions),
+    )
+
+
+def _parse_maintain_info(body: Mapping[str, Any], listing_id: str) -> ListingMaintainInfo:
+    """Parse getMaintainInfo — the detail page's 维护信息 section.
+
+    An empty/missing ``data`` means the id is not served by the 普租 detail
+    domain (probed 2026-08-09: unknown ids return code=100001 房源编码错误),
+    mirroring detailHead. Modules carry the upstream-rendered display values
+    (e.g. 装修情况 = "精装"), so no code mapping is needed downstream.
+    """
+    data = body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        raise UpstreamInvalidInputError(
+            "no getMaintainInfo record for this id; trusteeship (托管) listings "
+            "are not covered by the 普租 detail endpoint"
+        )
+    modules: list[MaintainModule] = []
+    for raw_module in ("importantModules", "otherModules"):
+        raw_list = data.get(raw_module)
+        if not isinstance(raw_list, list):
+            continue
+        for module in raw_list:
+            if not isinstance(module, Mapping):
+                continue
+            fields: list[MaintainField] = []
+            raw_fields = module.get("fields")
+            if isinstance(raw_fields, list):
+                for field in raw_fields:
+                    if not isinstance(field, Mapping):
+                        continue
+                    name = _opt_str(field.get("fieldName"))
+                    if not name:
+                        continue
+                    fields.append(
+                        MaintainField(
+                            name=name,
+                            display_value=_opt_str(field.get("displayValue")),
+                            complete=_as_bool(field.get("complete")),
+                        )
+                    )
+            modules.append(
+                MaintainModule(
+                    rate_text=_opt_str(module.get("completenessRate")),
+                    fields=tuple(fields),
+                )
+            )
+    return ListingMaintainInfo(
+        listing_id=listing_id,
+        modules=tuple(modules),
+        remark=_opt_str(data.get("remark")),
+        all_field_rate=_as_int(data.get("allFieldMaintainRate")),
+        important_rate=_as_int(data.get("importantFieldMaintainRate")),
+        owner_lowest_price=_opt_str(data.get("ownerLowestPrice")),
+    )
+
+
+def _parse_follow_records(body: Mapping[str, Any]) -> tuple[FollowRecord, ...]:
+    """Parse detailFollow — the detail page's 跟进记录 list.
+
+    ``data.result`` is ``None`` when the house has no follow-ups yet
+    (verified live: 106128807039 returns totalCount=0 with result=None),
+    which maps to an empty tuple — a valid answer, not an error.
+    """
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        return ()
+    raw_result = data.get("result")
+    if not isinstance(raw_result, list):
+        return ()
+    records: list[FollowRecord] = []
+    for item in raw_result:
+        if not isinstance(item, Mapping):
+            continue
+        content = _opt_str(item.get("followUpContent"))
+        if not content:
+            continue
+        labels: list[str] = []
+        raw_labels = item.get("followLabel")
+        if isinstance(raw_labels, list):
+            labels = [str(label) for label in raw_labels if str(label)]
+        records.append(
+            FollowRecord(
+                content=content,
+                follow_type=_opt_str(item.get("followTypeStr")),
+                creator_name=_opt_str(item.get("creatorName")),
+                role=_opt_str(item.get("roleTypeStr")),
+                created_at=_ts_to_datetime(item.get("createTime")),
+                labels=tuple(dict.fromkeys(labels)),
+                label_code=_opt_str(item.get("followLabelCode")),
+                remarks=_clean_opt_str(item.get("remarks")),
+                on_top=bool(item.get("onTop")),
+                on_top_time=_ts_to_datetime(item.get("onTopTime")),
+            )
+        )
+    return tuple(records)
+
+
 def _parse_principal(body: Mapping[str, Any]) -> Principal:
     # accountRightInfo does not return a stable employee principal field in
     # the documented envelope; the principal is read from the auth material
@@ -585,6 +977,13 @@ def _parse_principal(body: Mapping[str, Any]) -> Principal:
 
 def _opt_str(value: Any) -> str | None:
     return str(value) if value is not None else None
+
+
+def _clean_opt_str(value: Any) -> str | None:
+    """_opt_str that also collapses the upstream's empty-string "no value"
+    sentinel (e.g. detailHdicInfo.heatingFeeStr is '' when 无供暖费用)."""
+    text = _opt_str(value)
+    return text if text else None
 
 
 class KecomCrmClient:
@@ -657,6 +1056,91 @@ class KecomCrmClient:
         body = _coerce_mapping(response.body)
         _raise_for_business_code(body)
         return _parse_detail_head(body)
+
+    def get_rental_listing_prospect(self, listing_id: str) -> ListingProspect:
+        """Return the detail-page 实勘 record (photos, floor plan, VR flags).
+
+        An empty photo list is a valid answer — it means the house has not
+        been surveyed yet.
+        """
+        request = _build_detail_prospect_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"rental_listing.detail_prospect returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        return _parse_prospect(body, listing_id)
+
+    def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+        """Return the aggregated detail-page information beyond detailHead.
+
+        Five upstream records: getHouseLabel (labels), detailHdicInfo
+        (小区/楼栋 attributes), detailHqiTab (HQI score), getMaintainInfo
+        (维护信息), detailFollow (跟进记录). HQI may be None for houses
+        without a score record and follows may be empty when no follow-up
+        exists; the hdicInfo call must succeed for a valid 普租 id, otherwise
+        the unknown-id error surfaces from it.
+        """
+        request = _build_hdic_info_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"{request.route} returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        property_info = _parse_property_info(body, listing_id)
+
+        request = _build_house_label_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"{request.route} returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        labels = _parse_house_labels(body)
+
+        request = _build_hqi_tab_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"{request.route} returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        hqi = _parse_hqi_score(body, listing_id)
+
+        request = _build_maintain_info_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"{request.route} returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        maintain = _parse_maintain_info(body, listing_id)
+
+        request = _build_follow_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"{request.route} returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        follows = _parse_follow_records(body)
+
+        return ListingDetailInfo(
+            listing_id=listing_id,
+            labels=labels,
+            property_info=property_info,
+            hqi=hqi,
+            maintain=maintain,
+            follows=follows,
+        )
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
         request = _build_map_search_request(filters)

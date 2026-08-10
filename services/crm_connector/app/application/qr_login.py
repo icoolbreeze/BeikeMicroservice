@@ -244,10 +244,22 @@ class QrLoginManager:
             return self._snapshot(session)
 
     def needs_login(self) -> bool:
-        """True when the CRM session requires a human QR scan right now."""
-        return (
-            self._session_provider.status().state is ConnectionState.AUTH_REQUIRED
-        )
+        """True when the CRM session requires a human QR scan right now.
+
+        False when a scan attempt is already pending — callers (the session
+        watchdog, auto-start) use this to avoid spamming duplicate windows.
+        """
+        with self._lock:
+            if (
+                self._session_provider.status().state
+                is not ConnectionState.AUTH_REQUIRED
+            ):
+                return False
+            self._prune_locked()
+            return not any(
+                session.state is QrLoginState.PENDING
+                for session in self._sessions.values()
+            )
 
     def qrcode_png(self, login_id: str) -> bytes:
         """Render the session's latest QR payload to PNG bytes."""

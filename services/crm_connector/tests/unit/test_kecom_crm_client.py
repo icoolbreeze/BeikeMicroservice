@@ -21,18 +21,28 @@ from app.domain.models import (
 from app.domain.providers.session_provider import AuthorizedRequest, UpstreamResponse
 from app.infrastructure.kecom_crm_client import (
     KecomCrmClient,
+    _build_detail_prospect_request,
     _build_detail_request,
+    _build_hdic_info_request,
+    _build_house_label_request,
+    _build_hqi_tab_request,
     _build_search_request,
     _build_whoami_request,
     _build_map_bubbles_request,
     _build_map_search_request,
     _build_map_suggest_request,
+    _parse_follow_records,
     _parse_map_bubbles,
     _parse_map_page,
     _parse_map_suggestions,
+    _parse_house_labels,
+    _parse_hqi_score,
     _parse_listing,
+    _parse_maintain_info,
     _parse_page,
     _parse_principal,
+    _parse_property_info,
+    _parse_prospect,
     _route_query,
 )
 
@@ -150,6 +160,435 @@ def test_build_detail_request_is_direct_detailhead_call() -> None:
     assert request.method == "GET"
     assert request.query == {"delCode": "RC123456"}
     assert request.body is None
+
+
+def test_build_detail_prospect_request_uses_prospect_route() -> None:
+    request = _build_detail_prospect_request("RC123456")
+    assert request.route == "rental_listing.detail_prospect"
+    assert request.method == "GET"
+    assert request.query == {"delCode": "RC123456"}
+    assert request.body is None
+
+
+def test_parse_prospect_maps_photos_floor_plan_and_flags() -> None:
+    body = {
+        "code": 100000, "msg": "加载成功",
+        "data": {
+            "canEditProspect": False,
+            "houseFrameImageResp": {"imageUrl": "https://img.ke.com/huxing.png"},
+            "houseProspectImageList": [
+                {"prospectPicUrl": "https://img.ke.com/real-1.jpg",
+                 "roomName": "客厅", "imageType": "REAL",
+                 "uploadUserName": "张三", "createTime": 1750000000000},
+                {"prospectPicUrl": "https://img.ke.com/title.jpg",
+                 "roomName": None, "imageType": "TITLE",
+                 "uploadUserName": None, "createTime": 1750000500000},
+            ],
+        },
+    }
+    prospect = _parse_prospect(body, "106128762229")
+
+    assert prospect.listing_id == "106128762229"
+    assert len(prospect.photos) == 2
+    photo = prospect.photos[0]
+    assert photo.url == "https://img.ke.com/real-1.jpg"
+    assert photo.room_name == "客厅"
+    assert photo.image_type == "REAL"
+    assert photo.upload_user == "张三"
+    assert photo.created_at is not None and photo.created_at.year == 2025
+    assert prospect.floor_plan_url == "https://img.ke.com/huxing.png"
+    assert prospect.can_edit is False
+    assert prospect.has_survey_photo is True
+
+
+def test_parse_prospect_empty_photo_list_means_not_surveyed() -> None:
+    # A valid 普租 house with no survey yet returns non-empty data with an
+    # empty image list — this is NOT an error (verified against the live
+    # upstream: 106128814453).
+    body = {
+        "code": 100000, "msg": "加载成功",
+        "data": {
+            "canEditProspect": False, "houseFrameImageResp": {},
+            "houseProspectImageList": [], "houseProspectRoomList": [],
+        },
+    }
+    prospect = _parse_prospect(body, "106128814453")
+
+    assert prospect.photos == ()
+    assert prospect.has_survey_photo is False
+    assert prospect.floor_plan_url is None
+
+
+def test_parse_prospect_raises_when_data_empty() -> None:
+    # Empty data mirrors detailHead: the id is not served by the 普租 domain.
+    with pytest.raises(UpstreamInvalidInputError):
+        _parse_prospect({"code": 100000, "data": {}}, "10611245074901")
+
+
+def test_build_house_info_requests_use_detail_page_routes() -> None:
+    hdic = _build_hdic_info_request("RC-1")
+    assert hdic.route == "rental_listing.get_hdic_info"
+    assert hdic.query == {"delCode": "RC-1"}
+
+    label = _build_house_label_request("RC-1")
+    assert label.route == "rental_listing.get_house_label"
+    assert label.query == {"delCode": "RC-1"}
+
+    # isApp=false is required by the upstream (缺少必要的入参 without it).
+    hqi = _build_hqi_tab_request("RC-1")
+    assert hqi.route == "rental_listing.get_hqi_tab"
+    assert hqi.query == {"delCode": "RC-1", "isApp": "false"}
+
+
+def test_parse_property_info_maps_hdic_attributes() -> None:
+    # body shape from the live detailHdicInfo capture (106128274229)
+    body = {
+        "code": 100000,
+        "data": {
+            "resblockName": "成发紫东阳光", "districtName": "成华",
+            "bizCircleName": "新华公园", "buildTypeName": "塔楼",
+            "buildingStructureName": "框架结构", "buildingYear": 2015,
+            "statFunctionName": "普通住宅", "dealPropertyName": "商品房",
+            "elevatorCntStr": "有", "tiHuRatio": "2梯5户",
+            "tenementFeeStr": "2.15", "waterTypeName": "民水",
+            "electricTypeName": "民电", "gasStr": "有",
+            "heatingTypeName": None, "carRatio": "1:0.48",
+            "parkingFee": "350", "greenRate": 26, "cubageRate": 4.6,
+            "propertyAgeLimitName": "70",
+            "disgustDesc": None, "hauntedDesc": "高压线",
+            "heatingFeeStr": "", "gasFeeStr": "2.03", "hotWaterStr": "有",
+            "hotWaterFeeStr": "0.0", "middleWaterStr": "无", "middleWaterFeeStr": "0.0",
+            "carUpCntStr": "无", "carDownCntStr": "361", "kindergarten": "成华区第三幼儿园",
+        },
+    }
+    info = _parse_property_info(body, "106128274229")
+
+    assert info.listing_id == "106128274229"
+    assert info.community == "成发紫东阳光"
+    assert info.district == "成华"
+    assert info.biz_circle == "新华公园"
+    assert info.building_type == "塔楼"
+    assert info.building_structure == "框架结构"
+    assert info.building_year == 2015
+    assert info.property_purpose == "普通住宅"
+    assert info.deal_property == "商品房"
+    assert info.elevator == "有"
+    assert info.ti_hu_ratio == "2梯5户"
+    assert info.tenement_fee == "2.15"
+    assert info.water_type == "民水"
+    assert info.electric_type == "民电"
+    assert info.gas == "有"
+    assert info.heating is None
+    assert info.parking_ratio == "1:0.48"
+    assert info.parking_fee == "350"
+    assert info.green_rate == 26.0
+    assert info.cubage_rate == 4.6
+    assert info.age_limit == "70"
+    # 建筑信息补充
+    assert info.disgust_desc is None
+    assert info.haunted_desc == "高压线"
+    # 生活信息补充（空串 -> None）
+    assert info.heating_fee is None
+    assert info.gas_fee == "2.03"
+    assert info.hot_water == "有"
+    assert info.hot_water_fee == "0.0"
+    assert info.middle_water == "无"
+    assert info.middle_water_fee == "0.0"
+    assert info.parking_above_ground == "无"
+    assert info.parking_underground == "361"
+    assert info.kindergarten == "成华区第三幼儿园"
+
+
+def test_parse_property_info_normalizes_missing_year() -> None:
+    # buildingYear=0 is the upstream's "unknown" sentinel, not year zero.
+    body = {"code": 100000, "data": {"resblockName": "双桥路南一街", "buildingYear": 0}}
+    info = _parse_property_info(body, "RC-1")
+    assert info.building_year is None
+    assert info.community == "双桥路南一街"
+
+
+def test_parse_property_info_raises_when_data_empty() -> None:
+    # Mirrors detailHead/detailProspect: unknown id (e.g. 托管) -> invalid input.
+    with pytest.raises(UpstreamInvalidInputError):
+        _parse_property_info({"code": 100000, "data": {}}, "10611245074901")
+
+
+def test_parse_house_labels_extracts_deduplicated_list() -> None:
+    body = {"code": 100000, "data": ["电梯房", "VR房", "钥", "学区房", "电梯房"]}
+    labels = _parse_house_labels(body)
+    assert labels == ("电梯房", "VR房", "钥", "学区房")
+
+
+def test_parse_house_labels_empty_list_is_valid() -> None:
+    assert _parse_house_labels({"code": 100000, "data": []}) == ()
+    assert _parse_house_labels({"code": 100000, "data": None}) == ()
+
+
+def test_parse_hqi_score_maps_score_heat_and_suggestions() -> None:
+    # body shape from the live detailHqiTab capture (106128274229)
+    body = {
+        "code": 100000,
+        "data": {
+            "totalScoreValue": "38", "totalScoreLevel": None,
+            "nextLevelName": "白银等级", "pendingOptimizeDesc": "5项待优化",
+            "rankDescPrefix": "本商圈排名", "rankDescSuffix": "199/242",
+            "chotDataList": [
+                {"dataName": "本房热度", "dataValue": "125", "fluctuateVal": "20%",
+                 "isPositive": 1},
+            ],
+            "optimizeSuggestionList": [
+                {"optimizeItemName": "房间整洁度-实勘图AI评估",
+                 "suggestionDesc": "清理客厅及卧室的垃圾与杂物"},
+            ],
+        },
+    }
+    score = _parse_hqi_score(body, "106128274229")
+
+    assert score is not None
+    assert score.total_score == "38"
+    assert score.level is None
+    assert score.next_level == "白银等级"
+    assert score.rank_text == "本商圈排名199/242"
+    assert score.pending_optimize == "5项待优化"
+    assert score.heat_items[0].name == "本房热度"
+    assert score.heat_items[0].value == "125"
+    assert score.heat_items[0].fluctuate == "20%"
+    assert score.heat_items[0].positive is True
+    assert score.suggestions[0].item == "房间整洁度-实勘图AI评估"
+
+
+def test_parse_hqi_score_empty_data_means_no_score_record() -> None:
+    # Verified live: 106128807039 returns data:{} — a valid "no score" answer.
+    assert _parse_hqi_score({"code": 100000, "data": {}}, "106128807039") is None
+
+
+def test_parse_maintain_info_maps_modules_and_remark() -> None:
+    # body shape from the live getMaintainInfo capture (106128274229)
+    body = {
+        "code": 100000,
+        "data": {
+            "delCode": "106128274229",
+            "importantModules": [{
+                "completenessRate": "完备率：9/9(100%)",
+                "fields": [
+                    {"fieldName": "可入住时间", "displayValue": "随时入住", "complete": True},
+                    {"fieldName": "家具",
+                     "displayValue": "床/衣柜/桌椅/单人床/双人床/沙发/蹲便", "complete": True},
+                    {"fieldName": "租期", "displayValue": "2年以内", "complete": True},
+                ],
+            }],
+            "otherModules": [{
+                "completenessRate": "完备率：1/4(25%)",
+                "fields": [
+                    {"fieldName": "设施", "displayValue": "无", "complete": True},
+                    {"fieldName": "房屋格局是否有变动", "displayValue": "--", "complete": False},
+                ],
+            }],
+            "remark": "实勘图被买卖覆盖目前很干净。钥匙在门店或者门口小中介拿 给我打电话",
+            "allFieldMaintainRate": 75,
+            "importantFieldMaintainRate": 100,
+            "ownerLowestPrice": 2900,
+        },
+    }
+    info = _parse_maintain_info(body, "106128274229")
+
+    assert info.listing_id == "106128274229"
+    assert len(info.modules) == 2
+    important, other = info.modules
+    assert important.rate_text == "完备率：9/9(100%)"
+    assert [f.name for f in important.fields] == ["可入住时间", "家具", "租期"]
+    assert important.fields[0].display_value == "随时入住"
+    assert important.fields[0].complete is True
+    assert other.fields[1].display_value == "--"
+    assert other.fields[1].complete is False
+    assert info.remark == "实勘图被买卖覆盖目前很干净。钥匙在门店或者门口小中介拿 给我打电话"
+    assert info.all_field_rate == 75
+    assert info.important_rate == 100
+    assert info.owner_lowest_price == "2900"
+
+
+def test_parse_maintain_info_raises_when_data_empty() -> None:
+    # Probed 2026-08-09: unknown id -> code=100001 房源编码错误 (invalid input).
+    with pytest.raises(UpstreamInvalidInputError):
+        _parse_maintain_info({"code": 100000, "data": {}}, "999999999")
+
+
+def test_parse_follow_records_maps_records_and_skips_empty_content() -> None:
+    body = {
+        "code": 100000,
+        "data": {
+            "totalCount": 2,
+            "result": [
+                {
+                    "followUpContent": "真实在租房东，租带卖，附近最有性价比的电梯套三",
+                    "followTypeStr": "普通跟进", "creatorName": "万世平",
+                    "roleTypeStr": "维护人", "createTime": 1785403336000,
+                    "followLabel": ["真实在租", "真实在租"], "followLabelCode": "IN_RENT",
+                    "remarks": "业主脾气好", "onTop": True,
+                    "onTopTime": 1785403336000,
+                },
+                {"followUpContent": "", "followTypeStr": "普通跟进"},
+            ],
+        },
+    }
+    records = _parse_follow_records(body)
+
+    assert len(records) == 1
+    assert records[0].content == "真实在租房东，租带卖，附近最有性价比的电梯套三"
+    assert records[0].follow_type == "普通跟进"
+    assert records[0].creator_name == "万世平"
+    assert records[0].role == "维护人"
+    assert records[0].labels == ("真实在租",)  # deduplicated
+    assert records[0].label_code == "IN_RENT"
+    assert records[0].created_at is not None
+    assert records[0].created_at.year == 2026
+    assert records[0].remarks == "业主脾气好"
+    assert records[0].on_top is True
+    assert records[0].on_top_time is not None
+    assert records[0].on_top_time == records[0].created_at
+
+
+def test_parse_follow_records_none_result_means_no_follows() -> None:
+    # Verified live: 106128807039 returns totalCount=0 with result=None.
+    assert _parse_follow_records({"code": 100000, "data": {"result": None}}) == ()
+    assert _parse_follow_records({"code": 100000, "data": {}}) == ()
+
+
+def test_get_rental_listing_house_info_aggregates_five_records() -> None:
+    session = CapturingSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000, "data": {"resblockName": "成发紫东阳光", "tiHuRatio": "2梯5户"},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["电梯房", "VR房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000, "data": {"totalScoreValue": "38"},
+    })
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000, "data": {
+            "delCode": "106128274229",
+            "importantModules": [{
+                "completenessRate": "完备率：9/9(100%)",
+                "fields": [{"fieldName": "装修情况", "displayValue": "精装", "complete": True}],
+            }],
+            "remark": "钥匙在门店",
+            "allFieldMaintainRate": 75,
+            "importantFieldMaintainRate": 100,
+            "ownerLowestPrice": 2900,
+        },
+    })
+    session.enqueue("rental_listing.get_follow", 200, {
+        "code": 100000, "data": {
+            "totalCount": 1, "result": [{
+                "followUpContent": "真实在租房东，租带卖，附近最有性价比的电梯套三",
+                "followTypeStr": "普通跟进", "creatorName": "万世平",
+                "roleTypeStr": "维护人", "createTime": 1785403336000,
+                "followLabel": ["真实在租"], "followLabelCode": "IN_RENT",
+                "remarks": "业主脾气好", "onTop": True, "onTopTime": 1785403336000,
+            }],
+        },
+    })
+    client = KecomCrmClient(session)
+
+    info = client.get_rental_listing_house_info("106128274229")
+
+    assert [call.route for call in session.calls] == [
+        "rental_listing.get_hdic_info",
+        "rental_listing.get_house_label",
+        "rental_listing.get_hqi_tab",
+        "rental_listing.get_maintain_info",
+        "rental_listing.get_follow",
+    ]
+    assert session.calls[0].query == {"delCode": "106128274229"}
+    assert session.calls[1].query == {"delCode": "106128274229"}
+    assert session.calls[2].query == {"delCode": "106128274229", "isApp": "false"}
+    assert session.calls[3].query == {"delCode": "106128274229"}
+    assert session.calls[4].query == {"delCode": "106128274229", "pageSize": "100"}
+    assert info.listing_id == "106128274229"
+    assert info.labels == ("电梯房", "VR房")
+    assert info.property_info is not None and info.property_info.community == "成发紫东阳光"
+    assert info.hqi is not None and info.hqi.total_score == "38"
+    assert info.maintain is not None
+    assert info.maintain.modules[0].rate_text == "完备率：9/9(100%)"
+    assert info.maintain.modules[0].fields[0].name == "装修情况"
+    assert info.maintain.modules[0].fields[0].display_value == "精装"
+    assert info.maintain.remark == "钥匙在门店"
+    assert info.maintain.all_field_rate == 75
+    assert info.maintain.important_rate == 100
+    assert info.maintain.owner_lowest_price == "2900"
+    assert len(info.follows) == 1
+    assert info.follows[0].content == "真实在租房东，租带卖，附近最有性价比的电梯套三"
+    assert info.follows[0].follow_type == "普通跟进"
+    assert info.follows[0].creator_name == "万世平"
+    assert info.follows[0].role == "维护人"
+    assert info.follows[0].labels == ("真实在租",)
+    assert info.follows[0].label_code == "IN_RENT"
+    assert info.follows[0].remarks == "业主脾气好"
+    assert info.follows[0].on_top is True
+
+
+def test_get_rental_listing_house_info_allows_missing_hqi_and_empty_follows() -> None:
+    session = CapturingSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000, "data": {"resblockName": "双桥路南一街"},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["VR房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000, "data": {},
+    })
+    # 106128807039 verified live: getMaintainInfo remark=None, detailFollow
+    # totalCount=0 with result=None — both are valid, not errors.
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000, "data": {
+            "delCode": "106128807039",
+            "importantModules": [], "otherModules": [],
+            "remark": None, "allFieldMaintainRate": 0,
+            "importantFieldMaintainRate": 0, "ownerLowestPrice": None,
+        },
+    })
+    session.enqueue("rental_listing.get_follow", 200, {
+        "code": 100000, "data": {"totalCount": 0, "result": None},
+    })
+    client = KecomCrmClient(session)
+
+    info = client.get_rental_listing_house_info("106128807039")
+
+    assert info.hqi is None
+    assert info.property_info is not None
+    assert info.labels == ("VR房",)
+    assert info.maintain is not None and info.maintain.remark is None
+    assert info.maintain.modules == ()
+    assert info.follows == ()
+
+
+def test_get_rental_listing_prospect_through_session_boundary() -> None:
+    session = CapturingSession()
+    session.enqueue(
+        "rental_listing.detail_prospect", 200,
+        {
+            "code": 100000, "msg": "加载成功",
+            "data": {
+                "canEditProspect": True,
+                "houseFrameImageResp": {"imageUrl": "https://img.ke.com/huxing.png"},
+                "houseProspectImageList": [
+                    {"prospectPicUrl": "https://img.ke.com/real-1.jpg",
+                     "roomName": "卧室", "imageType": "REAL",
+                     "uploadUserName": "李四", "createTime": 1750000000000},
+                ],
+            },
+        },
+    )
+    client = KecomCrmClient(session)
+
+    prospect = client.get_rental_listing_prospect("106128762229")
+
+    assert session.calls[0].route == "rental_listing.detail_prospect"
+    assert session.calls[0].query == {"delCode": "106128762229"}
+    assert prospect.has_survey_photo is True
+    assert prospect.photos[0].upload_user == "李四"
 
 
 def test_build_whoami_request_uses_identity_me_route() -> None:
@@ -376,6 +815,13 @@ def test_get_rental_listing_detail_parses_detail_head() -> None:
                 "bedroomAmount": 2, "livingroomAmount": 1, "bathroomAmount": 1,
                 "houseArea": 51.23, "housePrice": 1350, "oriented": ["南"],
                 "resblockId": 16000000145204, "houseGrade": "B",
+                "orgName": "德佑-承嘉-水碾河店A组", "delResourceSub": "呼叫中心",
+                "floorDesc": "高楼层", "totalFloor": 31, "alreadyCreateDays": 42,
+                "followTotal": 3, "followNum7Days": 1,
+                "showingTotal": 0, "showingNum7Days": 0,
+                "keUrl": "https://m.ke.com/chuzu/cd/zufang/X1.html",
+                "lianJiaUrl": "https://m.lianjia.com/chuzu/cd/zufang/X1.html",
+                "haveKey": True, "delStatusString": "有效", "houseId": 25853701,
             },
         },
     )
@@ -392,6 +838,22 @@ def test_get_rental_listing_detail_parses_detail_head() -> None:
     assert listing.monthly_rent_yuan == 1350
     assert listing.orientation == "南"
     assert listing.visible_scope == "detail"
+    # Detail-only fields from the same detailHead record.
+    assert listing.maintain_org == "德佑-承嘉-水碾河店A组"
+    assert listing.source == "呼叫中心"
+    assert listing.floor_desc == "高楼层"
+    assert listing.total_floors == 31
+    assert listing.listed_days == 42
+    assert listing.house_grade == "B"
+    assert listing.follow_total == 3
+    assert listing.follow_last_7d == 1
+    assert listing.showing_total == 0
+    assert listing.showing_last_7d == 0
+    assert listing.external_url_ke == "https://m.ke.com/chuzu/cd/zufang/X1.html"
+    assert listing.external_url_lianjia == "https://m.lianjia.com/chuzu/cd/zufang/X1.html"
+    assert listing.has_key is True
+    assert listing.del_status_text == "有效"
+    assert listing.house_id == "25853701"
 
 
 def test_get_detail_raises_invalid_input_when_data_empty() -> None:

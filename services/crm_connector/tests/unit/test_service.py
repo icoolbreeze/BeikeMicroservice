@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from app.application.service import ConnectorService
 from app.domain.errors import AuthenticationRequiredError, UpstreamNotConfiguredError
 from app.domain.models import (
@@ -94,6 +96,49 @@ def test_ready_service_queries_through_crm_client() -> None:
     assert service.whoami().employee_principal == "employee-1"
     assert service.search_rental_listings(filters()).items[0].listing_id == "listing-1"
     assert service.get_rental_listing_detail("listing-1").listing_id == "listing-1"
+
+
+def test_connection_status_exposes_credential_expiry() -> None:
+    expiry = datetime(2026, 12, 31, tzinfo=UTC)
+    service = ConnectorService(
+        Settings(),
+        session_provider=type(
+            "ExpiringSession",
+            (),
+            {
+                "status": lambda self: ProviderStatus(
+                    ConnectionState.READY, "ready", expires_at=expiry
+                )
+            },
+        )(),
+        crm_client=FakeCrmClient(),
+    )
+
+    status = service.connection_status()
+
+    assert status.state is ConnectionState.READY
+    assert status.credential_expires_at == expiry
+
+
+def test_connection_status_reports_no_credential() -> None:
+    service = ConnectorService(
+        Settings(),
+        session_provider=type(
+            "MissingSession",
+            (),
+            {
+                "status": lambda self: ProviderStatus(
+                    ConnectionState.AUTH_REQUIRED, "sign in required"
+                )
+            },
+        )(),
+        crm_client=FakeCrmClient(),
+    )
+
+    status = service.connection_status()
+
+    assert status.state is ConnectionState.AUTH_REQUIRED
+    assert status.credential_expires_at is None
 
 
 def test_ready_service_reports_unconfigured_upstream() -> None:

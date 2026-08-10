@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastapi.testclient import TestClient
 
 from app.domain.models import ConnectionState, Principal, ProviderStatus
@@ -17,9 +19,15 @@ class StubSession:
     def __init__(self) -> None:
         self.calls: list[AuthorizedRequest] = []
         self.responses: list[tuple[str, int, object]] = []
+        self.ready = True
+        self.expires_at: datetime | None = None
 
     def status(self) -> ProviderStatus:
-        return ProviderStatus(ConnectionState.READY, "stub ready")
+        if not self.ready:
+            return ProviderStatus(ConnectionState.AUTH_REQUIRED, "stub unauthenticated")
+        return ProviderStatus(
+            ConnectionState.READY, "stub ready", expires_at=self.expires_at
+        )
 
     def bound_principal(self) -> Principal | None:
         # No locally-bound identity: force the upstream discovery path.
@@ -59,6 +67,42 @@ def _wired_app(session: StubSession, tmp_path) -> tuple[object, TestClient]:
     return app, TestClient(app)
 
 
+def test_health_reports_credential_validity(tmp_path) -> None:
+    session = StubSession()
+    session.expires_at = datetime(2026, 9, 1, tzinfo=UTC)
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok" and body["service"] == "crm_connector"
+    assert body["connection_state"] == "ready"
+    assert body["credential_valid"] is True
+    assert datetime.fromisoformat(body["credential_expires_at"]) == session.expires_at
+    # The connection status endpoint surfaces the same validity deadline.
+    status = client.get("/api/v1/connection/status")
+    assert status.status_code == 200
+    assert (
+        datetime.fromisoformat(status.json()["credential_expires_at"])
+        == session.expires_at
+    )
+
+
+def test_health_reports_absent_credential(tmp_path) -> None:
+    session = StubSession()
+    session.ready = False
+    _app, client = _wired_app(session, tmp_path)
+
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["connection_state"] == "auth_required"
+    assert body["credential_valid"] is False
+    assert body["credential_expires_at"] is None
+
+
 def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
     session = StubSession()
     session.enqueue(
@@ -94,6 +138,13 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
         "layout": "2室1厅", "area_sqm": 80.0, "monthly_rent_yuan": 3500.0,
         "orientation": "南", "visible_scope": "my_maintained",
         "del_type": None,
+        # detail-only fields are absent on search rows
+        "maintain_org": None, "source": None, "floor_desc": None,
+        "total_floors": None, "listed_days": None, "house_grade": None,
+        "follow_total": None, "follow_last_7d": None,
+        "showing_total": None, "showing_last_7d": None,
+        "external_url_ke": None, "external_url_lianjia": None,
+        "has_key": None, "del_status_text": None, "house_id": None,
     }
     # The request reached SessionProvider with the documented upstream params.
     assert len(session.calls) == 1
@@ -144,6 +195,13 @@ def test_get_detail_flows_through_full_app_pipeline(tmp_path) -> None:
                 "delCode": 106128814453, "resblockName": "双桥路南一街",
                 "bedroomAmount": 3, "livingroomAmount": 2, "bathroomAmount": 2,
                 "houseArea": 145.0, "housePrice": 9000, "oriented": ["东南"],
+                "orgName": "德佑-承嘉-水碾河店A组", "delResourceSub": "呼叫中心",
+                "floorDesc": "高楼层", "totalFloor": 18, "alreadyCreateDays": 42,
+                "houseGrade": "B", "followTotal": 5, "followNum7Days": 1,
+                "showingTotal": 2, "showingNum7Days": 0,
+                "keUrl": "https://m.ke.com/chuzu/cd/zufang/X1.html",
+                "lianJiaUrl": "https://m.lianjia.com/chuzu/cd/zufang/X1.html",
+                "haveKey": True, "delStatusString": "有效", "houseId": 25853701,
             },
         },
     )
@@ -160,9 +218,213 @@ def test_get_detail_flows_through_full_app_pipeline(tmp_path) -> None:
     assert listing["area_sqm"] == 145.0
     assert listing["monthly_rent_yuan"] == 9000.0
     assert listing["orientation"] == "东南"
+    assert listing["maintain_org"] == "德佑-承嘉-水碾河店A组"
+    assert listing["source"] == "呼叫中心"
+    assert listing["floor_desc"] == "高楼层"
+    assert listing["total_floors"] == 18
+    assert listing["listed_days"] == 42
+    assert listing["house_grade"] == "B"
+    assert listing["follow_total"] == 5
+    assert listing["follow_last_7d"] == 1
+    assert listing["showing_total"] == 2
+    assert listing["showing_last_7d"] == 0
+    assert listing["external_url_ke"] == "https://m.ke.com/chuzu/cd/zufang/X1.html"
+    assert listing["external_url_lianjia"] == "https://m.lianjia.com/chuzu/cd/zufang/X1.html"
+    assert listing["has_key"] is True
+    assert listing["del_status_text"] == "有效"
+    assert listing["house_id"] == "25853701"
     assert len(session.calls) == 1
     assert session.calls[0].route == "rental_listing.get_detail"
     assert session.calls[0].query == {"delCode": "RC-42"}
+
+
+def test_get_prospect_flows_through_full_app_pipeline(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "rental_listing.detail_prospect", 200,
+        {
+            "code": 100000, "msg": "加载成功",
+            "data": {
+                "canEditProspect": False,
+                "houseFrameImageResp": {"imageUrl": "https://img.ke.com/huxing.png"},
+                "houseProspectImageList": [
+                    {"prospectPicUrl": "https://img.ke.com/real-1.jpg",
+                     "roomName": "客厅", "imageType": "REAL",
+                     "uploadUserName": "张三", "createTime": 1750000000000},
+                    {"prospectPicUrl": "https://img.ke.com/title.jpg",
+                     "roomName": None, "imageType": "TITLE",
+                     "uploadUserName": None, "createTime": None},
+                ],
+            },
+        },
+    )
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.get("/api/v1/listings/rental/RC-42/prospect")
+
+    assert response.status_code == 200
+    prospect = response.json()
+    assert prospect["listing_id"] == "RC-42"
+    assert prospect["has_survey_photo"] is True
+    assert prospect["floor_plan_url"] == "https://img.ke.com/huxing.png"
+    assert prospect["can_edit"] is False
+    assert len(prospect["photos"]) == 2
+    assert prospect["photos"][0]["image_type"] == "REAL"
+    assert prospect["photos"][0]["room_name"] == "客厅"
+    assert prospect["photos"][1]["created_at"] is None
+    assert len(session.calls) == 1
+    assert session.calls[0].route == "rental_listing.detail_prospect"
+    assert session.calls[0].query == {"delCode": "RC-42"}
+
+
+def test_get_house_info_flows_through_full_app_pipeline(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000,
+        "data": {"resblockName": "成发紫东阳光", "districtName": "成华",
+                 "buildTypeName": "塔楼", "buildingYear": 2015,
+                 "tiHuRatio": "2梯5户", "tenementFeeStr": "2.15",
+                 "waterTypeName": "民水", "electricTypeName": "民电",
+                 "gasStr": "有", "gasFeeStr": "2.03", "hotWaterStr": "有",
+                 "heatingFeeStr": "", "carRatio": "1:0.48", "parkingFee": "350",
+                 "carUpCntStr": "无", "carDownCntStr": "361",
+                 "hauntedDesc": "高压线", "kindergarten": "成华区第三幼儿园",
+                 "greenRate": 26},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["电梯房", "VR房", "钥", "学区房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000,
+        "data": {"totalScoreValue": "38", "rankDescPrefix": "本商圈排名",
+                 "rankDescSuffix": "199/242",
+                 "chotDataList": [{"dataName": "本房热度", "dataValue": "125"}],
+                 "optimizeSuggestionList": [
+                     {"optimizeItemName": "房间整洁度-实勘图AI评估",
+                      "suggestionDesc": "清理客厅及卧室的垃圾"}]},
+    })
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000,
+        "data": {"delCode": "RC-42",
+                 "importantModules": [{
+                     "completenessRate": "完备率：9/9(100%)",
+                     "fields": [{"fieldName": "装修情况", "displayValue": "精装",
+                                 "complete": True},
+                                {"fieldName": "租期", "displayValue": "2年以内",
+                                 "complete": True}]}],
+                 "remark": "钥匙在门店",
+                 "allFieldMaintainRate": 75,
+                 "importantFieldMaintainRate": 100,
+                 "ownerLowestPrice": 2900},
+    })
+    session.enqueue("rental_listing.get_follow", 200, {
+        "code": 100000,
+        "data": {"totalCount": 1, "result": [{
+            "followUpContent": "真实在租房东，租带卖，附近最有性价比的电梯套三",
+            "followTypeStr": "普通跟进", "creatorName": "万世平",
+            "roleTypeStr": "维护人", "createTime": 1785403336000,
+            "followLabel": ["真实在租"], "followLabelCode": "IN_RENT",
+            "remarks": "业主脾气好", "onTop": True, "onTopTime": 1785403336000}]},
+    })
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.get("/api/v1/listings/rental/RC-42/house-info")
+
+    assert response.status_code == 200
+    info = response.json()
+    assert info["listing_id"] == "RC-42"
+    assert info["labels"] == ["电梯房", "VR房", "钥", "学区房"]
+    assert info["property_info"]["community"] == "成发紫东阳光"
+    assert info["property_info"]["ti_hu_ratio"] == "2梯5户"
+    assert info["property_info"]["building_year"] == 2015
+    assert info["property_info"]["green_rate"] == 26.0
+    assert info["property_info"]["parking_fee"] == "350"
+    assert info["property_info"]["gas_fee"] == "2.03"
+    assert info["property_info"]["hot_water"] == "有"
+    assert info["property_info"]["heating_fee"] is None  # 空串 -> None
+    assert info["property_info"]["parking_above_ground"] == "无"
+    assert info["property_info"]["parking_underground"] == "361"
+    assert info["property_info"]["haunted_desc"] == "高压线"
+    assert info["property_info"]["kindergarten"] == "成华区第三幼儿园"
+    assert info["hqi"]["total_score"] == "38"
+    assert info["hqi"]["rank_text"] == "本商圈排名199/242"
+    assert info["hqi"]["heat_items"][0]["name"] == "本房热度"
+    assert info["hqi"]["suggestions"][0]["item"] == "房间整洁度-实勘图AI评估"
+    assert info["maintain"]["remark"] == "钥匙在门店"
+    assert info["maintain"]["all_field_rate"] == 75
+    assert info["maintain"]["owner_lowest_price"] == "2900"
+    assert info["maintain"]["modules"][0]["fields"][0]["display_value"] == "精装"
+    assert info["follows"][0]["content"] == "真实在租房东，租带卖，附近最有性价比的电梯套三"
+    assert info["follows"][0]["creator_name"] == "万世平"
+    assert info["follows"][0]["label_code"] == "IN_RENT"
+    assert info["follows"][0]["remarks"] == "业主脾气好"
+    assert info["follows"][0]["on_top"] is True
+    assert [call.route for call in session.calls] == [
+        "rental_listing.get_hdic_info",
+        "rental_listing.get_house_label",
+        "rental_listing.get_hqi_tab",
+        "rental_listing.get_maintain_info",
+        "rental_listing.get_follow",
+    ]
+    assert session.calls[0].query == {"delCode": "RC-42"}
+    assert session.calls[1].query == {"delCode": "RC-42"}
+    assert session.calls[2].query == {"delCode": "RC-42", "isApp": "false"}
+    assert session.calls[3].query == {"delCode": "RC-42"}
+    assert session.calls[4].query == {"delCode": "RC-42", "pageSize": "100"}
+
+
+def test_get_house_info_missing_hqi_returns_null_without_error(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000, "data": {"resblockName": "双桥路南一街"},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["VR房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000, "data": {},
+    })
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000, "data": {"delCode": "RC-42",
+                                 "importantModules": [], "otherModules": [],
+                                 "remark": None, "allFieldMaintainRate": 0,
+                                 "importantFieldMaintainRate": 0,
+                                 "ownerLowestPrice": None},
+    })
+    session.enqueue("rental_listing.get_follow", 200, {
+        "code": 100000, "data": {"totalCount": 0, "result": None},
+    })
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.get("/api/v1/listings/rental/RC-42/house-info")
+
+    assert response.status_code == 200
+    info = response.json()
+    assert info["hqi"] is None
+    assert info["labels"] == ["VR房"]
+    assert info["maintain"]["modules"] == []
+    assert info["maintain"]["remark"] is None
+    assert info["follows"] == []
+
+
+def test_get_prospect_empty_photos_is_valid_not_surveyed_answer(tmp_path) -> None:
+    # A real 普租 house without survey photos returns an empty image list,
+    # not an error — the endpoint must surface that as has_survey_photo=false.
+    session = StubSession()
+    session.enqueue(
+        "rental_listing.detail_prospect", 200,
+        {"code": 100000, "msg": "加载成功",
+         "data": {"canEditProspect": False, "houseProspectImageList": []}},
+    )
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.get("/api/v1/listings/rental/106128814453/prospect")
+
+    assert response.status_code == 200
+    prospect = response.json()
+    assert prospect["has_survey_photo"] is False
+    assert prospect["photos"] == []
+    assert prospect["floor_plan_url"] is None
 
 
 def test_listing_filter_options_and_native_conditions_flow_through_api(tmp_path) -> None:
@@ -352,6 +614,7 @@ def test_nearby_map_search_resolves_location_then_uses_community_ids(tmp_path) -
     body = response.json()
     assert body["center"]["name"] == "万象城"
     assert body["matched_community_count"] == 1
+    assert body["community_ids"] == ["rb-near"]
     assert body["approximation"] == "community_centroid"
     assert body["result"]["items"][0]["listing_id"] == "RC-map-1"
     assert [call.route for call in session.calls] == [

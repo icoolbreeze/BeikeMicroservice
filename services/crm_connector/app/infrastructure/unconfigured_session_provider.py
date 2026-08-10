@@ -19,3 +19,8 @@ class UnconfiguredSessionProvider:
 
     def authorized_fetch(self, request: AuthorizedRequest) -> UpstreamResponse:
         raise AuthenticationRequiredError("CRM session provider has not been configured")
+
+    def run_keepalive(self) -> None:
+        # Nothing to probe or refresh — the watchdog never starts for the
+        # unconfigured profile, but the protocol requires the method.
+        return None

@@ -8,7 +8,16 @@ from pydantic import BaseModel, Field, model_validator
 from app.application.rental_budget import price_range_for_budget
 from app.domain.models import (
     ConnectionStatus,
+    FollowRecord,
+    HqiScore,
+    ListingDetailInfo,
+    ListingMaintainInfo,
+    ListingProspect,
+    ListingPropertyInfo,
+    MaintainField,
+    MaintainModule,
     Principal,
+    ProspectPhoto,
     RentalListing,
     RentalListingFilterOption,
     RentalListingFilters,
@@ -30,6 +39,15 @@ from app.domain.modules import CrmModule
 class HealthResponse(BaseModel):
     status: Literal["ok"]
     service: Literal["crm_connector"]
+    connection_state: str
+    """Authorization state of the session provider (ready/expiring/...)."""
+    credential_valid: bool
+    """Whether a credential exists and is still within its validity period
+    (ready or expiring, i.e. not auth_required/degraded)."""
+    credential_expires_at: datetime | None
+    """End of the active credential's validity period; null when the
+    connector holds no credential."""
+    checked_at: datetime
 
 
 class ConnectionStatusResponse(BaseModel):
@@ -38,6 +56,7 @@ class ConnectionStatusResponse(BaseModel):
     bound_employee_principal: str | None
     mcp_transport: str
     checked_at: datetime
+    credential_expires_at: datetime | None = None
 
     @classmethod
     def from_domain(cls, status: ConnectionStatus) -> "ConnectionStatusResponse":
@@ -47,6 +66,7 @@ class ConnectionStatusResponse(BaseModel):
             bound_employee_principal=status.bound_employee_principal,
             mcp_transport=status.mcp_transport,
             checked_at=status.checked_at,
+            credential_expires_at=status.credential_expires_at,
         )
 
 
@@ -430,6 +450,22 @@ class RentalListingResponse(BaseModel):
     orientation: str | None = None
     visible_scope: str
     del_type: int | None = None
+    # Detail-only fields; None for search-page rows (see §房源详情).
+    maintain_org: str | None = None
+    source: str | None = None
+    floor_desc: str | None = None
+    total_floors: int | None = None
+    listed_days: int | None = None
+    house_grade: str | None = None
+    follow_total: int | None = None
+    follow_last_7d: int | None = None
+    showing_total: int | None = None
+    showing_last_7d: int | None = None
+    external_url_ke: str | None = None
+    external_url_lianjia: str | None = None
+    has_key: bool | None = None
+    del_status_text: str | None = None
+    house_id: str | None = None
 
     @classmethod
     def from_domain(cls, listing: RentalListing) -> "RentalListingResponse":
@@ -477,6 +513,220 @@ class RentalListingFilterOptionResponse(BaseModel):
 
 
 RentalListingFilterOptionResponse.model_rebuild()
+
+
+class ProspectPhotoResponse(BaseModel):
+    url: str
+    room_name: str | None = None
+    image_type: str
+    """Upstream imageType: REAL = 实勘图, TITLE = 标题图."""
+    upload_user: str | None = None
+    created_at: datetime | None = None
+
+    @classmethod
+    def from_domain(cls, photo: ProspectPhoto) -> "ProspectPhotoResponse":
+        return cls(**photo.__dict__)
+
+
+class ListingProspectResponse(BaseModel):
+    listing_id: str
+    photos: list[ProspectPhotoResponse] = Field(default_factory=list)
+    floor_plan_url: str | None = None
+    can_edit: bool | None = None
+    has_survey_photo: bool
+    """True when at least one REAL (实勘) photo has been uploaded."""
+
+    @classmethod
+    def from_domain(cls, prospect: ListingProspect) -> "ListingProspectResponse":
+        return cls(
+            listing_id=prospect.listing_id,
+            photos=[ProspectPhotoResponse.from_domain(photo) for photo in prospect.photos],
+            floor_plan_url=prospect.floor_plan_url,
+            can_edit=prospect.can_edit,
+            has_survey_photo=prospect.has_survey_photo,
+        )
+
+
+class ListingPropertyInfoResponse(BaseModel):
+    # 小区信息
+    listing_id: str
+    community: str | None = None
+    district: str | None = None
+    biz_circle: str | None = None
+    tenement_fee: str | None = None
+    kindergarten: str | None = None
+    # 建筑信息
+    building_type: str | None = None
+    building_structure: str | None = None
+    building_year: int | None = None
+    property_purpose: str | None = None
+    deal_property: str | None = None
+    age_limit: str | None = None
+    disgust_desc: str | None = None
+    haunted_desc: str | None = None
+    # 生活信息
+    elevator: str | None = None
+    ti_hu_ratio: str | None = None
+    water_type: str | None = None
+    electric_type: str | None = None
+    heating: str | None = None
+    heating_fee: str | None = None
+    gas: str | None = None
+    gas_fee: str | None = None
+    hot_water: str | None = None
+    hot_water_fee: str | None = None
+    middle_water: str | None = None
+    middle_water_fee: str | None = None
+    parking_ratio: str | None = None
+    parking_fee: str | None = None
+    parking_above_ground: str | None = None
+    parking_underground: str | None = None
+    green_rate: float | None = None
+    cubage_rate: float | None = None
+
+    @classmethod
+    def from_domain(cls, info: ListingPropertyInfo) -> "ListingPropertyInfoResponse":
+        return cls(**info.__dict__)
+
+
+class HqiHeatItemResponse(BaseModel):
+    name: str
+    value: str | None = None
+    fluctuate: str | None = None
+    positive: bool | None = None
+
+
+class HqiSuggestionResponse(BaseModel):
+    item: str | None = None
+    suggestion: str | None = None
+
+
+class HqiScoreResponse(BaseModel):
+    total_score: str | None = None
+    level: str | None = None
+    next_level: str | None = None
+    rank_text: str | None = None
+    pending_optimize: str | None = None
+    heat_items: list[HqiHeatItemResponse] = Field(default_factory=list)
+    suggestions: list[HqiSuggestionResponse] = Field(default_factory=list)
+
+    @classmethod
+    def from_domain(cls, score: HqiScore) -> "HqiScoreResponse":
+        return cls(
+            total_score=score.total_score,
+            level=score.level,
+            next_level=score.next_level,
+            rank_text=score.rank_text,
+            pending_optimize=score.pending_optimize,
+            heat_items=[
+                HqiHeatItemResponse(
+                    name=item.name,
+                    value=item.value,
+                    fluctuate=item.fluctuate,
+                    positive=item.positive,
+                )
+                for item in score.heat_items
+            ],
+            suggestions=[
+                HqiSuggestionResponse(item=suggestion.item, suggestion=suggestion.suggestion)
+                for suggestion in score.suggestions
+            ],
+        )
+
+
+class MaintainFieldResponse(BaseModel):
+    name: str
+    display_value: str | None = None
+    complete: bool | None = None
+
+
+class MaintainModuleResponse(BaseModel):
+    rate_text: str | None = None
+    fields: list[MaintainFieldResponse] = Field(default_factory=list)
+
+
+class ListingMaintainInfoResponse(BaseModel):
+    listing_id: str
+    modules: list[MaintainModuleResponse] = Field(default_factory=list)
+    remark: str | None = None
+    all_field_rate: int | None = None
+    important_rate: int | None = None
+    owner_lowest_price: str | None = None
+
+
+class FollowRecordResponse(BaseModel):
+    content: str
+    follow_type: str | None = None
+    creator_name: str | None = None
+    role: str | None = None
+    created_at: datetime | None = None
+    labels: list[str] = Field(default_factory=list)
+    label_code: str | None = None
+    remarks: str | None = None
+    on_top: bool = False
+    on_top_time: datetime | None = None
+
+
+class ListingDetailInfoResponse(BaseModel):
+    listing_id: str
+    labels: list[str] = Field(default_factory=list)
+    property_info: ListingPropertyInfoResponse | None = None
+    hqi: HqiScoreResponse | None = None
+    maintain: ListingMaintainInfoResponse | None = None
+    follows: list[FollowRecordResponse] = Field(default_factory=list)
+
+    @classmethod
+    def from_domain(cls, info: ListingDetailInfo) -> "ListingDetailInfoResponse":
+        return cls(
+            listing_id=info.listing_id,
+            labels=list(info.labels),
+            property_info=(
+                ListingPropertyInfoResponse.from_domain(info.property_info)
+                if info.property_info is not None
+                else None
+            ),
+            hqi=HqiScoreResponse.from_domain(info.hqi) if info.hqi is not None else None,
+            maintain=(
+                ListingMaintainInfoResponse(
+                    listing_id=info.maintain.listing_id,
+                    modules=[
+                        MaintainModuleResponse(
+                            rate_text=module.rate_text,
+                            fields=[
+                                MaintainFieldResponse(
+                                    name=field.name,
+                                    display_value=field.display_value,
+                                    complete=field.complete,
+                                )
+                                for field in module.fields
+                            ],
+                        )
+                        for module in info.maintain.modules
+                    ],
+                    remark=info.maintain.remark,
+                    all_field_rate=info.maintain.all_field_rate,
+                    important_rate=info.maintain.important_rate,
+                    owner_lowest_price=info.maintain.owner_lowest_price,
+                )
+                if info.maintain is not None
+                else None
+            ),
+            follows=[
+                FollowRecordResponse(
+                    content=record.content,
+                    follow_type=record.follow_type,
+                    creator_name=record.creator_name,
+                    role=record.role,
+                    created_at=record.created_at,
+                    labels=list(record.labels),
+                    label_code=record.label_code,
+                    remarks=record.remarks,
+                    on_top=record.on_top,
+                    on_top_time=record.on_top_time,
+                )
+                for record in info.follows
+            ],
+        )
 
 
 class RentalMapListingResponse(BaseModel):
@@ -552,6 +802,14 @@ class RentalMapNearbySearchResponse(BaseModel):
     center: RentalMapSuggestionResponse
     radius_meters: int
     matched_community_count: int
+    community_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Community ids whose centroids fall inside the radius circle. "
+            "Pass as resblock_ids to rental_listing_search to continue filtering "
+            "the same circle with the full listing-filter catalog."
+        ),
+    )
     result: RentalMapPageResponse
     approximation: Literal["community_centroid"] = "community_centroid"
 
@@ -561,5 +819,6 @@ class RentalMapNearbySearchResponse(BaseModel):
             center=RentalMapSuggestionResponse.from_domain(result.center),
             radius_meters=result.radius_meters,
             matched_community_count=result.matched_community_count,
+            community_ids=list(result.community_ids),
             result=RentalMapPageResponse.from_domain(result.result),
         )

@@ -11,6 +11,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.schemas import (
     ConnectionStatusResponse,
+    ListingDetailInfoResponse,
+    ListingProspectResponse,
     PrincipalResponse,
     RentalListingFilterOptionResponse,
     RentalListingPageResponse,
@@ -28,6 +30,8 @@ from app.api.schemas import (
 
 __all__ = [
     "ConnectionStatusResponse",
+    "ListingDetailInfoResponse",
+    "ListingProspectResponse",
     "PrincipalResponse",
     "RentalListingDetailInput",
     "RentalListingFilterOptionResponse",

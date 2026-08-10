@@ -1,0 +1,4 @@
+interface:
+  display_name: "租赁房源搜索"
+  short_description: "通过 CRM MCP 执行地图与列表租赁房源筛选流程"
+  default_prompt: "Use $rental-search to find matching rental listings through the CRM MCP."
