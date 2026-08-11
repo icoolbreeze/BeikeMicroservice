@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鼎峰置业 · 精选房源大屏</title>
+<script src="/vendor/tailwind/tailwind.js"></script>
+<link rel="stylesheet" href="/vendor/fonts/fonts.css">
+<link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+<style>
+  /* 以 1080p 高度为设计基准：任意分辨率下字体与间距等比缩放，
+     布局容器用 vw/vh 弹性撑满，杜绝大屏两侧留白 */
+  html { font-size: calc(100vmin / 108); }
+  :root {
+    --bg: #f0ebe1;
+    --bg-warm: #e8e2d4;
+    --card: #ffffff;
+    --dark: #1a2e26;
+    --dark-soft: #2d4a3e;
+    --gold: #a07324;
+    --gold-light: #c9982f;
+    --gold-pale: #e8d4a8;
+    --red: #a83232;
+    --red-soft: #c14d4d;
+    --green: #4a6b4a;
+    --green-light: #6b8e6b;
+    --border: #d4cec0;
+    --border-light: #e8e3d8;
+    --muted: #7a7569;
+    --text: #1a2e26;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    margin: 0;
+    height: 100vh;
+  }
+  .font-serif { font-family: 'Noto Serif SC', serif; }
+  .font-display { font-family: 'Playfair Display', serif; }
+  .font-dm { font-family: 'DM Serif Display', serif; }
+  .font-num { font-family: 'Playfair Display', serif; letter-spacing: -0.02em; }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(160,115,36,0.06), transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(26,46,38,0.05), transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(160,115,36,0.015) 2px, rgba(160,115,36,0.015) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* 中部图片板块固定 4:3；max-height 兜底避免超高屏溢出 */
+  .hero-aspect { aspect-ratio: 4 / 3; }
+
+  .ken-burns { animation: kenBurns 18s ease-in-out infinite alternate; }
+  @keyframes kenBurns {
+    0% { transform: scale(1.05) translate(0, 0); }
+    100% { transform: scale(1.18) translate(-3%, -3%); }
+  }
+
+  .marquee-track {
+    display: inline-flex;
+    animation: marquee 60s linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .list-scroll { animation: listScroll 90s linear infinite; }
+  @keyframes listScroll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+  .list-scroll-rent { animation: listScrollRent 70s linear infinite; }
+  @keyframes listScrollRent {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+
+  .progress-anim { animation: progress 8s linear infinite; }
+  @keyframes progress {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+
+  .info-enter { animation: infoEnter 0.8s cubic-bezier(.2,.7,.3,1); }
+  @keyframes infoEnter {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .blink { animation: blink 1.4s infinite; }
+
+  @keyframes pulseRing {
+    0% { box-shadow: 0 0 0 0 rgba(168,50,50,0.5); }
+    100% { box-shadow: 0 0 0 8px rgba(168,50,50,0); }
+  }
+  .pulse-dot { animation: pulseRing 1.6s infinite; }
+  @keyframes pulseRingGreen {
+    0% { box-shadow: 0 0 0 0 rgba(74,107,74,0.5); }
+    100% { box-shadow: 0 0 0 6px rgba(74,107,74,0); }
+  }
+  .pulse-dot-green { animation: pulseRingGreen 1.6s infinite; }
+
+  @keyframes numIn {
+    0% { opacity: 0; transform: translateX(20px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  .num-in { animation: numIn 0.8s ease-out; }
+
+  #heroImg { transition: opacity 0.5s ease, transform 0.5s ease; }
+
+  .scan-line {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    animation: scan 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes scan {
+    0%,100% { left: -100%; }
+    50% { left: 150%; }
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: 3px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+  .tag i { font-size: 1.1rem; }
+  .tag-urgent { background: var(--red); color: #fff; box-shadow: 0 2px 8px rgba(168,50,50,0.25); }
+  .tag-new { background: var(--green); color: #fff; box-shadow: 0 2px 8px rgba(74,107,74,0.25); }
+  .tag-hot { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: #fff; box-shadow: 0 2px 8px rgba(160,115,36,0.3); }
+  .tag-exclusive { background: var(--dark); color: var(--gold-pale); border: 1px solid var(--gold); }
+  .tag-vip { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+  .tag-attr-dark {
+    background: rgba(255,255,255,0.92);
+    color: var(--dark);
+    border: 1px solid rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
+    font-weight: 500;
+  }
+  .tag-attr-light {
+    background: transparent;
+    color: var(--dark-soft);
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .tag-attr-light i { color: var(--gold); }
+  .tag-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 2px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .corner-deco {
+    position: absolute;
+    width: 1.8rem; height: 1.8rem;
+    border-color: var(--gold);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .corner-tl { top: 0.8rem; left: 0.8rem; border-top: 1.5px solid; border-left: 1.5px solid; }
+  .corner-tr { top: 0.8rem; right: 0.8rem; border-top: 1.5px solid; border-right: 1.5px solid; }
+  .corner-bl { bottom: 0.8rem; left: 0.8rem; border-bottom: 1.5px solid; border-left: 1.5px solid; }
+  .corner-br { bottom: 0.8rem; right: 0.8rem; border-bottom: 1.5px solid; border-right: 1.5px solid; }
+
+  .big-number {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    line-height: 0.85;
+  }
+
+  .watermark-text {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .slogan-shine {
+    background: linear-gradient(90deg, var(--gold-pale) 0%, #fff 50%, var(--gold-pale) 100%);
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: shine 5s linear infinite;
+  }
+  @keyframes shine {
+    0% { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stage" class="fixed inset-0 overflow-hidden" style="background:var(--bg)">
+  <div id="canvas" class="flex flex-col gap-[1rem] p-[1.6rem] relative z-10 w-full h-full">
+
+  <!-- ============ 顶部栏 ============ -->
+  <header class="flex-shrink-0 flex items-center justify-between gap-[2.4rem] px-[2.4rem] py-[1.2rem] h-[9.6rem] rounded-[1.6rem] bg-white/70 backdrop-blur-xl border border-[var(--border)] relative overflow-hidden shadow-sm">
+    <div class="flex items-center gap-[1.2rem] min-w-[26rem]">
+      <div class="relative w-[4.8rem] h-[4.8rem] flex-shrink-0">
+        <div class="absolute inset-0 rounded-[1.2rem] bg-[var(--dark)] flex items-center justify-center">
+          <svg width="2.6rem" height="2.6rem" viewBox="0 0 24 24" fill="none">
+            <path d="M3 12L12 3L21 12V20C21 20.5 20.5 21 20 21H15V14H9V21H4C3.5 21 3 20.5 3 20V12Z" fill="none" stroke="#c9982f" stroke-width="1.8" stroke-linejoin="round"/>
+            <circle cx="12" cy="9" r="1.5" fill="#c9982f"/>
+          </svg>
+        </div>
+        <div class="absolute -inset-1 rounded-[1.2rem] bg-[var(--gold)] opacity-10 blur-md"></div>
+      </div>
+      <div>
+        <div class="font-serif text-[2.4rem] font-black tracking-wide text-[var(--dark)] leading-tight">鼎峰置业</div>
+        <div class="text-[0.9rem] text-[var(--muted)] tracking-[0.35em] font-medium mt-[0.2rem]">DINGFENG · REAL ESTATE</div>
+      </div>
+    </div>
+
+    <div class="flex-1 flex items-center gap-[1.2rem] overflow-hidden min-w-0">
+      <div class="flex items-center gap-[0.8rem] px-[1.2rem] py-[0.6rem] rounded-full bg-[#a83232]/10 border border-[#a83232]/30 flex-shrink-0">
+        <span class="w-[0.6rem] h-[0.6rem] rounded-full bg-[var(--red)] pulse-dot"></span>
+        <span class="text-[1.1rem] font-bold text-[var(--red)] tracking-wider">LIVE</span>
+      </div>
+      <div class="flex-1 overflow-hidden min-w-0">
+        <div class="marquee-track text-[1.4rem] text-[var(--dark-soft)]" id="marquee"></div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-[1.6rem] flex-shrink-0">
+      <div class="text-right">
+        <div class="font-num text-[2.4rem] text-[var(--dark)] leading-none" id="time">--:--:--</div>
+        <div class="text-[1rem] text-[var(--muted)] mt-[0.3rem]" id="date">----</div>
+      </div>
+      <div class="w-px h-[3.6rem] bg-[var(--border)]"></div>
+      <div class="flex items-center gap-[0.8rem]">
+        <i class="fas fa-sun text-[2rem] text-[var(--gold)]"></i>
+        <div>
+          <div class="text-[1.4rem] font-bold text-[var(--dark)] leading-tight">26°C 晴</div>
+          <div class="text-[1rem] text-[var(--muted)] mt-[0.2rem]">北京 · 朝阳</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 主体 ============ -->
+  <main class="flex-1 grid grid-cols-12 gap-[1rem] min-h-0 auto-rows-fr">
+
+    <!-- 左列：4:3 精选大图 + 市场快报条 -->
+    <div class="col-span-6 flex flex-col gap-[1rem] min-h-0">
+      <section class="hero-aspect self-start w-full max-h-[calc(100%-5rem)] min-h-0 rounded-[1.6rem] overflow-hidden relative bg-[var(--dark)] shadow-lg">
+        <div class="corner-deco corner-tl" style="border-color:rgba(232,212,168,0.5)"></div>
+        <div class="corner-deco corner-tr" style="border-color:rgba(232,212,168,0.5)"></div>
+        <div class="corner-deco corner-bl" style="border-color:rgba(232,212,168,0.5)"></div>
+        <div class="corner-deco corner-br" style="border-color:rgba(232,212,168,0.5)"></div>
+
+        <div class="absolute inset-0">
+          <img id="heroImg" src="" class="w-full h-full object-cover ken-burns">
+          <div class="absolute inset-0" style="background: linear-gradient(180deg, rgba(26,46,38,0.5) 0%, transparent 25%, transparent 50%, rgba(26,46,38,0.95) 100%);"></div>
+          <div class="absolute inset-0" style="background: linear-gradient(90deg, rgba(26,46,38,0.4) 0%, transparent 40%);"></div>
+          <div class="scan-line"></div>
+        </div>
+
+        <div class="absolute top-0 left-0 right-0 p-[2.4rem] flex items-start justify-between z-20">
+          <div class="flex flex-wrap gap-[0.8rem]" id="heroTags"></div>
+          <div class="text-right">
+            <div class="text-[0.9rem] text-[var(--gold-pale)] tracking-[0.4em] mb-[0.4rem] opacity-80">FEATURED</div>
+            <div class="big-number text-[7.2rem] text-[var(--gold-pale)]" id="bigNumber">01</div>
+            <div class="text-[1rem] text-white/50 tracking-wider mt-[0.4rem]">/ <span id="totalIdx">13</span></div>
+          </div>
+        </div>
+
+        <div class="absolute bottom-0 left-0 right-0 p-[3.2rem] z-20" id="heroInfo">
+          <div class="flex items-center gap-[1.2rem] mb-[1.2rem]">
+            <div class="w-[4rem] h-px bg-[var(--gold-light)]"></div>
+            <span class="text-[1rem] text-[var(--gold-pale)] tracking-[0.3em] font-medium" id="heroType">买卖 · 精选好房</span>
+          </div>
+
+          <h2 class="font-serif text-[4.8rem] font-black mb-[0.8rem] text-white leading-tight" id="propTitle">翠湖天地·御园</h2>
+          <p class="text-[1.6rem] text-white/70 mb-[2rem] font-light" id="propDesc">湖景大平层 · 270°观景阳台 · 配套优质教育资源</p>
+
+          <div class="flex items-end justify-between gap-[2.4rem]">
+            <div class="flex gap-[2rem] flex-wrap">
+              <div class="flex flex-col gap-[0.4rem]">
+                <div class="text-[1rem] text-white/50 tracking-wider flex items-center gap-[0.4rem]">
+                  <i class="fas fa-vector-square text-[var(--gold-light)] text-[0.9rem]"></i>户型
+                </div>
+                <div class="text-[1.4rem] font-bold text-white" id="propLayout">3室2厅2卫</div>
+              </div>
+              <div class="border-l border-white/15 pl-[2rem] flex flex-col gap-[0.4rem]">
+                <div class="text-[1rem] text-white/50 tracking-wider flex items-center gap-[0.4rem]">
+                  <i class="fas fa-ruler-combined text-[var(--gold-light)] text-[0.9rem]"></i>面积
+                </div>
+                <div class="text-[1.4rem] font-bold text-white"><span id="propArea">128.5</span> ㎡</div>
+              </div>
+              <div class="border-l border-white/15 pl-[2rem] flex flex-col gap-[0.4rem]">
+                <div class="text-[1rem] text-white/50 tracking-wider flex items-center gap-[0.4rem]">
+                  <i class="fas fa-layer-group text-[var(--gold-light)] text-[0.9rem]"></i>楼层
+                </div>
+                <div class="text-[1.4rem] font-bold text-white" id="propFloor">中层/32层</div>
+              </div>
+              <div class="border-l border-white/15 pl-[2rem] flex flex-col gap-[0.4rem]">
+                <div class="text-[1rem] text-white/50 tracking-wider flex items-center gap-[0.4rem]">
+                  <i class="fas fa-compass text-[var(--gold-light)] text-[0.9rem]"></i>朝向
+                </div>
+                <div class="text-[1.4rem] font-bold text-white" id="propOrient">南北通透</div>
+              </div>
+              <div class="border-l border-white/15 pl-[2rem] flex flex-col gap-[0.4rem]">
+                <div class="text-[1rem] text-white/50 tracking-wider flex items-center gap-[0.4rem]">
+                  <i class="fas fa-paintbrush text-[var(--gold-light)] text-[0.9rem]"></i>装修
+                </div>
+                <div class="text-[1.4rem] font-bold text-white" id="propDecor">精装修</div>
+              </div>
+            </div>
+
+            <div class="text-right flex-shrink-0">
+              <div class="text-[1rem] text-white/60 tracking-[0.2em] mb-[0.4rem]" id="priceLabel">总　价</div>
+              <div class="flex items-baseline gap-[0.6rem] justify-end">
+                <span class="font-num text-[6rem] text-[var(--gold-pale)] leading-none" id="propPrice">1280</span>
+                <span class="text-[2rem] text-[var(--gold-light)] font-bold" id="propPriceUnit">万</span>
+              </div>
+              <div class="text-[1.1rem] text-white/50 mt-[0.6rem]" id="propUnitPrice">单价 99609 元/㎡</div>
+            </div>
+          </div>
+
+          <div class="mt-[2rem] flex items-center gap-[1.2rem]">
+            <div class="flex-1 h-[0.2rem] bg-white/15 rounded-full overflow-hidden">
+              <div class="h-full progress-anim" style="background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold-pale));" id="progressBar"></div>
+            </div>
+            <div class="flex items-center gap-[0.6rem]">
+              <i class="fas fa-location-dot text-[var(--gold-light)] text-[1rem]"></i>
+              <span class="text-[1rem] text-white/60" id="propLocation">朝阳区 · 翠湖天地</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 市场快报条：弹性填充 16:9 图片下方的剩余空间 -->
+      <div class="flex-1 min-h-[4rem] rounded-[1.6rem] bg-white/70 backdrop-blur-xl border border-[var(--border)] px-[2.4rem] flex items-center gap-[2rem] overflow-hidden shadow-sm">
+        <div class="flex items-center gap-[1rem] flex-shrink-0">
+          <span class="w-[3.2rem] h-px bg-[var(--gold)]"></span>
+          <span class="text-[1rem] text-[var(--gold)] tracking-[0.3em] font-medium">市场快报</span>
+        </div>
+        <div class="w-px h-[2.4rem] bg-[var(--border)] flex-shrink-0"></div>
+        <div class="flex-1 min-w-0 flex items-center justify-evenly gap-[1.2rem]">
+          <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
+            <span class="text-[1rem] text-[var(--muted)]">今日新增挂牌</span>
+            <span class="font-num text-[1.8rem] text-[var(--dark)] font-bold">12</span>
+            <span class="text-[1rem] text-[var(--muted)]">套</span>
+          </div>
+          <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
+            <span class="text-[1rem] text-[var(--muted)]">本周成交</span>
+            <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold">8</span>
+            <span class="text-[1rem] text-[var(--muted)]">套</span>
+          </div>
+          <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
+            <span class="text-[1rem] text-[var(--muted)]">24小时带看</span>
+            <span class="font-num text-[1.8rem] text-[var(--dark)] font-bold">36</span>
+            <span class="text-[1rem] text-[var(--muted)]">组</span>
+          </div>
+          <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
+            <span class="text-[1rem] text-[var(--muted)]">在售房源</span>
+            <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold">1286</span>
+            <span class="text-[1rem] text-[var(--muted)]">套</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="col-span-6 grid grid-cols-2 gap-[1rem] min-h-0 auto-rows-fr">
+      <div class="min-h-0 rounded-[1.6rem] bg-white/70 backdrop-blur-xl border border-[var(--border)] flex flex-col overflow-hidden shadow-sm">
+        <div class="px-[1.4rem] py-[1rem] border-b border-[var(--border)] flex items-center justify-between gap-[0.6rem] bg-[#e8e2d4]/40">
+          <div class="flex items-center gap-[0.8rem] min-w-0">
+            <div class="w-[3.2rem] h-[3.2rem] rounded-[0.8rem] bg-[var(--dark)] flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-handshake text-[var(--gold-light)] text-[1.4rem]"></i>
+            </div>
+            <div>
+              <div class="font-serif font-bold text-[var(--dark)] text-[1.6rem] leading-tight">买卖房源</div>
+              <div class="text-[1rem] text-[var(--muted)] tracking-wider mt-[0.2rem]">FOR SALE</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-[0.6rem] px-[1rem] py-[0.4rem] rounded-full bg-[#4a6b4a]/10 border border-[#4a6b4a]/25">
+            <span class="w-[0.6rem] h-[0.6rem] rounded-full bg-[var(--green)] pulse-dot-green"></span>
+            <span class="font-num text-[1.8rem] text-[var(--green)] font-bold leading-none">1286</span>
+            <span class="text-[1.2rem] text-[var(--muted)]">套</span>
+          </div>
+        </div>
+        <div class="flex-1 overflow-hidden relative">
+          <div class="list-scroll p-[1.2rem] space-y-[1.2rem]" id="saleList"></div>
+          <div class="absolute top-0 left-0 right-0 h-[1.6rem] bg-gradient-to-b from-white/80 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 h-[1.6rem] bg-gradient-to-t from-white/80 to-transparent pointer-events-none"></div>
+        </div>
+      </div>
+
+      <div class="min-h-0 rounded-[1.6rem] bg-white/70 backdrop-blur-xl border border-[var(--border)] flex flex-col overflow-hidden shadow-sm">
+        <div class="px-[1.4rem] py-[1rem] border-b border-[var(--border)] flex items-center justify-between gap-[0.6rem] bg-[#e8e2d4]/40">
+          <div class="flex items-center gap-[0.8rem] min-w-0">
+            <div class="w-[3.2rem] h-[3.2rem] rounded-[0.8rem] bg-[var(--gold)] flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-key text-white text-[1.4rem]"></i>
+            </div>
+            <div>
+              <div class="font-serif font-bold text-[var(--dark)] text-[1.6rem] leading-tight">租赁房源</div>
+              <div class="text-[1rem] text-[var(--muted)] tracking-wider mt-[0.2rem]">FOR RENT</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-[0.6rem] px-[1rem] py-[0.4rem] rounded-full bg-[#4a6b4a]/10 border border-[#4a6b4a]/25">
+            <span class="w-[0.6rem] h-[0.6rem] rounded-full bg-[var(--green)] pulse-dot-green"></span>
+            <span class="font-num text-[1.8rem] text-[var(--green)] font-bold leading-none">386</span>
+            <span class="text-[1.2rem] text-[var(--muted)]">套</span>
+          </div>
+        </div>
+        <div class="flex-1 overflow-hidden relative">
+          <div class="list-scroll-rent p-[1.2rem] space-y-[1.2rem]" id="rentList"></div>
+          <div class="absolute top-0 left-0 right-0 h-[1.6rem] bg-gradient-to-b from-white/80 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 h-[1.6rem] bg-gradient-to-t from-white/80 to-transparent pointer-events-none"></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ============ 底部大字营销区 ============ -->
+  <footer class="flex-shrink-0 grid grid-cols-12 gap-[1rem] h-[16rem]">
+
+    <!-- 房东免中介费 -->
+    <div class="col-span-5 rounded-[1.6rem] bg-[var(--dark)] border border-[#a07324]/30 px-[2.8rem] flex items-center relative overflow-hidden shadow-lg">
+      <div class="absolute -right-[1.6rem] -top-[3.2rem] watermark-text text-[12rem] text-white/[0.05] leading-none tracking-tighter">LANDLORD</div>
+      <div class="absolute left-0 top-0 w-[0.4rem] h-full bg-gradient-to-b from-[var(--gold-light)] via-[var(--gold)] to-transparent"></div>
+
+      <div class="relative z-10 w-full">
+        <div class="flex items-center justify-between mb-[0.9rem]">
+          <div class="flex items-center gap-[0.8rem]">
+            <span class="w-[3.2rem] h-px bg-[var(--gold-light)]"></span>
+            <span class="text-[1rem] text-[var(--gold-pale)] tracking-[0.35em] font-medium">FOR LANDLORDS</span>
+          </div>
+          <span class="text-[0.9rem] text-white/35 tracking-[0.3em]">DINGFENG DIRECT</span>
+        </div>
+        <div class="flex items-center justify-between gap-[1.6rem]">
+          <div class="font-serif flex items-baseline gap-[1.2rem]">
+            <span class="text-[3.2rem] font-black text-white/90 leading-none">房东直租</span>
+            <span class="text-[3.2rem] font-black text-[var(--gold-light)] leading-none">免费登记</span>
+            <span class="slogan-shine text-[5.6rem] font-black tracking-tight leading-none">免中介费</span>
+          </div>
+          <div class="w-[6.4rem] h-[6.4rem] rounded-full border border-[#a07324]/40 flex items-center justify-center flex-shrink-0 relative">
+            <div class="absolute inset-[0.5rem] rounded-full border border-[#a07324]/20"></div>
+            <div class="text-center">
+              <div class="font-num text-[2.4rem] leading-none text-[var(--gold-light)] font-bold">0</div>
+              <div class="text-[1rem] text-white/60 mt-[0.4rem] tracking-[0.3em]">佣金</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-[0.9rem]">
+          <div class="flex items-center gap-[0.6rem]">
+            <i class="fas fa-file-signature text-[var(--gold-light)] text-[1.1rem]"></i>
+            <span class="text-[1.1rem] text-white/60">业主直签</span>
+          </div>
+          <span class="w-px h-[1.6rem] bg-white/10"></span>
+          <div class="flex items-center gap-[0.6rem]">
+            <i class="fas fa-scale-balanced text-[var(--gold-light)] text-[1.1rem]"></i>
+            <span class="text-[1.1rem] text-white/60">佣金透明</span>
+          </div>
+          <span class="w-px h-[1.6rem] bg-white/10"></span>
+          <div class="flex items-center gap-[0.6rem]">
+            <i class="fas fa-bolt text-[var(--gold-light)] text-[1.1rem]"></i>
+            <span class="text-[1.1rem] text-white/60">即挂即售</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 租客免中介费可月付 -->
+    <div class="col-span-4 rounded-[1.6rem] bg-white border border-[var(--border)] px-[2.4rem] flex flex-col justify-center relative overflow-hidden shadow-sm">
+      <div class="absolute -right-[1.6rem] -top-[3.2rem] watermark-text text-[12rem] text-[#a07324]/[0.06] leading-none tracking-tighter">TENANT</div>
+      <div class="absolute left-0 top-0 w-[0.4rem] h-full bg-gradient-to-b from-[var(--gold)] via-[var(--gold-light)] to-transparent"></div>
+
+      <div class="relative z-10">
+        <div class="flex items-center justify-between mb-[0.9rem]">
+          <div class="flex items-center gap-[0.8rem]">
+            <span class="w-[3.2rem] h-px bg-[var(--gold)]"></span>
+            <span class="text-[1rem] text-[var(--gold)] tracking-[0.35em] font-medium">FOR TENANTS</span>
+          </div>
+          <span class="text-[0.9rem] text-[var(--muted)] tracking-[0.3em]">DUAL EXEMPTION</span>
+        </div>
+
+        <div class="flex items-center justify-between gap-[1.6rem]">
+          <div>
+            <div class="font-serif text-[3.6rem] font-black text-[var(--red)] leading-none">部分房源</div>
+            <div class="flex items-center gap-[1.1rem] mt-[0.7rem]">
+              <span class="text-[1.4rem] font-bold text-[var(--green)]">免中介费</span>
+              <span class="w-px h-[1.5rem] bg-[#4a6b4a]/25"></span>
+              <span class="text-[1.4rem] font-bold text-[var(--gold)]">可月付</span>
+              <span class="w-px h-[1.5rem] bg-[#a07324]/25"></span>
+              <span class="text-[1.4rem] font-bold text-[var(--red)]">免押金</span>
+            </div>
+          </div>
+
+          <div class="w-[7.6rem] h-[7.6rem] rounded-full border-2 border-[#4a6b4a] flex items-center justify-center flex-shrink-0 relative">
+            <div class="absolute inset-[0.55rem] rounded-full border border-dashed border-[#4a6b4a]/40"></div>
+            <div class="absolute inset-[1.15rem] rounded-full border border-[#4a6b4a]/20"></div>
+            <div class="text-center">
+              <i class="fas fa-circle-check text-[#4a6b4a] text-[1.7rem]"></i>
+              <div class="font-serif text-[1.5rem] font-black text-[#4a6b4a] leading-none mt-[0.25rem]">真房源</div>
+              <div class="text-[0.72rem] text-[#4a6b4a]/70 tracking-[0.28em] mt-[0.2rem]">VERIFIED</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 联系方式 -->
+    <div class="col-span-3 rounded-[1.6rem] bg-[var(--dark)] border border-[#a07324]/30 px-[1.6rem] py-[1.6rem] flex flex-col justify-center relative overflow-hidden shadow-lg [container-type:inline-size]">
+      <div class="absolute top-0 right-0 w-[12.8rem] h-[12.8rem] bg-[#a07324]/15 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 w-[8rem] h-[8rem] bg-[#a07324]/10 rounded-full blur-xl"></div>
+
+      <div class="relative z-10 flex items-center gap-[1rem] mb-[0.9rem]">
+        <i class="fas fa-phone-volume text-[var(--gold-light)] text-[1.4rem]"></i>
+        <span class="text-[1rem] text-[var(--gold-pale)] tracking-[0.3em] font-medium">HOTLINE</span>
+      </div>
+
+      <div class="relative z-10 space-y-[0.7rem]">
+        <div class="flex items-center justify-center gap-[1.4cqi] border-b border-[#a07324]/15 pb-[0.6rem]">
+          <span class="font-serif text-[clamp(1.6rem,7.5cqi,2.4rem)] text-[var(--gold-pale)] font-bold">谭姐</span>
+          <span class="w-px h-[clamp(1.4rem,4cqi,2.4rem)] bg-[#a07324]/30"></span>
+          <span class="font-num text-[clamp(1.5rem,8.5cqi,2.4rem)] text-white tracking-wider font-bold">136 8810 1509</span>
+        </div>
+        <div class="flex items-center justify-center gap-[1.4cqi]">
+          <span class="font-serif text-[clamp(1.6rem,7.5cqi,2.4rem)] text-[var(--gold-pale)] font-bold">万哥</span>
+          <span class="w-px h-[clamp(1.4rem,4cqi,2.4rem)] bg-[#a07324]/30"></span>
+          <span class="font-num text-[clamp(1.5rem,8.5cqi,2.4rem)] text-white tracking-wider font-bold">135 5116 0281</span>
+        </div>
+      </div>
+
+      <div class="relative z-10 flex items-center justify-between gap-[0.8rem] mt-[0.7rem] pt-[0.6rem] border-t border-[#a07324]/15">
+        <div class="flex items-center gap-[0.6rem] min-w-0">
+          <i class="fas fa-location-dot text-[var(--gold-light)] text-[1rem] flex-shrink-0"></i>
+          <span class="text-[1rem] text-white/50 truncate">北京 · 朝阳区</span>
+        </div>
+        <div class="flex items-center gap-[0.6rem] flex-shrink-0">
+          <i class="fas fa-store text-[var(--gold-light)] text-[1rem]"></i>
+          <span class="text-[1rem] text-white/50">欢迎到店咨询</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+  </div>
+</div>
+
+<script>
+  const saleProperties = [
+    {
+      id: 'V20240156', title: '翠湖天地·御园', layout: '3室2厅2卫',
+      area: '128.5', floor: '中层/32层', orient: '南北通透', decor: '精装修',
+      price: '1280', priceUnit: '万', unitPrice: '99609',
+      location: '朝阳区 · 翠湖天地',
+      tags: [
+        {type:'urgent', icon:'fa-bolt', text:'急售'},
+        {type:'attr', icon:'fa-graduation-cap', text:'学区房'},
+        {type:'attr', icon:'fa-train-subway', text:'地铁2号线'}
+      ],
+      image: '/featured/images/luxe-sale-01.jpg',
+      desc: '湖景大平层 · 270°观景阳台 · 配套优质教育资源'
+    },
+    {
+      id: 'V20240189', title: '朝阳公园一号', layout: '4室2厅2卫',
+      area: '186.0', floor: '高层/28层', orient: '南向', decor: '豪华装修',
+      price: '2350', priceUnit: '万', unitPrice: '126344',
+      location: '朝阳区 · 朝阳公园',
+      tags: [
+        {type:'exclusive', icon:'fa-crown', text:'独家代理'},
+        {type:'attr', icon:'fa-tree', text:'公园景观'},
+        {type:'attr', icon:'fa-expand', text:'大平层'}
+      ],
+      image: '/featured/images/luxe-sale-02.jpg',
+      desc: '朝阳公园全景 · 7米大横厅 · 私人电梯入户'
+    },
+    {
+      id: 'V20240203', title: '中海·紫御公馆', layout: '2室2厅1卫',
+      area: '89.0', floor: '低层/18层', orient: '东南向', decor: '精装修',
+      price: '720', priceUnit: '万', unitPrice: '80899',
+      location: '海淀区 · 紫竹桥',
+      tags: [
+        {type:'urgent', icon:'fa-bolt', text:'急售'},
+        {type:'attr', icon:'fa-certificate', text:'满五唯一'},
+        {type:'attr', icon:'fa-graduation-cap', text:'学区'}
+      ],
+      image: '/featured/images/luxe-sale-03.jpg',
+      desc: '业主诚心出售 · 价格可议 · 配套成熟即买即住'
+    },
+    {
+      id: 'V20240215', title: '万科·翡翠公园', layout: '3室2厅2卫',
+      area: '115.0', floor: '中层/24层', orient: '南北通透', decor: '毛坯',
+      price: '980', priceUnit: '万', unitPrice: '85217',
+      location: '大兴区 · 万科翡翠',
+      tags: [
+        {type:'new', icon:'fa-star', text:'新上'},
+        {type:'attr', icon:'fa-train-subway', text:'地铁8号线'},
+        {type:'attr', icon:'fa-building', text:'品牌房企'}
+      ],
+      image: '/featured/images/luxe-sale-04.jpg',
+      desc: '次新小区 · 园林景观 · 户型方正通透 · 含车位'
+    },
+    {
+      id: 'V20240228', title: '保利·茉莉公馆', layout: '5室3厅4卫',
+      area: '320.0', floor: '联排/3层', orient: '南向', decor: '豪华装修',
+      price: '3180', priceUnit: '万', unitPrice: '99375',
+      location: '顺义区 · 后沙峪',
+      tags: [
+        {type:'exclusive', icon:'fa-crown', text:'独家代理'},
+        {type:'attr', icon:'fa-house', text:'联排别墅'},
+        {type:'attr', icon:'fa-tree', text:'花园200㎡'}
+      ],
+      image: '/featured/images/luxe-sale-05.jpg',
+      desc: '稀缺联排别墅 · 私家花园 · 地下车库双车位'
+    },
+    {
+      id: 'V20240301', title: '龙湖·天街原著', layout: '2室1厅1卫',
+      area: '75.0', floor: '中层/15层', orient: '南向', decor: '精装修',
+      price: '580', priceUnit: '万', unitPrice: '77333',
+      location: '昌平区 · 回龙观',
+      tags: [
+        {type:'hot', icon:'fa-fire', text:'热销'},
+        {type:'attr', icon:'fa-chart-line', text:'投资首选'},
+        {type:'attr', icon:'fa-train-subway', text:'近地铁'}
+      ],
+      image: '/featured/images/luxe-sale-06.jpg',
+      desc: '小户型投资首选 · 租金回报率高 · 配套完善'
+    },
+    {
+      id: 'V20240312', title: '金地·格林小镇', layout: '3室2厅2卫',
+      area: '132.0', floor: '高层/26层', orient: '南北通透', decor: '精装修',
+      price: '1100', priceUnit: '万', unitPrice: '83333',
+      location: '通州区 · 北苑',
+      tags: [
+        {type:'new', icon:'fa-star', text:'新上'},
+        {type:'attr', icon:'fa-house-chimney', text:'改善首选'},
+        {type:'attr', icon:'fa-car', text:'含车位'}
+      ],
+      image: '/featured/images/luxe-sale-07.jpg',
+      desc: '改善型三居 · 主卧套房设计 · 干湿分离卫浴'
+    }
+  ];
+
+  const rentProperties = [
+    {
+      id: 'R20240156', title: '国贸·SOHO', layout: '1室1厅1卫',
+      area: '58.0', floor: '高层/35层', orient: '南向', decor: '精装修',
+      price: '8500', priceUnit: '元/月', unitPrice: '146',
+      location: '朝阳区 · 国贸',
+      tags: [
+        {type:'new', icon:'fa-star', text:'新上'},
+        {type:'attr', icon:'fa-train-subway', text:'地铁1号线'},
+        {type:'attr', icon:'fa-suitcase', text:'拎包入住'}
+      ],
+      image: '/featured/images/luxe-rent-01.jpg',
+      desc: 'CBD核心区 · 全套家具家电 · 拎包即住'
+    },
+    {
+      id: 'R20240167', title: '望京·SOHO', layout: '2室1厅1卫',
+      area: '86.0', floor: '中层/22层', orient: '东南向', decor: '精装修',
+      price: '12000', priceUnit: '元/月', unitPrice: '140',
+      location: '朝阳区 · 望京',
+      tags: [
+        {type:'hot', icon:'fa-fire', text:'热租'},
+        {type:'attr', icon:'fa-building', text:'近阿里'},
+        {type:'attr', icon:'fa-couch', text:'配套齐全'}
+      ],
+      image: '/featured/images/luxe-rent-02.jpg',
+      desc: '互联网公司聚集地 · 距地铁5分钟 · 家电齐全'
+    },
+    {
+      id: 'R20240178', title: '三里屯·外交公寓', layout: '3室2厅2卫',
+      area: '145.0', floor: '高层/18层', orient: '南北通透', decor: '豪华装修',
+      price: '28000', priceUnit: '元/月', unitPrice: '193',
+      location: '朝阳区 · 三里屯',
+      tags: [
+        {type:'exclusive', icon:'fa-crown', text:'高端'},
+        {type:'attr', icon:'fa-globe', text:'涉外'},
+        {type:'attr', icon:'fa-bell-concierge', text:'24h管家'}
+      ],
+      image: '/featured/images/luxe-rent-03.jpg',
+      desc: '涉外高端公寓 · 国际化社区 · 24小时管家服务'
+    },
+    {
+      id: 'R20240189', title: '中关村·融科资讯', layout: '1室0厅1卫',
+      area: '42.0', floor: '中层/16层', orient: '南向', decor: '精装修',
+      price: '6500', priceUnit: '元/月', unitPrice: '155',
+      location: '海淀区 · 中关村',
+      tags: [
+        {type:'new', icon:'fa-star', text:'新上'},
+        {type:'attr', icon:'fa-bed', text:'单身公寓'},
+        {type:'attr', icon:'fa-graduation-cap', text:'近清华'}
+      ],
+      image: '/featured/images/luxe-rent-04.jpg',
+      desc: '科技园核心 · 单身精英首选 · 月付灵活'
+    },
+    {
+      id: 'R20240201', title: '金融街·威斯汀', layout: '2室2厅2卫',
+      area: '110.0', floor: '高层/30层', orient: '南向', decor: '豪华装修',
+      price: '18000', priceUnit: '元/月', unitPrice: '164',
+      location: '西城区 · 金融街',
+      tags: [
+        {type:'vip', icon:'fa-gem', text:'服务式'},
+        {type:'attr', icon:'fa-building-columns', text:'金融街'},
+        {type:'attr', icon:'fa-bell-concierge', text:'酒店管理'}
+      ],
+      image: '/featured/images/luxe-rent-05.jpg',
+      desc: '服务式公寓 · 酒店级管理 · 商务精英首选'
+    },
+    {
+      id: 'R20240215', title: '亚奥·万豪公寓', layout: '2室2厅1卫',
+      area: '95.0', floor: '中层/20层', orient: '东南向', decor: '精装修',
+      price: '14000', priceUnit: '元/月', unitPrice: '147',
+      location: '朝阳区 · 亚运村',
+      tags: [
+        {type:'hot', icon:'fa-fire', text:'热租'},
+        {type:'attr', icon:'fa-tree', text:'奥森公园'},
+        {type:'attr', icon:'fa-dumbbell', text:'健身房泳池'}
+      ],
+      image: '/featured/images/luxe-rent-06.jpg',
+      desc: '紧邻奥森公园 · 会所配套齐全 · 高品质社区'
+    }
+  ];
+
+  const allProperties = [
+    ...saleProperties.map(p => ({...p, type: 'sale'})),
+    ...rentProperties.map(p => ({...p, type: 'rent'}))
+  ];
+
+  let currentIdx = 0;
+  let heroTimer = null;
+
+  function updateClock() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('time').textContent = `${h}:${m}:${s}`;
+    const weeks = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+    document.getElementById('date').textContent =
+      `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${weeks[now.getDay()]}`;
+  }
+
+  function initMarquee() {
+    const news = [
+      '恭喜张先生成功购置 翠湖天地·御园 3室2厅 总价1280万',
+      '急售 | 朝阳公园一号 4室2厅 业主诚心出售 价格可议',
+      '新增房源 | 万科·翡翠公园 3室2厅 980万 学区房 紧邻地铁',
+      '独家代理 | 保利·茉莉公馆 联排别墅 花园200㎡ 总价3180万',
+      '成交快报 | 中海·紫御公馆 2室2厅 720万 7天极速成交',
+      '市场动态 | 本周二手房成交量同比上涨23% 创年内新高',
+      '租售快报 | 国贸SOHO 1室1厅 3天内成功出租 月租8500元'
+    ];
+    const track = document.getElementById('marquee');
+    const content = news.map(n =>
+      `<span class="px-[2rem] text-[var(--dark-soft)]"><i class="fas fa-circle text-[0.5rem] text-[var(--gold)] mr-[0.8rem]"></i>${n}</span>`
+    ).join('<span class="text-[var(--gold)] text-[1rem]">◆</span>');
+    track.innerHTML = content + '<span class="text-[var(--gold)] text-[1rem]">◆</span>' + content;
+  }
+
+  function renderTag(tag, dark = false) {
+    const icon = tag.icon ? `<i class="fas ${tag.icon}"></i>` : '';
+    switch(tag.type) {
+      case 'urgent': return `<span class="tag tag-urgent">${icon}${tag.text}</span>`;
+      case 'new': return `<span class="tag tag-new">${icon}${tag.text}</span>`;
+      case 'hot': return `<span class="tag tag-hot">${icon}${tag.text}</span>`;
+      case 'exclusive': return `<span class="tag tag-exclusive">${icon}${tag.text}</span>`;
+      case 'vip': return `<span class="tag tag-vip">${icon}${tag.text}</span>`;
+      case 'attr':
+        return dark
+          ? `<span class="tag tag-attr-dark">${icon}${tag.text}</span>`
+          : `<span class="tag tag-attr-light">${icon}${tag.text}</span>`;
+      default: return `<span class="tag tag-attr-light">${tag.text}</span>`;
+    }
+  }
+
+  function showHero(idx) {
+    const p = allProperties[idx];
+    if (!p) return;
+    currentIdx = idx;
+
+    const img = document.getElementById('heroImg');
+    img.style.opacity = '0';
+    setTimeout(() => {
+      img.src = p.image;
+      img.onload = () => { img.style.opacity = '1'; };
+      img.onerror = () => { img.style.opacity = '1'; };
+    }, 250);
+
+    document.getElementById('propTitle').textContent = p.title;
+    document.getElementById('propDesc').textContent = p.desc;
+    document.getElementById('propLayout').textContent = p.layout;
+    document.getElementById('propArea').textContent = p.area;
+    document.getElementById('propFloor').textContent = p.floor;
+    document.getElementById('propOrient').textContent = p.orient;
+    document.getElementById('propDecor').textContent = p.decor;
+    document.getElementById('propPrice').textContent = p.price;
+    document.getElementById('propPriceUnit').textContent = p.priceUnit;
+    document.getElementById('propLocation').textContent = p.location;
+    document.getElementById('priceLabel').textContent = p.type === 'sale' ? '总　价' : '月　租';
+    document.getElementById('propUnitPrice').textContent =
+      p.type === 'sale' ? `单价 ${p.unitPrice} 元/㎡` : `约 ${p.unitPrice} 元/㎡·月`;
+    document.getElementById('heroType').textContent =
+      p.type === 'sale' ? '买卖 · 精选好房' : '租赁 · 优质好房';
+
+    const bigNum = document.getElementById('bigNumber');
+    bigNum.textContent = String(idx + 1).padStart(2, '0');
+    bigNum.classList.remove('num-in');
+    void bigNum.offsetWidth;
+    bigNum.classList.add('num-in');
+
+    document.getElementById('totalIdx').textContent = String(allProperties.length).padStart(2, '0');
+
+    const tagsHtml = p.tags.map(t => renderTag(t, true)).join('');
+    document.getElementById('heroTags').innerHTML = tagsHtml;
+
+    const info = document.getElementById('heroInfo');
+    info.classList.remove('info-enter');
+    void info.offsetWidth;
+    info.classList.add('info-enter');
+
+    const bar = document.getElementById('progressBar');
+    bar.style.animation = 'none';
+    void bar.offsetWidth;
+    bar.style.animation = '';
+  }
+
+  function startHeroRotation() {
+    if (heroTimer) clearInterval(heroTimer);
+    heroTimer = setInterval(() => {
+      currentIdx = (currentIdx + 1) % allProperties.length;
+      showHero(currentIdx);
+    }, 8000);
+  }
+
+  function renderList(containerId, properties) {
+    const container = document.getElementById(containerId);
+    const buildCard = (p) => `
+      <div class="prop-card flex gap-[1.2rem] p-[1rem] rounded-[1.2rem] border border-[var(--border-light)] bg-white/60">
+        <div class="w-[9.6rem] h-[8rem] rounded-[0.8rem] overflow-hidden flex-shrink-0 relative">
+          <img src="${p.image}" class="w-full h-full object-cover" loading="lazy" alt="${p.title}">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+          <div class="absolute top-[0.6rem] left-[0.6rem]">
+            ${renderMiniTag(p.tags[0])}
+          </div>
+        </div>
+        <div class="flex-1 min-w-0 flex flex-col justify-between py-[0.2rem]">
+          <div>
+            <div class="font-bold text-[1.4rem] text-[var(--dark)] truncate leading-tight">${p.title}</div>
+            <div class="text-[1.1rem] text-[var(--muted)] truncate mt-[0.4rem]">${p.layout} · ${p.area}㎡ · ${p.floor}</div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-baseline gap-[0.2rem]">
+              <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold leading-none">${p.price}</span>
+              <span class="text-[1rem] text-[var(--gold)] font-bold">${p.priceUnit}</span>
+            </div>
+            <div class="flex items-center gap-[0.4rem] text-[1.1rem] text-[var(--muted)]">
+              <i class="fas fa-compass text-[0.9rem] text-[var(--gold)]"></i>
+              ${p.orient}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    container.innerHTML = [...properties, ...properties].map(buildCard).join('');
+  }
+
+  function renderMiniTag(tag) {
+    if (!tag) return '';
+    const icon = tag.icon ? `<i class="fas ${tag.icon}" style="font-size:0.8rem"></i>` : '';
+    const styles = {
+      urgent: 'background:#a83232;color:#fff;',
+      new: 'background:#4a6b4a;color:#fff;',
+      hot: 'background:#a07324;color:#fff;',
+      exclusive: 'background:#1a2e26;color:#e8d4a8;',
+      vip: 'background:transparent;color:#c9982f;border:1px solid #c9982f;'
+    };
+    const style = styles[tag.type] || 'background:rgba(255,255,255,0.9);color:#1a2e26;';
+    return `<span class="tag-mini" style="${style}">${icon}${tag.text}</span>`;
+  }
+
+  function init() {
+    updateClock();
+    setInterval(updateClock, 1000);
+    initMarquee();
+    renderList('saleList', saleProperties);
+    renderList('rentList', rentProperties);
+    showHero(0);
+    startHeroRotation();
+  }
+
+  init();
+</script>
+</body>
+</html>

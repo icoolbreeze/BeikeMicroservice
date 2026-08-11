@@ -11,7 +11,7 @@
 - 展示端预加载并复用媒体节点，已发布文件使用不可变资源缓存，避免每轮切换重复加载；
 - 系统管理员、区域经理、店长、店员四级 RBAC，权限按区域和门店隔离；
 - SQLite 元数据、密码 PBKDF2 哈希、随机不透明会话令牌、本地媒体持久化；
-- 管理页 `/`，展示页 `/display.html?store_id=<门店标识>`，OpenAPI `/docs`。
+- 管理页 `/`，门店展示页 `/display.html?store_id=<门店标识>`，精选房源大屏 `/featured.html`，OpenAPI `/docs`。
 
 ## 本地启动
 
