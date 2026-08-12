@@ -13,8 +13,16 @@ def test_featured_page_is_served(tmp_path) -> None:
     with TestClient(app) as client:
         response = client.get("/featured.html")
         assert response.status_code == 200
-        assert "saleProperties" in response.text
-        assert "DINGFENG" in response.text
+        assert "fallbackSaleProperties" in response.text
+        assert "loadFeatured" in response.text
+        assert "const carouselSale" not in response.text
+        assert "allProperties = rent" in response.text
+        assert ".filter(p => p.original_image)" in response.text
+        assert "image: p.original_image" in response.text
+        assert "updateMarketBrief" in response.text
+        assert "originalMarketCount" in response.text
+        assert "communityMarketCount" in response.text
+        assert "COMMUNITY" in response.text
         assert "https://" not in response.text
         assert "http://" not in response.text
         for asset in (

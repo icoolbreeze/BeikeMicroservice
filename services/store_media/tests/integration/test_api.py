@@ -1,5 +1,9 @@
 from fastapi.testclient import TestClient
 
+from app.infrastructure.featured_fetcher import (
+    FeaturedFeed, FeaturedListingsFetcher, FeaturedListing, FeaturedTag,
+    original_image_url, public_image_url,
+)
 from app.infrastructure.settings import Settings
 from app.main import create_app
 
@@ -193,3 +197,100 @@ def test_regional_manager_cannot_manage_another_region(tmp_path) -> None:
         })
         assert allowed.status_code == 201
         assert denied.status_code == 403
+
+
+def test_featured_feed_images_are_watermark_free_originals(monkeypatch, tmp_path) -> None:
+    """大屏图片必须是无水印原图（lease-image 桶直连，不带尺寸后缀）。"""
+
+    def fake_latest(self):
+        assert isinstance(self, FeaturedListingsFetcher)
+        return FeaturedFeed(
+            sale=[
+                FeaturedListing(
+                    id="S1", title="水碾河社区", layout="2室1厅1卫", area="47.85",
+                    floor="低层/6层", orient="南", decor="—", price="60", priceUnit="万",
+                    unitPrice="12539", location="新华公园 · 水碾河社区",
+                    tags=[FeaturedTag(type="new", icon="fa-star", text="新上房源")],
+                    image="https://img.ljcdn.com/lease-image/house/s1.jpeg",
+                    desc="2室1厅1卫 · 47.85㎡ · 南向",
+                )
+            ],
+            rent=[
+                FeaturedListing(
+                    id="R1", title="建设路小区", layout="3室2厅2卫", area="114.0",
+                    floor="—", orient="南北", decor="—", price="4500", priceUnit="元/月",
+                    unitPrice="39", location="建设路小区",
+                    tags=[FeaturedTag(type="attr", icon="fa-key", text="整租")],
+                    image="https://img.ljcdn.com/lease-image/house/r1.jpeg",
+                    desc="3室2厅2卫 · 114.0㎡ · 真实房源 · 拎包入住",
+                )
+            ],
+            sale_total=471,
+            rent_total=1,
+            updated_at="2026-08-11 08:00:00",
+        )
+
+    monkeypatch.setattr(FeaturedListingsFetcher, "latest", fake_latest)
+    app = create_app(Settings(
+        storage_dir=tmp_path, bootstrap_admin_username="admin",
+        bootstrap_admin_password="correct-horse-battery-staple",
+        crm_connector_base_url="http://127.0.0.1:1",
+    ))
+    with TestClient(app) as client:
+        response = client.get("/api/v1/display/featured")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["sale_total"] == 471
+        assert "/lease-image/" in payload["sale"][0]["image"]
+        assert not payload["sale"][0]["image"].endswith(".1500x.jpg")
+        assert payload["rent"][0]["priceUnit"] == "元/月"
+        assert payload["sale"][0]["tags"][0]["type"] == "new"
+
+
+def test_original_image_url_only_accepts_lease_image_bucket() -> None:
+    # lease-image 桶原图（无水印）→ 原样返回，不拼尺寸后缀
+    assert original_image_url(
+        "https://img.ljcdn.com//lease-image/house/20a113fdee250e99f952823b72308bfc.jpeg"
+    ) == "https://img.ljcdn.com//lease-image/house/20a113fdee250e99f952823b72308bfc.jpeg"
+    # 带 ! 命令后缀 → 剥离命令后缀后原样返回
+    assert original_image_url(
+        "https://img.ljcdn.com//lease-image/house/x.jpeg!m_fill,l_dy"
+    ) == "https://img.ljcdn.com//lease-image/house/x.jpeg"
+    # inspection 桶（实勘）没有无水印原图 → None
+    assert original_image_url(
+        "https://img.ljcdn.com//110000-inspection/pc1_nVZCubiA7.jpg"
+    ) is None
+    # hdic-frame 桶（户型图）没有无水印原图 → None
+    assert original_image_url(
+        "https://img.ljcdn.com/hdic-frame/standard_1.png"
+    ) is None
+    # 已带尺寸后缀的 lease-image 变体（带水印）→ None
+    assert original_image_url(
+        "https://img.ljcdn.com/lease-image/house/x.jpeg.1500x.jpg"
+    ) is None
+    # 空/非法 → None
+    assert original_image_url(None) is None
+    assert original_image_url("") is None
+    assert original_image_url("not-a-url") is None
+
+
+def test_public_image_url_appends_size_suffix_for_lists() -> None:
+    # 列表缩略图：受保护桶原图 → 拼 .1500x.jpg 公开变体
+    assert public_image_url(
+        "https://img.ljcdn.com//110000-inspection/pc1_nVZCubiA7.jpg"
+    ) == "https://img.ljcdn.com//110000-inspection/pc1_nVZCubiA7.jpg.1500x.jpg"
+    # 剥离 ! 命令后缀再拼
+    assert public_image_url(
+        "https://img.ljcdn.com//110000-inspection/pc1_x.jpg!m_fill,l_dy"
+    ) == "https://img.ljcdn.com//110000-inspection/pc1_x.jpg.1500x.jpg"
+    # lease-image 桶原图 → 原样（无水印，优于变体）
+    assert public_image_url(
+        "https://img.ljcdn.com/lease-image/house/y.jpeg"
+    ) == "https://img.ljcdn.com/lease-image/house/y.jpeg"
+    # 已带尺寸后缀 → 原样
+    assert public_image_url(
+        "https://img.ljcdn.com/hdic-frame/a.png.450x.jpg"
+    ) == "https://img.ljcdn.com/hdic-frame/a.png.450x.jpg"
+    # 空/非法 → None
+    assert public_image_url(None) is None
+    assert public_image_url("not-a-url") is None

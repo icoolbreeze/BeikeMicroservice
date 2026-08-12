@@ -8,9 +8,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
 
 from app.api.schemas import (
-    CreateStoreRequest, CreateUserRequest, LoginRequest, LoginResponse, MediaResponse,
-    PlaylistItem, PlaylistResponse, StoreResponse, UpdateMediaRequest, UpdatePlaylistRequest,
-    UpdateUserRequest, UserResponse,
+    CreateStoreRequest, CreateUserRequest, FeaturedFeedResponse,
+    FeaturedListingSchema, LoginRequest, LoginResponse, MediaResponse,
+    NewsFeedResponse, NewsItemResponse, PlaylistItem, PlaylistResponse,
+    StoreResponse, UpdateMediaRequest, UpdatePlaylistRequest, UpdateUserRequest,
+    UserResponse, WeatherResponse,
 )
 from app.application.service import ServiceError, StoreMediaService
 from app.domain.models import User
@@ -172,3 +174,42 @@ def media_content(media_id: str, svc: Annotated[StoreMediaService, Depends(servi
     return FileResponse(path, media_type=item.content_type, filename=item.original_name,
                         content_disposition_type="inline",
                         headers={"Cache-Control": "public, max-age=31536000, immutable"})
+
+
+@router.get("/display/news", response_model=NewsFeedResponse)
+def display_news(request: Request) -> NewsFeedResponse:
+    fetcher = request.app.state.news_fetcher
+    items = fetcher.latest()
+    return NewsFeedResponse(
+        source=fetcher.source_label,
+        items=[NewsItemResponse(title=item.title, url=item.url, published_at=item.published_at)
+               for item in items],
+    )
+
+
+@router.get("/display/weather", response_model=WeatherResponse)
+def display_weather(request: Request) -> WeatherResponse:
+    fetcher = request.app.state.weather_fetcher
+    reading = fetcher.latest()
+    if reading is None:
+        raise HTTPException(status_code=503, detail="天气数据暂不可用")
+    return WeatherResponse(
+        location=fetcher.location_name,
+        temperature_c=reading.temperature_c,
+        description=reading.description,
+        icon=reading.icon,
+        observed_at=reading.observed_at,
+    )
+
+
+@router.get("/display/featured", response_model=FeaturedFeedResponse)
+def display_featured(request: Request) -> FeaturedFeedResponse:
+    snapshot = request.app.state.featured_snapshot_store.latest()
+    feed = snapshot if snapshot is not None else request.app.state.featured_fetcher.latest()
+    return FeaturedFeedResponse(
+        sale=[FeaturedListingSchema.model_validate(item) for item in feed.sale],
+        rent=[FeaturedListingSchema.model_validate(item) for item in feed.rent],
+        sale_total=feed.sale_total,
+        rent_total=feed.rent_total,
+        updated_at=feed.updated_at,
+    )

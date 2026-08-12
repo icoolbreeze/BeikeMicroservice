@@ -111,3 +111,56 @@ class PlaylistItem(BaseModel):
 class PlaylistResponse(BaseModel):
     store: StoreResponse
     items: list[PlaylistItem]
+
+
+class NewsItemResponse(BaseModel):
+    title: str
+    url: str
+    published_at: str = ""
+
+
+class NewsFeedResponse(BaseModel):
+    source: str
+    items: list[NewsItemResponse]
+
+
+class WeatherResponse(BaseModel):
+    location: str
+    temperature_c: float
+    description: str
+    icon: str
+    observed_at: str = ""
+
+
+class FeaturedTagSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    type: str
+    icon: str
+    text: str
+
+
+class FeaturedListingSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    title: str
+    layout: str
+    area: str
+    floor: str
+    orient: str
+    decor: str
+    price: str
+    priceUnit: str
+    unitPrice: str
+    location: str
+    tags: list[FeaturedTagSchema]
+    image: str
+    desc: str
+    original_image: str | None = None
+
+
+class FeaturedFeedResponse(BaseModel):
+    sale: list[FeaturedListingSchema]
+    rent: list[FeaturedListingSchema]
+    sale_total: int | None = None
+    rent_total: int | None = None
+    updated_at: str = ""
