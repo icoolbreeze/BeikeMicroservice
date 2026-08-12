@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>鼎峰置业 · 精选房源大屏</title>
+<title>社区信息中心 · 精选房源大屏</title>
 <script src="/vendor/tailwind/tailwind.js"></script>
 <link rel="stylesheet" href="/vendor/fonts/fonts.css">
 <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
@@ -42,6 +42,12 @@
   .font-display { font-family: 'Playfair Display', serif; }
   .font-dm { font-family: 'DM Serif Display', serif; }
   .font-num { font-family: 'Playfair Display', serif; letter-spacing: -0.02em; }
+  .font-phone {
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+    letter-spacing: 0.035em;
+  }
 
   body::before {
     content: '';
@@ -82,16 +88,17 @@
     100% { transform: translateX(-50%); }
   }
 
-  .list-scroll { animation: listScroll 90s linear infinite; }
+  .list-scroll { animation: listScroll 300s linear infinite; }
   @keyframes listScroll {
     0% { transform: translateY(0); }
     100% { transform: translateY(-50%); }
   }
-  .list-scroll-rent { animation: listScrollRent 70s linear infinite; }
+  .list-scroll-rent { animation: listScrollRent 130s linear infinite; }
   @keyframes listScrollRent {
     0% { transform: translateY(0); }
     100% { transform: translateY(-50%); }
   }
+  .list-scroll:hover, .list-scroll-rent:hover { animation-play-state: paused; }
 
   .progress-anim { animation: progress 8s linear infinite; }
   @keyframes progress {
@@ -179,11 +186,14 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.3rem 0.8rem;
-    border-radius: 2px;
-    font-size: 1.1rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid rgba(26,46,38,0.28);
+    box-shadow: 0 1px 4px rgba(26,46,38,0.16);
+    font-size: 0.95rem;
     font-weight: 600;
     line-height: 1.4;
+    white-space: nowrap;
   }
 
   .corner-deco {
@@ -235,16 +245,13 @@
     <div class="flex items-center gap-[1.2rem] min-w-[26rem]">
       <div class="relative w-[4.8rem] h-[4.8rem] flex-shrink-0">
         <div class="absolute inset-0 rounded-[1.2rem] bg-[var(--dark)] flex items-center justify-center">
-          <svg width="2.6rem" height="2.6rem" viewBox="0 0 24 24" fill="none">
-            <path d="M3 12L12 3L21 12V20C21 20.5 20.5 21 20 21H15V14H9V21H4C3.5 21 3 20.5 3 20V12Z" fill="none" stroke="#c9982f" stroke-width="1.8" stroke-linejoin="round"/>
-            <circle cx="12" cy="9" r="1.5" fill="#c9982f"/>
-          </svg>
+          <i class="fas fa-people-roof text-[var(--gold-light)] text-[2.6rem]"></i>
         </div>
         <div class="absolute -inset-1 rounded-[1.2rem] bg-[var(--gold)] opacity-10 blur-md"></div>
       </div>
       <div>
-        <div class="font-serif text-[2.4rem] font-black tracking-wide text-[var(--dark)] leading-tight">鼎峰置业</div>
-        <div class="text-[0.9rem] text-[var(--muted)] tracking-[0.35em] font-medium mt-[0.2rem]">DINGFENG · REAL ESTATE</div>
+        <div class="font-serif text-[2.4rem] font-black tracking-wide text-[var(--dark)] leading-tight">社区信息中心</div>
+        <div class="text-[0.9rem] text-[var(--muted)] tracking-[0.35em] font-medium mt-[0.2rem]">COMMUNITY · INFO CENTER</div>
       </div>
     </div>
 
@@ -254,7 +261,7 @@
         <span class="text-[1.1rem] font-bold text-[var(--red)] tracking-wider">LIVE</span>
       </div>
       <div class="flex-1 overflow-hidden min-w-0">
-        <div class="marquee-track text-[1.4rem] text-[var(--dark-soft)]" id="marquee"></div>
+        <div class="marquee-track text-[2rem] text-[var(--dark-soft)]" id="marquee"></div>
       </div>
     </div>
 
@@ -265,10 +272,10 @@
       </div>
       <div class="w-px h-[3.6rem] bg-[var(--border)]"></div>
       <div class="flex items-center gap-[0.8rem]">
-        <i class="fas fa-sun text-[2rem] text-[var(--gold)]"></i>
+        <i id="weatherIcon" class="fas fa-sun text-[2rem] text-[var(--gold)]"></i>
         <div>
-          <div class="text-[1.4rem] font-bold text-[var(--dark)] leading-tight">26°C 晴</div>
-          <div class="text-[1rem] text-[var(--muted)] mt-[0.2rem]">北京 · 朝阳</div>
+          <div class="text-[1.4rem] font-bold text-[var(--dark)] leading-tight"><span id="weatherText">26°C 晴</span></div>
+          <div class="text-[1rem] text-[var(--muted)] mt-[0.2rem]" id="weatherLocation">成都 · 成华</div>
         </div>
       </div>
     </div>
@@ -370,29 +377,32 @@
       <div class="flex-1 min-h-[4rem] rounded-[1.6rem] bg-white/70 backdrop-blur-xl border border-[var(--border)] px-[2.4rem] flex items-center gap-[2rem] overflow-hidden shadow-sm">
         <div class="flex items-center gap-[1rem] flex-shrink-0">
           <span class="w-[3.2rem] h-px bg-[var(--gold)]"></span>
-          <span class="text-[1rem] text-[var(--gold)] tracking-[0.3em] font-medium">市场快报</span>
+          <div>
+            <span class="text-[1rem] text-[var(--gold)] tracking-[0.3em] font-medium">市场快报</span>
+            <span class="block text-[0.75rem] text-[var(--muted)] mt-[0.2rem]" id="marketUpdatedAt">数据更新中</span>
+          </div>
         </div>
         <div class="w-px h-[2.4rem] bg-[var(--border)] flex-shrink-0"></div>
         <div class="flex-1 min-w-0 flex items-center justify-evenly gap-[1.2rem]">
           <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
-            <span class="text-[1rem] text-[var(--muted)]">今日新增挂牌</span>
-            <span class="font-num text-[1.8rem] text-[var(--dark)] font-bold">12</span>
+            <span class="text-[1rem] text-[var(--muted)]">范围在售</span>
+            <span class="font-num text-[1.8rem] text-[var(--dark)] font-bold" id="saleMarketCount">—</span>
             <span class="text-[1rem] text-[var(--muted)]">套</span>
           </div>
           <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
-            <span class="text-[1rem] text-[var(--muted)]">本周成交</span>
-            <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold">8</span>
+            <span class="text-[1rem] text-[var(--muted)]">范围在租</span>
+            <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold" id="rentMarketCount">—</span>
             <span class="text-[1rem] text-[var(--muted)]">套</span>
           </div>
           <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
-            <span class="text-[1rem] text-[var(--muted)]">24小时带看</span>
-            <span class="font-num text-[1.8rem] text-[var(--dark)] font-bold">36</span>
-            <span class="text-[1rem] text-[var(--muted)]">组</span>
+            <span class="text-[1rem] text-[var(--muted)]">原图可播</span>
+            <span class="font-num text-[1.8rem] text-[var(--dark)] font-bold" id="originalMarketCount">—</span>
+            <span class="text-[1rem] text-[var(--muted)]">套</span>
           </div>
           <div class="flex items-baseline gap-[0.6rem] whitespace-nowrap">
-            <span class="text-[1rem] text-[var(--muted)]">在售房源</span>
-            <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold">1286</span>
-            <span class="text-[1rem] text-[var(--muted)]">套</span>
+            <span class="text-[1rem] text-[var(--muted)]">覆盖小区</span>
+            <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold" id="communityMarketCount">—</span>
+            <span class="text-[1rem] text-[var(--muted)]">个</span>
           </div>
         </div>
       </div>
@@ -412,7 +422,7 @@
           </div>
           <div class="flex items-center gap-[0.6rem] px-[1rem] py-[0.4rem] rounded-full bg-[#4a6b4a]/10 border border-[#4a6b4a]/25">
             <span class="w-[0.6rem] h-[0.6rem] rounded-full bg-[var(--green)] pulse-dot-green"></span>
-            <span class="font-num text-[1.8rem] text-[var(--green)] font-bold leading-none">1286</span>
+            <span class="font-num text-[1.8rem] text-[var(--green)] font-bold leading-none" id="saleTotalBadge">1286</span>
             <span class="text-[1.2rem] text-[var(--muted)]">套</span>
           </div>
         </div>
@@ -436,7 +446,7 @@
           </div>
           <div class="flex items-center gap-[0.6rem] px-[1rem] py-[0.4rem] rounded-full bg-[#4a6b4a]/10 border border-[#4a6b4a]/25">
             <span class="w-[0.6rem] h-[0.6rem] rounded-full bg-[var(--green)] pulse-dot-green"></span>
-            <span class="font-num text-[1.8rem] text-[var(--green)] font-bold leading-none">386</span>
+            <span class="font-num text-[1.8rem] text-[var(--green)] font-bold leading-none" id="rentTotalBadge">386</span>
             <span class="text-[1.2rem] text-[var(--muted)]">套</span>
           </div>
         </div>
@@ -463,13 +473,13 @@
             <span class="w-[3.2rem] h-px bg-[var(--gold-light)]"></span>
             <span class="text-[1rem] text-[var(--gold-pale)] tracking-[0.35em] font-medium">FOR LANDLORDS</span>
           </div>
-          <span class="text-[0.9rem] text-white/35 tracking-[0.3em]">DINGFENG DIRECT</span>
+          <span class="text-[0.9rem] text-white/35 tracking-[0.3em]">COMMUNITY DIRECT</span>
         </div>
         <div class="flex items-center justify-between gap-[1.6rem]">
           <div class="font-serif flex items-baseline gap-[1.2rem]">
-            <span class="text-[3.2rem] font-black text-white/90 leading-none">房东直租</span>
-            <span class="text-[3.2rem] font-black text-[var(--gold-light)] leading-none">免费登记</span>
-            <span class="slogan-shine text-[5.6rem] font-black tracking-tight leading-none">免中介费</span>
+            <span class="text-[2.8rem] font-black text-white/90 leading-none">房东直租</span>
+            <span class="text-[2.8rem] font-black text-[var(--gold-light)] leading-none">免费登记</span>
+            <span class="slogan-shine text-[5.2rem] font-black tracking-tight leading-none">房东免佣金</span>
           </div>
           <div class="w-[6.4rem] h-[6.4rem] rounded-full border border-[#a07324]/40 flex items-center justify-center flex-shrink-0 relative">
             <div class="absolute inset-[0.5rem] rounded-full border border-[#a07324]/20"></div>
@@ -499,75 +509,107 @@
     </div>
 
     <!-- 租客免中介费可月付 -->
-    <div class="col-span-4 rounded-[1.6rem] bg-white border border-[var(--border)] px-[2.4rem] flex flex-col justify-center relative overflow-hidden shadow-sm">
-      <div class="absolute -right-[1.6rem] -top-[3.2rem] watermark-text text-[12rem] text-[#a07324]/[0.06] leading-none tracking-tighter">TENANT</div>
-      <div class="absolute left-0 top-0 w-[0.4rem] h-full bg-gradient-to-b from-[var(--gold)] via-[var(--gold-light)] to-transparent"></div>
+    <div class="col-span-5 rounded-[1.6rem] bg-[var(--dark)] border border-[#a07324]/30 px-[2.8rem] flex flex-col justify-center relative overflow-hidden shadow-lg">
+      <div class="absolute -right-[1.6rem] -top-[3.2rem] watermark-text text-[12rem] text-white/[0.05] leading-none tracking-tighter">TENANT</div>
+      <div class="absolute left-0 top-0 w-[0.4rem] h-full bg-gradient-to-b from-[var(--gold-light)] via-[var(--gold)] to-transparent"></div>
 
       <div class="relative z-10">
         <div class="flex items-center justify-between mb-[0.9rem]">
           <div class="flex items-center gap-[0.8rem]">
-            <span class="w-[3.2rem] h-px bg-[var(--gold)]"></span>
-            <span class="text-[1rem] text-[var(--gold)] tracking-[0.35em] font-medium">FOR TENANTS</span>
+            <span class="w-[3.2rem] h-px bg-[var(--gold-light)]"></span>
+            <span class="text-[1rem] text-[var(--gold-pale)] tracking-[0.35em] font-medium">FOR TENANTS</span>
           </div>
-          <span class="text-[0.9rem] text-[var(--muted)] tracking-[0.3em]">DUAL EXEMPTION</span>
+          <span class="text-[0.9rem] text-white/35 tracking-[0.3em]">DUAL EXEMPTION</span>
         </div>
-
         <div class="flex items-center justify-between gap-[1.6rem]">
-          <div>
-            <div class="font-serif text-[3.6rem] font-black text-[var(--red)] leading-none">部分房源</div>
-            <div class="flex items-center gap-[1.1rem] mt-[0.7rem]">
-              <span class="text-[1.4rem] font-bold text-[var(--green)]">免中介费</span>
-              <span class="w-px h-[1.5rem] bg-[#4a6b4a]/25"></span>
-              <span class="text-[1.4rem] font-bold text-[var(--gold)]">可月付</span>
-              <span class="w-px h-[1.5rem] bg-[#a07324]/25"></span>
-              <span class="text-[1.4rem] font-bold text-[var(--red)]">免押金</span>
-            </div>
+          <div class="font-serif flex items-baseline gap-[1rem]">
+            <span class="text-[1.6rem] font-black text-[var(--gold-light)] leading-none tracking-[0.15em]">租房</span>
+            <span class="text-[3rem] font-black text-white leading-none">部分房源</span>
+            <span class="text-[2.2rem] font-black text-white/85 leading-none">可月付</span>
+            <span class="text-[2.2rem] font-black text-white/85 leading-none">免押金</span>
+            <span class="slogan-shine text-[5.2rem] font-black tracking-tight leading-none">免中介费</span>
           </div>
 
-          <div class="w-[7.6rem] h-[7.6rem] rounded-full border-2 border-[#4a6b4a] flex items-center justify-center flex-shrink-0 relative">
-            <div class="absolute inset-[0.55rem] rounded-full border border-dashed border-[#4a6b4a]/40"></div>
-            <div class="absolute inset-[1.15rem] rounded-full border border-[#4a6b4a]/20"></div>
+          <div class="w-[6.4rem] h-[6.4rem] rounded-full border border-[#4a6b4a]/70 flex items-center justify-center flex-shrink-0 relative">
+            <div class="absolute inset-[0.45rem] rounded-full border border-dashed border-[#4a6b4a]/40"></div>
+            <div class="absolute inset-[0.95rem] rounded-full border border-[#4a6b4a]/20"></div>
             <div class="text-center">
-              <i class="fas fa-circle-check text-[#4a6b4a] text-[1.7rem]"></i>
-              <div class="font-serif text-[1.5rem] font-black text-[#4a6b4a] leading-none mt-[0.25rem]">真房源</div>
-              <div class="text-[0.72rem] text-[#4a6b4a]/70 tracking-[0.28em] mt-[0.2rem]">VERIFIED</div>
+              <i class="fas fa-circle-check text-[var(--green-light)] text-[1.4rem]"></i>
+              <div class="font-serif text-[1.3rem] font-black text-[var(--green-light)] leading-none mt-[0.2rem]">真房源</div>
+              <div class="text-[0.62rem] text-[#6b8e6b]/70 tracking-[0.28em] mt-[0.2rem]">VERIFIED</div>
             </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-[0.9rem]">
+          <div class="flex items-center gap-[0.6rem]">
+            <i class="fas fa-suitcase-rolling text-[var(--green-light)] text-[1.1rem]"></i>
+            <span class="text-[1.1rem] text-white/60">拎包入住</span>
+          </div>
+          <span class="w-px h-[1.6rem] bg-white/10"></span>
+          <div class="flex items-center gap-[0.6rem]">
+            <i class="fas fa-bell-concierge text-[var(--green-light)] text-[1.1rem]"></i>
+            <span class="text-[1.1rem] text-white/60">24h管家</span>
+          </div>
+          <span class="w-px h-[1.6rem] bg-white/10"></span>
+          <div class="flex items-center gap-[0.6rem]">
+            <i class="fas fa-couch text-[var(--green-light)] text-[1.1rem]"></i>
+            <span class="text-[1.1rem] text-white/60">配套齐全</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- 联系方式 -->
-    <div class="col-span-3 rounded-[1.6rem] bg-[var(--dark)] border border-[#a07324]/30 px-[1.6rem] py-[1.6rem] flex flex-col justify-center relative overflow-hidden shadow-lg [container-type:inline-size]">
+    <div class="col-span-2 rounded-[1.6rem] bg-[var(--dark)] border border-[#a07324]/30 px-[1.4rem] py-[0.9rem] flex flex-col justify-center relative overflow-hidden shadow-lg [container-type:inline-size]">
       <div class="absolute top-0 right-0 w-[12.8rem] h-[12.8rem] bg-[#a07324]/15 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-[8rem] h-[8rem] bg-[#a07324]/10 rounded-full blur-xl"></div>
 
-      <div class="relative z-10 flex items-center gap-[1rem] mb-[0.9rem]">
-        <i class="fas fa-phone-volume text-[var(--gold-light)] text-[1.4rem]"></i>
-        <span class="text-[1rem] text-[var(--gold-pale)] tracking-[0.3em] font-medium">HOTLINE</span>
-      </div>
-
-      <div class="relative z-10 space-y-[0.7rem]">
-        <div class="flex items-center justify-center gap-[1.4cqi] border-b border-[#a07324]/15 pb-[0.6rem]">
-          <span class="font-serif text-[clamp(1.6rem,7.5cqi,2.4rem)] text-[var(--gold-pale)] font-bold">谭姐</span>
-          <span class="w-px h-[clamp(1.4rem,4cqi,2.4rem)] bg-[#a07324]/30"></span>
-          <span class="font-num text-[clamp(1.5rem,8.5cqi,2.4rem)] text-white tracking-wider font-bold">136 8810 1509</span>
+      <div class="relative z-10 flex items-center justify-between gap-[0.6rem] mb-[0.65rem] pb-[0.45rem] border-b border-[#a07324]/15">
+        <div class="flex items-center gap-[0.55rem] min-w-0">
+          <i class="fas fa-phone-volume text-[var(--gold-light)] text-[1.2rem] flex-shrink-0"></i>
+          <span class="text-[0.95rem] text-[var(--gold-pale)] tracking-[0.22em] font-medium">HOTLINE</span>
         </div>
-        <div class="flex items-center justify-center gap-[1.4cqi]">
-          <span class="font-serif text-[clamp(1.6rem,7.5cqi,2.4rem)] text-[var(--gold-pale)] font-bold">万哥</span>
-          <span class="w-px h-[clamp(1.4rem,4cqi,2.4rem)] bg-[#a07324]/30"></span>
-          <span class="font-num text-[clamp(1.5rem,8.5cqi,2.4rem)] text-white tracking-wider font-bold">135 5116 0281</span>
+        <div class="flex items-center gap-[0.4rem] text-[0.8rem] text-white/45 whitespace-nowrap">
+          <i class="fas fa-location-dot text-[var(--gold-light)]"></i>
+          <span>成都·成华</span>
+          <span class="text-white/20">|</span>
+          <span>9:00–21:00</span>
         </div>
       </div>
 
-      <div class="relative z-10 flex items-center justify-between gap-[0.8rem] mt-[0.7rem] pt-[0.6rem] border-t border-[#a07324]/15">
-        <div class="flex items-center gap-[0.6rem] min-w-0">
-          <i class="fas fa-location-dot text-[var(--gold-light)] text-[1rem] flex-shrink-0"></i>
-          <span class="text-[1rem] text-white/50 truncate">北京 · 朝阳区</span>
+      <div class="relative z-10">
+        <div class="flex items-baseline justify-start gap-[1.2rem] pb-[0.55rem] border-b border-[#a07324]/15">
+          <div class="flex items-baseline gap-[0.4rem] whitespace-nowrap">
+            <span class="font-serif text-[1.65rem] leading-none text-[var(--gold-pale)] font-bold">谭姐</span>
+            <span class="text-[0.78rem] text-white/45">顾问</span>
+          </div>
+          <div class="font-phone text-[clamp(1.5rem,7cqi,2rem)] leading-none text-white font-semibold whitespace-nowrap">136 8810 1509</div>
         </div>
-        <div class="flex items-center gap-[0.6rem] flex-shrink-0">
-          <i class="fas fa-store text-[var(--gold-light)] text-[1rem]"></i>
-          <span class="text-[1rem] text-white/50">欢迎到店咨询</span>
+        <div class="flex items-baseline justify-start gap-[1.2rem] py-[0.55rem]">
+          <div class="flex items-baseline gap-[0.4rem] whitespace-nowrap">
+            <span class="font-serif text-[1.65rem] leading-none text-[var(--gold-pale)] font-bold">万哥</span>
+            <span class="text-[0.78rem] text-white/45">顾问</span>
+          </div>
+          <div class="font-phone text-[clamp(1.5rem,7cqi,2rem)] leading-none text-white font-semibold whitespace-nowrap">135 5125 1328</div>
+        </div>
+      </div>
+
+      <div class="relative z-10 grid grid-cols-4 gap-[0.35rem] mt-[0.15rem] pt-[0.55rem] border-t border-[#a07324]/15">
+        <div class="flex items-center justify-center gap-[0.3rem]">
+          <i class="fas fa-handshake text-[var(--gold-light)] text-[0.85rem]"></i>
+          <span class="text-[0.8rem] text-white/55">买卖</span>
+        </div>
+        <div class="flex items-center justify-center gap-[0.3rem]">
+          <i class="fas fa-key text-[var(--gold-light)] text-[0.85rem]"></i>
+          <span class="text-[0.8rem] text-white/55">租赁</span>
+        </div>
+        <div class="flex items-center justify-center gap-[0.3rem]">
+          <i class="fas fa-file-signature text-[var(--gold-light)] text-[0.85rem]"></i>
+          <span class="text-[0.8rem] text-white/55">过户</span>
+        </div>
+        <div class="flex items-center justify-center gap-[0.3rem]">
+          <i class="fas fa-coins text-[var(--gold-light)] text-[0.85rem]"></i>
+          <span class="text-[0.8rem] text-white/55">贷款</span>
         </div>
       </div>
     </div>
@@ -576,7 +618,7 @@
 </div>
 
 <script>
-  const saleProperties = [
+  const fallbackSaleProperties = [
     {
       id: 'V20240156', title: '翠湖天地·御园', layout: '3室2厅2卫',
       area: '128.5', floor: '中层/32层', orient: '南北通透', decor: '精装修',
@@ -670,7 +712,7 @@
     }
   ];
 
-  const rentProperties = [
+  const fallbackRentProperties = [
     {
       id: 'R20240156', title: '国贸·SOHO', layout: '1室1厅1卫',
       area: '58.0', floor: '高层/35层', orient: '南向', decor: '精装修',
@@ -751,13 +793,42 @@
     }
   ];
 
-  const allProperties = [
-    ...saleProperties.map(p => ({...p, type: 'sale'})),
-    ...rentProperties.map(p => ({...p, type: 'rent'}))
-  ];
-
+  let saleProperties = [];
+  let rentProperties = [];
+  let allProperties = [];
   let currentIdx = 0;
   let heroTimer = null;
+  const FEATURED_CACHE_KEY = 'store-media-featured-feed-v1';
+
+  function cacheFeatured(data) {
+    try { localStorage.setItem(FEATURED_CACHE_KEY, JSON.stringify(data)); } catch (err) { /* quota/private mode */ }
+  }
+
+  function readCachedFeatured() {
+    try {
+      const data = JSON.parse(localStorage.getItem(FEATURED_CACHE_KEY) || 'null');
+      if (data && (Array.isArray(data.sale) || Array.isArray(data.rent))) return data;
+    } catch (err) { /* stale or unavailable browser storage */ }
+    return null;
+  }
+
+  function applyFeaturedData(data) {
+    const sale = data.sale || [];
+    const rent = data.rent || [];
+    if (!sale.length && !rent.length) throw new Error('featured data empty');
+    saleProperties = sale;
+    rentProperties = rent;
+    // 轮播严格只展示租赁列表中有无水印原图的房源；买卖/租赁列表
+    // 保留全部真实房源（缩略图继续使用 image）。
+    allProperties = rent
+      .filter(p => p.original_image)
+      .map(p => ({...p, type: 'rent', image: p.original_image}));
+    const saleCount = document.getElementById('saleTotalBadge');
+    const rentCount = document.getElementById('rentTotalBadge');
+    if (saleCount && data.sale_total != null) saleCount.textContent = data.sale_total;
+    if (rentCount && data.rent_total != null) rentCount.textContent = data.rent_total;
+    updateMarketBrief(sale, rent, data.updated_at, data.sale_total, data.rent_total);
+  }
 
   function updateClock() {
     const now = new Date();
@@ -770,21 +841,48 @@
       `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${weeks[now.getDay()]}`;
   }
 
-  function initMarquee() {
-    const news = [
-      '恭喜张先生成功购置 翠湖天地·御园 3室2厅 总价1280万',
-      '急售 | 朝阳公园一号 4室2厅 业主诚心出售 价格可议',
-      '新增房源 | 万科·翡翠公园 3室2厅 980万 学区房 紧邻地铁',
-      '独家代理 | 保利·茉莉公馆 联排别墅 花园200㎡ 总价3180万',
-      '成交快报 | 中海·紫御公馆 2室2厅 720万 7天极速成交',
-      '市场动态 | 本周二手房成交量同比上涨23% 创年内新高',
-      '租售快报 | 国贸SOHO 1室1厅 3天内成功出租 月租8500元'
-    ];
+  const fallbackNews = [
+    '成都房协通知公告：房地产开发企业合规经营指南与行业提醒',
+    '成都住房公积金政策持续优化，关注官方渠道发布的最新办理要求',
+    '成都市保障性住房管理政策更新，具体以住建部门公告为准',
+    '四川省住建部门公开征求住宅小区安全管理相关意见',
+    '成都房地产市场资讯来自成都房协及住建部门公开信息'
+  ];
+
+  function renderMarquee(items) {
     const track = document.getElementById('marquee');
-    const content = news.map(n =>
-      `<span class="px-[2rem] text-[var(--dark-soft)]"><i class="fas fa-circle text-[0.5rem] text-[var(--gold)] mr-[0.8rem]"></i>${n}</span>`
-    ).join('<span class="text-[var(--gold)] text-[1rem]">◆</span>');
-    track.innerHTML = content + '<span class="text-[var(--gold)] text-[1rem]">◆</span>' + content;
+    const content = items.map(n =>
+      `<span class="px-[2rem] text-[var(--dark-soft)]"><i class="fas fa-circle text-[0.8rem] text-[var(--gold)] mr-[0.8rem]"></i>${n}</span>`
+    ).join('<span class="text-[var(--gold)] text-[1.4rem]">◆</span>');
+    track.innerHTML = content + '<span class="text-[var(--gold)] text-[1.4rem]">◆</span>' + content;
+    const halfWidth = track.scrollWidth / 2;
+    track.style.animationDuration = Math.max(120, Math.round(halfWidth / 45)) + 's';
+  }
+
+  function initMarquee() {
+    async function load() {
+      try {
+        const res = await fetch('/api/v1/display/news');
+        if (!res.ok) throw new Error('news api failed');
+        const data = await res.json();
+        const items = (data.items || []).map(item => item.title).filter(Boolean);
+        if (items.length) { renderMarquee(items); return; }
+      } catch (err) { /* 官方新闻不可用时回退到本地文案 */ }
+      renderMarquee(fallbackNews);
+    }
+    load();
+    setInterval(load, 30 * 60 * 1000);
+  }
+
+  async function loadWeather() {
+    try {
+      const res = await fetch('/api/v1/display/weather');
+      if (!res.ok) throw new Error('weather api failed');
+      const data = await res.json();
+      document.getElementById('weatherIcon').className = `fas ${data.icon} text-[2rem] text-[var(--gold)]`;
+      document.getElementById('weatherText').textContent = `${data.temperature_c}°C ${data.description}`;
+      document.getElementById('weatherLocation').textContent = data.location;
+    } catch (err) { /* 天气不可用时保留页面默认文案 */ }
   }
 
   function renderTag(tag, dark = false) {
@@ -856,6 +954,8 @@
 
   function startHeroRotation() {
     if (heroTimer) clearInterval(heroTimer);
+    heroTimer = null;
+    if (!allProperties.length) return;
     heroTimer = setInterval(() => {
       currentIdx = (currentIdx + 1) % allProperties.length;
       showHero(currentIdx);
@@ -869,29 +969,39 @@
         <div class="w-[9.6rem] h-[8rem] rounded-[0.8rem] overflow-hidden flex-shrink-0 relative">
           <img src="${p.image}" class="w-full h-full object-cover" loading="lazy" alt="${p.title}">
           <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-          <div class="absolute top-[0.6rem] left-[0.6rem]">
-            ${renderMiniTag(p.tags[0])}
-          </div>
         </div>
         <div class="flex-1 min-w-0 flex flex-col justify-between py-[0.2rem]">
-          <div>
-            <div class="font-bold text-[1.4rem] text-[var(--dark)] truncate leading-tight">${p.title}</div>
-            <div class="text-[1.1rem] text-[var(--muted)] truncate mt-[0.4rem]">${p.layout} · ${p.area}㎡ · ${p.floor}</div>
+          <div class="min-w-0">
+            <div class="flex items-center justify-between gap-[0.6rem] min-w-0">
+              <div class="font-bold text-[1.8rem] text-[var(--dark)] truncate leading-tight min-w-0">${p.title}</div>
+              <div class="flex items-center gap-[0.35rem] flex-shrink-0">
+                ${p.tags.slice(0, 2).map(renderMiniTag).join('')}
+              </div>
+            </div>
+            <div class="flex items-center gap-[0.4rem] text-[1rem] text-[var(--gold)] truncate mt-[0.35rem]">
+              <i class="fas fa-location-dot text-[0.85rem]"></i>${p.location || '位置待定'}
+            </div>
+            <div class="text-[1.1rem] text-[var(--muted)] truncate mt-[0.3rem]">${p.layout} · ${p.area}㎡ · ${p.orient}</div>
+            <div class="text-[0.95rem] text-[var(--muted)] truncate mt-[0.25rem]">${p.desc || '真实房源 · 欢迎咨询'}</div>
           </div>
           <div class="flex items-center justify-between">
             <div class="flex items-baseline gap-[0.2rem]">
-              <span class="font-num text-[1.8rem] text-[var(--gold)] font-bold leading-none">${p.price}</span>
-              <span class="text-[1rem] text-[var(--gold)] font-bold">${p.priceUnit}</span>
+              <span class="font-num text-[2.3rem] text-[var(--gold)] font-bold leading-none">${p.price}</span>
+              <span class="text-[1.1rem] text-[var(--gold)] font-bold">${p.priceUnit}</span>
             </div>
-            <div class="flex items-center gap-[0.4rem] text-[1.1rem] text-[var(--muted)]">
-              <i class="fas fa-compass text-[0.9rem] text-[var(--gold)]"></i>
-              ${p.orient}
+            <div class="flex items-center gap-[0.4rem] text-[1.05rem] text-[var(--muted)] whitespace-nowrap">
+              <i class="fas fa-layer-group text-[0.9rem] text-[var(--gold)]"></i>
+              ${p.floor || '楼层待定'}
             </div>
           </div>
         </div>
       </div>
     `;
     container.innerHTML = [...properties, ...properties].map(buildCard).join('');
+    // 滚动时长按内容高度自适应（约 35px/s 的阅读速度）：买卖 119 条时约 8 分钟转完一圈，
+    // 列表条数变化后仍保持同一速度，避免固定时长下列表越长滚得越快。
+    const halfHeight = container.scrollHeight / 2;
+    container.style.animationDuration = Math.max(120, Math.round(halfHeight / 35)) + 's';
   }
 
   function renderMiniTag(tag) {
@@ -904,18 +1014,93 @@
       exclusive: 'background:#1a2e26;color:#e8d4a8;',
       vip: 'background:transparent;color:#c9982f;border:1px solid #c9982f;'
     };
-    const style = styles[tag.type] || 'background:rgba(255,255,255,0.9);color:#1a2e26;';
+    const style = styles[tag.type] || 'background:#f1eadc;color:#1a2e26;border-color:#c9b98f;';
     return `<span class="tag-mini" style="${style}">${icon}${tag.text}</span>`;
   }
 
-  function init() {
+  function useFallbackData() {
+    saleProperties = fallbackSaleProperties;
+    // 本地兜底图片均为项目内原始素材；轮播仍只从租赁列表取图。
+    rentProperties = fallbackRentProperties.map(p => ({...p, original_image: p.image}));
+    allProperties = rentProperties.map(p => ({
+      ...p, type: 'rent', image: p.original_image
+    }));
+  }
+
+  function showEmptyHero() {
+    currentIdx = 0;
+    const img = document.getElementById('heroImg');
+    img.removeAttribute('src');
+    img.style.opacity = '0';
+    document.getElementById('propTitle').textContent = '暂无可播放的租赁原图';
+    document.getElementById('propDesc').textContent = '买卖与租赁列表仍可正常浏览';
+    document.getElementById('heroType').textContent = '租赁 · 原图房源';
+    document.getElementById('bigNumber').textContent = '00';
+    document.getElementById('totalIdx').textContent = '00';
+    document.getElementById('heroTags').innerHTML = '';
+  }
+
+  function updateMarketBrief(sale, rent, updatedAt = '', saleTotal = null, rentTotal = null) {
+    const setText = (id, value) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = String(value ?? '—');
+    };
+    const communities = new Set(
+      [...sale, ...rent].map(p => p.title).filter(Boolean)
+    ).size;
+    setText('saleMarketCount', saleTotal ?? sale.length);
+    setText('rentMarketCount', rentTotal ?? rent.length);
+    setText('originalMarketCount', rent.filter(p => p.original_image).length);
+    setText('communityMarketCount', communities);
+    setText('marketUpdatedAt', updatedAt ? `更新于 ${updatedAt}` : '本地展示数据');
+  }
+
+  async function loadFeatured() {
+    try {
+      const res = await fetch('/api/v1/display/featured');
+      if (!res.ok) throw new Error('featured api failed');
+      const data = await res.json();
+      applyFeaturedData(data);
+      cacheFeatured(data);
+      return true;
+    } catch (err) {
+      const cached = readCachedFeatured();
+      if (cached) {
+        try {
+          applyFeaturedData(cached);
+          return true;
+        } catch (cacheError) { /* fall through to bundled fallback */ }
+      }
+      useFallbackData();
+      updateMarketBrief(saleProperties, rentProperties);
+      return false;
+    }
+  }
+
+  async function init() {
     updateClock();
     setInterval(updateClock, 1000);
     initMarquee();
+    loadWeather();
+    setInterval(loadWeather, 10 * 60 * 1000);
+    await loadFeatured();
     renderList('saleList', saleProperties);
     renderList('rentList', rentProperties);
-    showHero(0);
+    if (allProperties.length) showHero(0);
+    else showEmptyHero();
     startHeroRotation();
+    setInterval(() => {
+      loadFeatured().then(ok => {
+        if (ok) {
+          renderList('saleList', saleProperties);
+          renderList('rentList', rentProperties);
+          if (currentIdx >= allProperties.length) currentIdx = 0;
+          if (allProperties.length) showHero(currentIdx);
+          else showEmptyHero();
+          startHeroRotation();
+        }
+      });
+    }, 10 * 60 * 1000);
   }
 
   init();
