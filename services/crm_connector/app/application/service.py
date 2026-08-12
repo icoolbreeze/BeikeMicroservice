@@ -28,6 +28,18 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleCommunitySuggestion,
+    SaleFollowRecord,
+    SaleListing,
+    SaleListingDetail,
+    SaleListingFilters,
+    SaleListingFilterOption,
+    SaleListingPage,
+    SaleMaintainInfo,
+    SaleMapBubbleFilters,
+    SaleMapNearbySearchFilters,
+    SaleMapNearbySearchResult,
+    SaleMapSuggestion,
 )
 from app.domain.modules import CrmModule, crm_modules
 from app.domain.providers.crm_client import CrmClient
@@ -98,6 +110,141 @@ class ConnectorService:
     ) -> tuple[RentalMapSuggestion, ...]:
         self._require_ready()
         return self._crm_client.rental_map_suggest(filters)
+
+    def search_sale_listings(self, filters: SaleListingFilters) -> SaleListingPage:
+        self._require_ready()
+        return self._crm_client.search_sale_listings(filters)
+
+    def sale_filter_options(self) -> tuple[SaleListingFilterOption, ...]:
+        self._require_ready()
+        return self._crm_client.sale_filter_options()
+
+    def sale_community_suggest(self, query: str) -> tuple[SaleCommunitySuggestion, ...]:
+        self._require_ready()
+        return self._crm_client.sale_community_suggest(query)
+
+    def get_sale_listing_detail(self, listing_id: str) -> SaleListing:
+        self._require_ready()
+        return self._crm_client.get_sale_listing_detail(listing_id)
+
+    def get_sale_listing_detail_head(self, listing_id: str) -> SaleListingDetail:
+        self._require_ready()
+        return self._crm_client.get_sale_listing_detail_head(listing_id)
+
+    def get_sale_listing_maintain_info(self, listing_id: str) -> SaleMaintainInfo:
+        self._require_ready()
+        return self._crm_client.get_sale_listing_maintain_info(listing_id)
+
+    def get_sale_listing_follows(self, listing_id: str) -> tuple[SaleFollowRecord, ...]:
+        self._require_ready()
+        return self._crm_client.get_sale_listing_follows(listing_id)
+
+    def sale_map_suggest(self, query: str) -> tuple[SaleMapSuggestion, ...]:
+        self._require_ready()
+        return self._crm_client.sale_map_suggest(query, self.default_city_id)
+
+    def search_sale_map_nearby(
+        self, filters: SaleMapNearbySearchFilters
+    ) -> SaleMapNearbySearchResult:
+        """Find 在售 listings in communities whose map centroids fall in a radius.
+
+        Same shape as the rental nearby flow: resolve a place with the sale
+        map suggest, load community bubbles for its enclosing rectangle, keep
+        the community ids inside the Haversine circle, then hand them back to
+        the sale list search (multi_community_id). Not a property-coordinate
+        radius query — community centroids only.
+        """
+        self._require_ready()
+        center: SaleMapSuggestion | None
+        if filters.center_latitude is not None and filters.center_longitude is not None:
+            center = SaleMapSuggestion(
+                suggestion_id="",
+                text=filters.location,
+                alias=None,
+                bizcircle_name=None,
+                district_name=None,
+                item_type="provided_coordinate",
+                count=None,
+                latitude=filters.center_latitude,
+                longitude=filters.center_longitude,
+                unit_price=None,
+            )
+        else:
+            suggestions = self._crm_client.sale_map_suggest(
+                filters.location, self.default_city_id
+            )
+            center = _pick_sale_map_center(suggestions, filters.location)
+        if center is None or center.latitude is None or center.longitude is None:
+            raise UpstreamInvalidInputError(
+                "sale map location could not be resolved to coordinates"
+            )
+
+        bounds = _radius_bounds(
+            latitude=center.latitude,
+            longitude=center.longitude,
+            radius_meters=filters.radius_meters,
+        )
+        bubbles = self._crm_client.sale_map_bubbles(
+            SaleMapBubbleFilters(
+                city_id=self.default_city_id,
+                bounds=bounds,
+                group_type="community",
+                filters={},
+            )
+        )
+        all_community_ids = tuple(
+            dict.fromkeys(
+                bubble.bubble_id
+                for bubble in bubbles
+                if bubble.bubble_id
+                and bubble.latitude is not None
+                and bubble.longitude is not None
+                and _haversine_meters(
+                    center.latitude, center.longitude, bubble.latitude, bubble.longitude
+                ) <= filters.radius_meters
+            )
+        )
+        # Keep the response compatible with sale_listing_search's 100-id
+        # input limit, but make truncation explicit instead of silently
+        # presenting an incomplete circle as complete.
+        community_ids = all_community_ids[:100]
+
+        result = self._crm_client.search_sale_listings(
+            SaleListingFilters(
+                scope=filters.scope,
+                community_ids=community_ids,
+                district_id=None,
+                listing_id=None,
+                price_wan=filters.price_wan,
+                area_sqm=filters.area_sqm,
+                rooms=filters.rooms,
+                floors=(),
+                orientations=(),
+                house_layouts=(),
+                tags=(),
+                select=(),
+                house_age=None,
+                visitable_times=None,
+                payment_mode=None,
+                building_type=None,
+                sort="period1_desc_createtime_desc",
+                page=filters.page,
+            )
+        ) if community_ids else SaleListingPage(
+            items=(),
+            page=filters.page,
+            total=0,
+            has_more=False,
+            request_id="local-empty-circle",
+        )
+        return SaleMapNearbySearchResult(
+            center=center,
+            radius_meters=filters.radius_meters,
+            matched_community_count=len(all_community_ids),
+            community_ids=community_ids,
+            community_ids_truncated=len(all_community_ids) > len(community_ids),
+            result=result,
+        )
 
     @property
     def default_city_id(self) -> str:
@@ -221,6 +368,26 @@ def _pick_map_center(
     if not available:
         return None
     return next((item for item in available if item.name == location), available[0])
+
+
+def _pick_sale_map_center(
+    suggestions: tuple[SaleMapSuggestion, ...], location: str
+) -> SaleMapSuggestion | None:
+    """Prefer an exact text match, but only accept coordinate-bearing entries.
+
+    The sale map suggest returns community entries only; a phrase like
+    万象城 resolves to 华润广场(成华) whose alias is 万象城, so exact matches
+    are checked on both text and alias.
+    """
+    available = [
+        item for item in suggestions if item.latitude is not None and item.longitude is not None
+    ]
+    if not available:
+        return None
+    for item in available:
+        if item.text == location or item.alias == location:
+            return item
+    return available[0]
 
 
 def _radius_bounds(*, latitude: float, longitude: float, radius_meters: int):

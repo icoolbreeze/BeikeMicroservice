@@ -5,7 +5,8 @@
 ## 当前能力
 
 > **完整链路已于 2026-08-06 用真实扫码验证打通**：扫码登录 → CAS 双跳 bootstrap → 凭证入库 → `authorizedFetch` 业务调用 → TGC 无感刷新。
-> **MCP stdio 已于 2026-08-07 用真实凭据验证**：`crm-mcp` 子进程在 `kecom-prod` profile 下通过 `stdio` 暴露 4 个工具，`crm_whoami` / `rental_listing_search` / `rental_listing_get_detail` 均返回真实 CRM 数据。
+> **MCP stdio 已于 2026-08-07 用真实凭据验证**：`crm-mcp` 子进程在 `kecom-prod` profile 下通过 `stdio` 暴露工具，`crm_whoami` / `rental_listing_search` / `rental_listing_get_detail` 均返回真实 CRM 数据。
+> **买卖板块已于 2026-08-11 用真实凭据验证**：house.link shiro-cas 域（`saas_token` + `HOUSEJSESSIONID`）的搜索/筛选字典/小区联想/详情头/维护信息/跟进记录全部走通，`sale_listing_*` 系列 MCP 工具返回真实在售房源数据。
 
 - `/api/v1/health`：服务健康检查；
 - `/api/v1/connection/status`：认证与连接状态；
@@ -16,6 +17,8 @@
 - `/api/v1/mcp/tools`：与 MCP transport 同源的工具元数据（`app/mcp/tools.py`，经 `/tools/list` 暴露）；
 - `/api/v1/crm/me`、`/api/v1/listings/rental/search`：已完成租赁房源的分层与输入/输出契约，走通真实上游 `KecomCrmClient` → `KecomSessionProvider.authorizedFetch` → `lease-pz.link.lianjia.com`。
 - `/api/v1/listings/rental/{listing_id}`：租赁房源详情端点，返回单条 `RentalListingResponse`。
+- `/api/v1/listings/sale/search`、`/filter-options`、`/suggest`、`/{listing_id}` 等：买卖（在售）房源查询端点，走真实上游 `house.link.lianjia.com`（详见 [`docs/sale-api-catalog.md`](docs/sale-api-catalog.md)）。
+- `/api/v1/listings/sale/map/suggest`、`/listings/sale/map/nearby`：买卖地图找房——地点联想与半径范围查询（万象城 1 公里 → 44 小区 → 2000+ 套在售，2026-08-11 实测）。
 
 ## 服务内扫码登录
 
@@ -108,8 +111,8 @@ python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 }
 ```
 
-- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_search`、`rental_listing_get_detail`；
-- `crm_connection_status` 不限额；其余 3 个按调用者主体（`getpass.getuser()`）受 `CC_MCP_RATE_LIMIT_PER_MIN`（默认 30 次/分钟）滑动窗口限流，超限返回 `RATE_LIMITED`；
+- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_*`（搜索/筛选字典/详情/实勘/房源信息）、`rental_map_*`（联想/附近）、`sale_listing_*`（搜索/筛选字典/小区联想/详情/详情头/维护信息/跟进记录）、`sale_map_*`（买卖地点联想/附近范围查询）；
+- `crm_connection_status` 不限额；其余 MCP 工具按调用者主体（`getpass.getuser()`）受 `CC_MCP_RATE_LIMIT_PER_MIN`（默认 30 次/分钟）滑动窗口限流，超限返回 `RATE_LIMITED`；
 - 未配置凭据时业务工具返回 `CRM_AUTH_REQUIRED`，不会访问上游；
 - 凭据只经 `SessionProvider.authorizedFetch()` 注入，MCP 响应与日志不含任何认证材料。
 
@@ -119,7 +122,7 @@ python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 CC_UPSTREAM_PROFILE=kecom-prod python examples/mcp_client.py demo --keyword 万象城
 ```
 
-仓库根 `.mcp.json` 已将 `crm-connector` 注册为项目级 MCP server（stdio + `kecom-prod` profile），重新启动 Claude Code 后即可直接使用 `crm_*` / `rental_listing_*` 工具。
+仓库根 `.mcp.json` 已将 `crm-connector` 注册为项目级 MCP server（stdio + `kecom-prod` profile），重新启动 Claude Code 后即可直接使用 `crm_*`、`rental_listing_*` 和 `sale_*` 工具。
 
 > Dockerfile 用于服务契约与基础运行验证；生产 Connector 仍应运行在云枢已接入的员工专属 Windows VM 中，不应把云枢或员工认证材料打包进镜像。
 
@@ -137,8 +140,8 @@ api -> application -> domain <- infrastructure
 - `infrastructure/kecom_session_provider.py`：已认证请求代理与 keepalive，注入 `puzu_lease_token` + `saas_token` 等业务 cookie（`KecomSessionProvider`）；
 - `infrastructure/kecom_crm_client.py`：CRM 业务 Adapter，通过 `SessionProvider.authorizedFetch` 调用受控路由（`KecomCrmClient`）；
 - `infrastructure/windows_dpapi_credential_store.py`：Windows DPAPI 加密本地存储；
-- `mcp/tools.py`：首期 4 个 MCP tool 的契约（输入/输出 Schema、只读标注），与 HTTP `/api/v1/mcp/tools` 同源；
-- `mcp/server.py`：MCP server 组装（`build_mcp_server`）与 `stdio` 入口（`main`），`MCPServer.tool` 注册 4 个工具、`ToolAnnotations(read_only_hint=True)` 只读标注、`_require_quota` 按调用者主体限流；
+- `mcp/tools.py`：18 个 MCP tool 的契约（输入/输出 Schema、只读标注），HTTP `/api/v1/mcp/tools` 返回与 stdio `/tools/list` 一致的扁平 Schema；
+- `mcp/server.py`：MCP server 组装（`build_mcp_server`）与 `stdio` 入口（`main`），注册连接、租赁和买卖查询工具，所有业务工具使用 `ToolAnnotations(read_only_hint=True)` 并按调用者主体限流；
 - `mcp/schemas.py`：MCP 入参模型（`extra="forbid"` 拒绝未知字段）；
 - `mcp/rate_limit.py`：滑动窗口工具级限流。
 

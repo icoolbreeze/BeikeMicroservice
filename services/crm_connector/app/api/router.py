@@ -22,6 +22,17 @@ from app.api.schemas import (
     RentalMapNearbySearchResponse,
     RentalMapSuggestionRequest,
     RentalMapSuggestionResponse,
+    SaleCommunitySuggestionResponse,
+    SaleFollowRecordResponse,
+    SaleListingDetailResponse,
+    SaleListingFilterOptionResponse,
+    SaleListingPageResponse,
+    SaleListingResponse,
+    SaleListingSearchRequest,
+    SaleMaintainInfoResponse,
+    SaleMapNearbySearchRequest,
+    SaleMapNearbySearchResponse,
+    SaleMapSuggestionResponse,
 )
 from app.application.qr_login import QrLoginManager
 from app.application.service import ConnectorService
@@ -227,3 +238,103 @@ def search_rental_map_nearby(
         lambda: svc.search_rental_map_nearby(payload.to_domain(svc.default_city_id))
     )
     return RentalMapNearbySearchResponse.from_domain(result)
+
+
+# -- 买卖 (sale, house.link) ------------------------------------------------
+
+
+@router.post("/listings/sale/search", response_model=SaleListingPageResponse)
+def search_sale_listings(
+    payload: SaleListingSearchRequest,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> SaleListingPageResponse:
+    result = invoke(lambda: svc.search_sale_listings(payload.to_domain()))
+    return SaleListingPageResponse.from_domain(result)
+
+
+@router.get(
+    "/listings/sale/filter-options",
+    response_model=list[SaleListingFilterOptionResponse],
+)
+def sale_listing_filter_options(
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> list[SaleListingFilterOptionResponse]:
+    options = invoke(svc.sale_filter_options)
+    return [SaleListingFilterOptionResponse.from_domain(option) for option in options]
+
+
+@router.get(
+    "/listings/sale/suggest",
+    response_model=list[SaleCommunitySuggestionResponse],
+)
+def sale_community_suggest(
+    query: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> list[SaleCommunitySuggestionResponse]:
+    result = invoke(lambda: svc.sale_community_suggest(query))
+    return [SaleCommunitySuggestionResponse.from_domain(item) for item in result]
+
+
+@router.get("/listings/sale/{listing_id}", response_model=SaleListingResponse)
+def get_sale_listing_detail(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> SaleListingResponse:
+    return SaleListingResponse.from_domain(
+        invoke(lambda: svc.get_sale_listing_detail(listing_id))
+    )
+
+
+@router.get("/listings/sale/{listing_id}/detail-head", response_model=SaleListingDetailResponse)
+def get_sale_listing_detail_head(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> SaleListingDetailResponse:
+    return SaleListingDetailResponse.from_domain(
+        invoke(lambda: svc.get_sale_listing_detail_head(listing_id))
+    )
+
+
+@router.get(
+    "/listings/sale/{listing_id}/maintain-info",
+    response_model=SaleMaintainInfoResponse,
+)
+def get_sale_listing_maintain_info(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> SaleMaintainInfoResponse:
+    return SaleMaintainInfoResponse.from_domain(
+        invoke(lambda: svc.get_sale_listing_maintain_info(listing_id))
+    )
+
+
+@router.get(
+    "/listings/sale/{listing_id}/follows",
+    response_model=list[SaleFollowRecordResponse],
+)
+def get_sale_listing_follows(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> list[SaleFollowRecordResponse]:
+    records = invoke(lambda: svc.get_sale_listing_follows(listing_id))
+    return [SaleFollowRecordResponse.from_domain(record) for record in records]
+
+
+@router.get("/listings/sale/map/suggest", response_model=list[SaleMapSuggestionResponse])
+def sale_map_suggest(
+    query: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> list[SaleMapSuggestionResponse]:
+    result = invoke(lambda: svc.sale_map_suggest(query))
+    return [SaleMapSuggestionResponse.from_domain(item) for item in result]
+
+
+@router.post(
+    "/listings/sale/map/nearby", response_model=SaleMapNearbySearchResponse
+)
+def search_sale_map_nearby(
+    payload: SaleMapNearbySearchRequest,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> SaleMapNearbySearchResponse:
+    result = invoke(lambda: svc.search_sale_map_nearby(payload.to_domain()))
+    return SaleMapNearbySearchResponse.from_domain(result)

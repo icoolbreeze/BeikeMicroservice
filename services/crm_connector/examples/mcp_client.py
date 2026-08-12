@@ -121,6 +121,70 @@ async def _run(args: argparse.Namespace) -> bool:
                     "rental_listing_get_prospect",
                     {"input": {"listing_id": args.listing_id}},
                 )
+            elif args.command == "sale-search":
+                payload = await _call_json(
+                    session,
+                    "sale_listing_search",
+                    {
+                        "input": {
+                            "scope": args.scope,
+                            "total_price_wan": (
+                                {"min": args.price_min, "max": args.price_max}
+                                if args.price_min is not None or args.price_max is not None
+                                else None
+                            ),
+                            "rooms": args.rooms,
+                            "page": args.page,
+                        }
+                    },
+                )
+            elif args.command == "sale-suggest":
+                payload = await _call_json(
+                    session,
+                    "sale_community_suggest",
+                    {"input": {"query": args.keyword}},
+                )
+            elif args.command == "sale-detail":
+                payload = await _call_json(
+                    session,
+                    "sale_listing_get_detail",
+                    {"input": {"listing_id": args.listing_id}},
+                )
+            elif args.command == "sale-maintain":
+                payload = await _call_json(
+                    session,
+                    "sale_listing_get_maintain_info",
+                    {"input": {"listing_id": args.listing_id}},
+                )
+            elif args.command == "sale-follows":
+                payload = await _call_json(
+                    session,
+                    "sale_listing_get_follows",
+                    {"input": {"listing_id": args.listing_id}},
+                )
+            elif args.command == "sale-map-suggest":
+                payload = await _call_json(
+                    session,
+                    "sale_map_suggest",
+                    {"input": {"query": args.keyword}},
+                )
+            elif args.command == "sale-nearby":
+                payload = await _call_json(
+                    session,
+                    "sale_map_nearby_search",
+                    {
+                        "input": {
+                            "location": args.keyword,
+                            "radius_meters": args.radius,
+                            "total_price_wan": (
+                                {"min": args.price_min, "max": args.price_max}
+                                if args.price_min is not None or args.price_max is not None
+                                else None
+                            ),
+                            "rooms": args.rooms,
+                        }
+                    },
+                )
             else:  # detail
                 payload = await _call_json(
                     session,
@@ -153,6 +217,48 @@ def _parser() -> argparse.ArgumentParser:
 
     prospect = sub.add_parser("prospect", help="fetch one listing's 实勘 photo record")
     prospect.add_argument("--listing-id", required=True)
+
+    sale_search = sub.add_parser("sale-search", help="search 在售 (买卖) listings")
+    sale_search.add_argument("--keyword", default="")
+    sale_search.add_argument("--scope", default="gdiv_mt")
+    sale_search.add_argument("--price-min", type=int, default=None)
+    sale_search.add_argument("--price-max", type=int, default=None)
+    sale_search.add_argument("--rooms", type=int, nargs="*", default=[])
+    sale_search.add_argument("--page", type=int, default=1)
+
+    sale_suggest = sub.add_parser(
+        "sale-suggest", help="resolve a 买卖 community name"
+    )
+    sale_suggest.add_argument("--keyword", default="成发紫东阳光")
+
+    sale_detail = sub.add_parser(
+        "sale-detail", help="fetch one 在售 listing (search row)"
+    )
+    sale_detail.add_argument("--listing-id", required=True)
+
+    sale_maintain = sub.add_parser(
+        "sale-maintain", help="fetch one 在售 listing's 维护信息"
+    )
+    sale_maintain.add_argument("--listing-id", required=True)
+
+    sale_follows = sub.add_parser(
+        "sale-follows", help="fetch one 在售 listing's 跟进记录"
+    )
+    sale_follows.add_argument("--listing-id", required=True)
+
+    sale_map_suggest = sub.add_parser(
+        "sale-map-suggest", help="resolve a 买卖 map phrase (mall/landmark/community)"
+    )
+    sale_map_suggest.add_argument("--keyword", default="万象城")
+
+    sale_nearby = sub.add_parser(
+        "sale-nearby", help="search 在售 listings near a named place"
+    )
+    sale_nearby.add_argument("--keyword", default="万象城")
+    sale_nearby.add_argument("--radius", type=int, default=1000)
+    sale_nearby.add_argument("--price-min", type=int, default=None)
+    sale_nearby.add_argument("--price-max", type=int, default=None)
+    sale_nearby.add_argument("--rooms", type=int, nargs="*", default=[])
 
     demo = sub.add_parser("demo", help="full chain: tools -> status -> whoami -> search -> detail")
     demo.add_argument("--keyword", default="万象城")

@@ -15,6 +15,17 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleCommunitySuggestion,
+    SaleFollowRecord,
+    SaleListing,
+    SaleListingDetail,
+    SaleListingFilters,
+    SaleListingFilterOption,
+    SaleListingPage,
+    SaleMaintainInfo,
+    SaleMapBubble,
+    SaleMapBubbleFilters,
+    SaleMapSuggestion,
 )
 
 
@@ -48,4 +59,33 @@ class UnconfiguredCrmClient:
     def rental_map_suggest(
         self, filters: RentalMapSuggestionFilters
     ) -> tuple[RentalMapSuggestion, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def search_sale_listings(self, filters: SaleListingFilters) -> SaleListingPage:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def sale_filter_options(self) -> tuple[SaleListingFilterOption, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def sale_community_suggest(self, query: str) -> tuple[SaleCommunitySuggestion, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_detail(self, listing_id: str) -> SaleListing:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_detail_head(self, listing_id: str) -> SaleListingDetail:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_maintain_info(self, listing_id: str) -> SaleMaintainInfo:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_follows(self, listing_id: str) -> tuple[SaleFollowRecord, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def sale_map_suggest(self, query: str, city_id: str) -> tuple[SaleMapSuggestion, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def sale_map_bubbles(
+        self, filters: SaleMapBubbleFilters
+    ) -> tuple[SaleMapBubble, ...]:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")

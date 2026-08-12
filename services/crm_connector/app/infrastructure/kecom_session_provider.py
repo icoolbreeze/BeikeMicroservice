@@ -6,7 +6,8 @@ import threading
 import time
 import uuid
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 from typing import Callable
 
 import httpx
@@ -44,6 +45,10 @@ _COMPAT_COOKIES = (
     "lianjia_uuid",
     "saas_token",
     "login_ucid",
+    # house.link shiro-cas session; required with saas_token for the 买卖
+    # business APIs (house.link.lianjia.com) — without it the upstream
+    # returns 403 未登录认证 (probed 2026-08-11).
+    "HOUSEJSESSIONID",
 )
 
 # Account / whoami probe used by the keepalive timer to extend the
@@ -54,6 +59,15 @@ _KEEPALIVE_PATH = "/api/puzuHouse/puzu/house/auth/pc/accountRightInfo"
 # Default business-domain code. The CRM API requires the matching header on
 # every business call.
 _DEFAULT_CITY_HEADER = "house_current_work_citycode"
+
+# The local expires_at is a conservative estimate produced by
+# KeComQrBootstrapProvider._estimate_expires_at (1 h), not the upstream token
+# deadline. A successful keepalive probe proves the business session is alive
+# upstream and refreshes the lianjia_ssid sliding window, so when the estimate
+# gets close we roll it forward instead of letting a stale local clock force a
+# rescan of a healthy session.
+_EXPIRY_ROLL_FORWARD_SECONDS = 30 * 60
+_EXPIRY_EXTENSION_SECONDS = 60 * 60
 
 
 class KecomSessionProvider:
@@ -113,10 +127,19 @@ class KecomSessionProvider:
                 )
 
             if self._is_expired(active):
+                # The local estimate lapsed — attempt a silent TGC renewal
+                # before giving up; rescan is only the fallback.
+                refreshed = self._refresh_on_local_expiry(active)
+                if refreshed is not None:
+                    return ProviderStatus(
+                        ConnectionState.READY,
+                        "CRM authorization refreshed via TGC after local expiry",
+                        expires_at=refreshed.expires_at,
+                    )
                 self._deactivate_locked(active.session_id, "expired")
                 return ProviderStatus(
                     ConnectionState.AUTH_REQUIRED,
-                    "CRM authorization expired; refresh or rescan required",
+                    "CRM authorization expired; refresh failed, rescan required",
                 )
 
             state, message = self._derive_state_locked(active)
@@ -199,6 +222,11 @@ class KecomSessionProvider:
             previous = self._active or self._store.load_active()
             self._store.save(new_credential)
             self._active = new_credential
+            # A successful human-assisted login is authoritative. Clear the
+            # failure latch left by the credential that required the rescan;
+            # otherwise status() remains DEGRADED forever and the watchdog
+            # will never consider the session healthy again.
+            self._clear_degraded_locked()
             if previous is not None and previous.session_id != session_id:
                 self._store.invalidate(previous.session_id, "replaced")
             return new_credential
@@ -240,7 +268,13 @@ class KecomSessionProvider:
             if response.status_code != 200 or self._is_auth_failure(response):
                 # Refresh and re-probe; if refresh still fails, leave state
                 # as AUTH_REQUIRED so the human-assisted bootstrap is needed.
-                refreshed = self._make_credential(self._bootstrap.refresh(active))
+                try:
+                    refreshed = self._make_credential(self._bootstrap.refresh(active))
+                except Exception as exc:  # noqa: BLE001 - bootstrap is an adapter boundary
+                    logger.warning(
+                        "keepalive.refresh_failed class=%s", exc.__class__.__name__
+                    )
+                    refreshed = None
                 if refreshed is None:
                     self._deactivate_locked(active.session_id, "upstream_rejected")
                     self._degraded_message = "keepalive failed; employee rescan required"
@@ -250,15 +284,22 @@ class KecomSessionProvider:
                     )
                 self._store.save(refreshed)
                 self._active = refreshed
+                self._clear_degraded_locked()
                 self._store.invalidate(active.session_id, "replaced")
                 return ProviderStatus(
                     ConnectionState.READY,
                     "CRM authorization refreshed via TGC after keepalive failure",
                     expires_at=refreshed.expires_at,
                 )
-            state, message = self._derive_state_locked(active)
+            # Probe succeeded: the business session is alive upstream and each
+            # response refreshes the lianjia_ssid sliding window. Roll the
+            # conservative local expiry estimate forward so a healthy session
+            # is not marked expired by the clock.
+            extended = self._roll_expiry_forward(active)
+            self._clear_degraded_locked()
+            state, message = self._derive_state_locked(extended)
             return ProviderStatus(
-                state, message, expires_at=active.expires_at
+                state, message, expires_at=extended.expires_at
             )
 
     # -- internals: send + refresh -----------------------------------------
@@ -269,11 +310,12 @@ class KecomSessionProvider:
         cookies = _decode_material(active.credential_material)
         method = request.method.upper()
         path, requires_city_header, origin = _resolve_route(request.route)
-        base_url = (
-            self._settings.crm_map_origin
-            if origin == "map"
-            else self._settings.crm_business_origin
-        )
+        if origin == "map":
+            base_url = self._settings.crm_map_origin
+        elif origin == "house":
+            base_url = self._settings.crm_house_origin
+        else:
+            base_url = self._settings.crm_business_origin
         url = f"{base_url}{path}"
 
         # Optional query string. We enforce a primitive whitelist on keys
@@ -295,6 +337,17 @@ class KecomSessionProvider:
             map_token = cookies.get("puzu_lease_token")
             if map_token:
                 headers["user-token"] = map_token
+        if origin == "house":
+            # 买卖 workbench (house.link.lianjia.com) request signature captured
+            # from the live search page 2026-08-11: lianjia_curworkcity /
+            # lianjia_bucid headers plus the sale search referer.
+            headers["referer"] = (
+                f"{self._settings.crm_house_origin}/search/sale/default/gdiv_mt"
+            )
+            headers["lianjia_curworkcity"] = self._settings.crm_default_city_code
+            bucid = cookies.get("UCID") or cookies.get("login_ucid")
+            if bucid:
+                headers["lianjia_bucid"] = bucid
         if requires_city_header:
             headers[_DEFAULT_CITY_HEADER] = self._settings.crm_default_city_code
         headers["x-request-id"] = request_id
@@ -332,11 +385,18 @@ class KecomSessionProvider:
 
         try:
             self._deactivate_locked(active.session_id, "upstream_rejected")
-            refreshed = self._make_credential(self._bootstrap.refresh(active))
+            try:
+                refreshed = self._make_credential(self._bootstrap.refresh(active))
+            except Exception as exc:  # noqa: BLE001 - bootstrap is an adapter boundary
+                logger.warning(
+                    "authorized_fetch.refresh_failed class=%s", exc.__class__.__name__
+                )
+                refreshed = None
             if refreshed is None:
                 return None
             self._store.save(refreshed)
             self._active = refreshed
+            self._clear_degraded_locked()
             self._store.invalidate(active.session_id, "replaced")
             return refreshed
         finally:
@@ -357,6 +417,63 @@ class KecomSessionProvider:
             credential_version=result.credential_version,
             refresh_material=result.refresh_material,
         )
+
+    # -- internals: silent renewal ---------------------------------------
+
+    def _refresh_on_local_expiry(self, active: ActiveCredential) -> ActiveCredential | None:
+        """Silent TGC renewal when the local expiry estimate lapses.
+
+        ``expires_at`` is a conservative estimate (see
+        ``KeComQrBootstrapProvider._estimate_expires_at``), not the upstream
+        token deadline; the TGC refresh material stays valid for hours-to-days
+        upstream, so a renewal usually succeeds without a human rescan.
+        Deactivation is only the fallback when the renewal itself fails.
+        Mirrors the auto-refresh on upstream rejection: single-flight under
+        ``_refresh_lock``, store-save, predecessor invalidation.
+        """
+        with self._refresh_lock:
+            current = self._active or self._store.load_active()
+            self._active = current
+            if current is None:
+                return None
+            if current.session_id != active.session_id:
+                # Another caller already replaced the credential (e.g. a
+                # concurrent refresh); treat that as the renewal.
+                return current
+            try:
+                refreshed = self._make_credential(self._bootstrap.refresh(active))
+            except Exception as exc:  # noqa: BLE001 - bootstrap is an adapter boundary
+                logger.warning(
+                    "expiry.refresh_failed class=%s", exc.__class__.__name__
+                )
+                refreshed = None
+            if refreshed is None:
+                return None
+            self._store.save(refreshed)
+            self._active = refreshed
+            self._clear_degraded_locked()
+            self._store.invalidate(active.session_id, "replaced")
+            logger.info("session.refresh_via_tgc reason=local_expiry")
+            return refreshed
+
+    def _roll_expiry_forward(self, active: ActiveCredential) -> ActiveCredential:
+        """Extend the conservative expiry estimate after a live probe.
+
+        Only persists when the estimate is close to lapsing so the store is
+        not rewritten on every keepalive tick.
+        """
+        if active.expires_at is None:
+            return active
+        remaining = active.expires_at - self._clock()
+        if remaining.total_seconds() > _EXPIRY_ROLL_FORWARD_SECONDS:
+            return active
+        extended = replace(
+            active,
+            expires_at=self._clock() + timedelta(seconds=_EXPIRY_EXTENSION_SECONDS),
+        )
+        self._store.save(extended)
+        self._active = extended
+        return extended
 
     # -- internals: state derivation --------------------------------------
 
@@ -391,9 +508,15 @@ class KecomSessionProvider:
                 "CRM authorization not bootstrapped; run crm-authd login"
             )
         if self._is_expired(active):
+            # Same silent-renewal-first policy as status(): the local
+            # estimate is not the upstream deadline, so refresh via TGC
+            # before failing the call.
+            refreshed = self._refresh_on_local_expiry(active)
+            if refreshed is not None:
+                return refreshed
             self._deactivate(active.session_id, "expired")
             raise AuthenticationRequiredError(
-                "CRM authorization expired; refresh or rescan required"
+                "CRM authorization expired; refresh failed, rescan required"
             )
         return active
 
@@ -409,6 +532,10 @@ class KecomSessionProvider:
             self._active = None
         if reason == "upstream_rejected":
             self._degraded_message = "upstream rejected credential; refresh attempted"
+
+    def _clear_degraded_locked(self) -> None:
+        self._degraded_message = None
+        self._last_business_failure_at = None
 
     def _default_headers(self) -> dict[str, str]:
         return {
@@ -532,6 +659,21 @@ _ROUTE_TABLE = {
         False,
         "map",
     ),
+    # 买卖 (house.link) domain. All captured live 2026-08-11 from the
+    # /search/sale/default/gdiv_mt workbench. The house origin injects its
+    # own lianjia_curworkcity/lianjia_bucid headers, so no business-domain
+    # city header is needed.
+    "sale_listing.search": ("/search/searchQueryNew", False, "house"),
+    "sale_listing.filter_options": ("/search/getSearchFilters", False, "house"),
+    "sale_listing.condition": ("/search/getSearchCondition", False, "house"),
+    "sale_listing.suggest": ("/search/sugCommunityInfo", False, "house"),
+    "sale_listing.get_detail": ("/housedel/views", False, "house"),
+    "sale_listing.get_ext_info": ("/housedel/housedelExtInfo", False, "house"),
+    "sale_listing.get_maintain_info": ("/housedel/getMaintainInfo", False, "house"),
+    "sale_listing.get_follow": ("/housedelfollow/queryfollows", False, "house"),
+    # 买卖地图找房 (mapSearch workbench, captured live 2026-08-11).
+    "sale_map.suggest": ("/search/map/suggest", False, "house"),
+    "sale_map.bubbles": ("/search/map/bubbleSearch", False, "house"),
 }
 
 

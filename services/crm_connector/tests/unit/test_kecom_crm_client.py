@@ -17,6 +17,8 @@ from app.domain.models import (
     RentalMapBubbleFilters,
     RentalMapSearchFilters,
     RentalMapSuggestionFilters,
+    SaleListingFilters,
+    SaleMapBubbleFilters,
 )
 from app.domain.providers.session_provider import AuthorizedRequest, UpstreamResponse
 from app.infrastructure.kecom_crm_client import (
@@ -132,6 +134,7 @@ def test_route_query_emits_fixed_params_and_maps_filters() -> None:
 
 
 def test_route_query_maps_scope_to_page_native_relation_range() -> None:
+    assert _route_query(_filters(scope="all"))["relationRange"] == 0
     assert _route_query(_filters(scope="my_maintained"))["relationRange"] == 1
     assert _route_query(_filters(scope="shared"))["relationRange"] == 4
     assert _route_query(_filters(scope="role_visible"))["relationRange"] == 9
@@ -702,6 +705,8 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
         "bedroomAmount": 3, "hallAmount": 1, "bathroomAmount": 1,
         "area": 89.5, "price": 4500, "orientation": ["南"],
         "delType": 2,
+        "titleImage": "https://img.ljcdn.com//110000-inspection/pc0_abc.jpg",
+        "floorPlanImage": "https://img.ljcdn.com//hdic-frame/std_1.png",
     }
     listing = _parse_listing(row, scope="my_maintained")
     assert listing.listing_id == "RC-1"
@@ -713,6 +718,10 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
     assert listing.visible_scope == "my_maintained"
     # delType distinguishes 普租 (2) from 托管 (5); detailHead only serves 普租.
     assert listing.del_type == 2
+    # 图片字段原样透传（不带尺寸后缀——后缀由调用方按需拼接，见
+    # docs/rental-image-cdn.md）。
+    assert listing.title_image_url == "https://img.ljcdn.com//110000-inspection/pc0_abc.jpg"
+    assert listing.floor_plan_image_url == "https://img.ljcdn.com//hdic-frame/std_1.png"
 
 
 def test_parse_listing_exposes_trusteeship_del_type() -> None:
@@ -729,6 +738,8 @@ def test_parse_listing_handles_missing_fields_without_crashing() -> None:
     assert listing.monthly_rent_yuan is None
     assert listing.orientation is None
     assert listing.del_type is None
+    assert listing.title_image_url is None
+    assert listing.floor_plan_image_url is None
 
 
 def test_parse_page_returns_paged_domain_with_has_more() -> None:
@@ -1001,3 +1012,514 @@ def test_wired_app_search_returns_auth_required_when_no_credential(tmp_path) -> 
         )
         assert response.status_code == 401
         assert response.json()["detail"]["code"] == "CRM_AUTH_REQUIRED"
+
+
+# -- 买卖 (sale, house.link) ------------------------------------------------
+
+
+def _sale_filters(**overrides: Any) -> SaleListingFilters:
+    base = SaleListingFilters(
+        scope="gdiv_mt",
+        community_ids=(),
+        district_id=None,
+        listing_id=None,
+        price_wan=None,
+        area_sqm=None,
+        rooms=(),
+        floors=(),
+        orientations=(),
+        house_layouts=(),
+        tags=(),
+        select=(),
+        house_age=None,
+        visitable_times=None,
+        payment_mode=None,
+        building_type=None,
+        sort="period1_desc_createtime_desc",
+        page=1,
+    )
+    if not overrides:
+        return base
+    import dataclasses
+    return dataclasses.replace(base, **overrides)
+
+
+def test_sale_query_emits_fixed_params_and_maps_filters() -> None:
+    from app.infrastructure.kecom_crm_client import _sale_query
+
+    query = _sale_query(_sale_filters(
+        community_ids=("1611063740147", "1611063740148"),
+        listing_id="106128785501",
+        district_id="510108",
+        price_wan=(50, 70),
+        area_sqm=(70, 110),
+        rooms=[2, 3],
+        floors=["first_floor"],
+        orientations=["100500000003"],
+        house_layouts=["northSouthTransparent"],
+        tags=["mwwy", "mw"],
+        select=(("appro_broker", "1"), ("key_broker", "0")),
+        house_age=2,
+        visitable_times=4,
+        payment_mode="307500000001",
+        building_type="102200000002",
+        page=2,
+    ))
+    assert query["del_type"] == 1
+    assert query["currentPage"] == 2
+    assert query["vertical"] == "gdiv_mt"
+    assert query["sort"] == "period1_desc_createtime_desc"
+    assert query["multi_community_id"] == "1611063740147,1611063740148"
+    assert query["del_code"] == "106128785501"
+    assert query["disId"] == "510108"
+    assert query["price"] == "50,70"
+    assert query["area"] == "70,110"
+    assert query["room"] == "2,3"
+    assert query["floorNew"] == "first_floor"
+    assert query["orient"] == "100500000003"
+    assert query["houseLayout"] == "northSouthTransparent"
+    assert query["tag"] == "mwwy,mw"
+    assert query["appro_broker"] == "1"
+    assert query["key_broker"] == "0"
+    assert query["h_age"] == 2
+    assert query["visitable_times"] == 4
+    assert query["payment_mode"] == "307500000001"
+    assert query["b_type"] == "102200000002"
+
+
+def test_sale_query_drops_unlimited_select_and_open_ranges() -> None:
+    from app.infrastructure.kecom_crm_client import _sale_query
+
+    query = _sale_query(_sale_filters(
+        price_wan=(None, 200),
+        select=(("appro_broker", "-1"), ("role", "1")),
+    ))
+    assert query["price"] == "0,200"
+    assert "appro_broker" not in query
+    assert query["role"] == "1"
+
+
+def test_sale_query_emits_fixed_defaults_without_filters() -> None:
+    from app.infrastructure.kecom_crm_client import _sale_query
+
+    query = _sale_query(_sale_filters(page=1))
+    assert query["punishCode"] == "500100000004"
+    assert query["riskLabelAction"] == 0
+    assert query["riskLabelPerson"] == 1
+    assert query["maskAllHouse"] == "false"
+    assert "price" not in query and "room" not in query and "multi_community_id" not in query
+
+
+def test_sale_listing_search_parses_page_and_rows() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_listing
+
+    row = {
+        "houseDelCode": "106128356122",
+        "communityName": "水碾河路46号",
+        "bizCircleName": "新华公园",
+        "unitType": "2-1-1-1",
+        "areaSize": 47.78,
+        "totalPrice": 650000.0,
+        "totalPriceStr": "65万",
+        "unitPrice": 13604.0,
+        "floorType": "高",
+        "showFloor": 0,
+        "totalFloor": "7",
+        "orientation": "南,北",
+        "tags": ["满二", "钥匙", "VR房", "满二"],
+        "visitCount": 3,
+        "followUp": True,
+        "createTime": 1786074975000,
+        "maintainerName": "卢梦珂",
+        "maintainerTag": "A级",
+        "maintainPercentage": 44,
+        "qualityScore": "5.77",
+        "holderLevel": "S",
+        "delType": 1,
+        "communityId": "1611063740147",
+        "paymentMode": "307500000001",
+        "statFunction": "107500000003",
+        "subwayLineName": "地铁6号线",
+        "subwayName": "东光",
+        "vrStatus": 1,
+    }
+    listing = _parse_sale_listing(row)
+    assert listing.listing_id == "106128356122"
+    assert listing.community == "水碾河路46号"
+    assert listing.layout == "2-1-1-1"
+    assert listing.area_sqm == 47.78
+    assert listing.total_price_yuan == 650000.0
+    assert listing.total_price_text == "65万"
+    assert listing.unit_price_yuan_per_sqm == 13604.0
+    assert listing.floor_desc == "高/7"
+    assert listing.orientation == "南,北"
+    assert listing.tags == ("满二", "钥匙", "VR房")  # deduplicated
+    assert listing.visit_count_15d == 3
+    assert listing.follow_up is True
+    assert listing.create_time is not None
+    assert listing.quality_score == 5.77  # numeric string coerced
+    assert listing.holder_level == "S"
+    assert listing.subway_line == "地铁6号线"
+
+
+def test_sale_search_method_parses_page_envelope() -> None:
+    session = CapturingSession()
+    session.enqueue("sale_listing.search", 200, {
+        "code": 1, "msg": "恭喜你，操作成功",
+        "data": {
+            "totalCount": 10, "currentPage": 1,
+            "list": [{
+                "houseDelCode": "106128356122", "communityName": "水碾河路46号",
+                "unitType": "2-1-1-1", "areaSize": 47.78, "totalPrice": 650000.0,
+                "totalPriceStr": "65万", "unitPrice": 13604.0, "floorType": "高",
+                "totalFloor": "7", "orientation": "南,北", "qualityScore": "5.77",
+            }],
+        },
+    })
+    client = KecomCrmClient(session)
+    page = client.search_sale_listings(_sale_filters(price_wan=(50, 70), rooms=[2]))
+    assert page.total == 10
+    assert page.page == 1
+    assert page.has_more is False
+    assert page.items[0].listing_id == "106128356122"
+    assert session.calls[0].route == "sale_listing.search"
+    assert session.calls[0].query["price"] == "50,70"
+
+
+def test_sale_filter_options_parses_groups_and_nested_select() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_filter_options
+
+    body = {
+        "code": 1,
+        "data": [
+            {"name": "范围", "id": "", "key": "vertical", "type": "radio",
+             "defaultValue": {"id": "gdiv_mt"}, "forShow": False,
+             "children": [{"id": "all", "name": "不限"},
+                          {"id": "gdiv_mt", "name": "维护盘房源"}]},
+            {"name": "筛选", "id": "", "key": "select", "type": "radio",
+             "forShow": True,
+             "children": [
+                 {"name": "实勘", "key": "appro_broker", "type": "select",
+                  "children": [{"id": "-1", "name": "不限"},
+                               {"id": "1", "name": "有实勘"}]},
+                 {"name": "钥匙", "key": "key_broker", "type": "select",
+                  "children": [{"id": "-1", "name": "不限"},
+                               {"id": "1", "name": "有钥匙"}]},
+             ]},
+        ],
+    }
+    options = _parse_sale_filter_options(body)
+    assert len(options) == 2
+    assert options[0].key == "vertical"
+    assert options[0].value is None
+    assert options[0].default_value == "gdiv_mt"
+    assert options[0].children[1].value == "gdiv_mt"
+    assert options[0].children[1].name == "维护盘房源"
+    assert options[1].key == "select"
+    assert options[1].for_show is True
+    assert options[1].children[0].key == "appro_broker"
+    assert options[1].children[0].children[1].name == "有实勘"
+    assert options[1].children[0].children[1].value == "1"
+
+
+def test_sale_suggest_parses_community_matches() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_suggestions
+
+    body = {
+        "code": 1,
+        "data": [{
+            "text": "成发紫东阳光", "districtName": "成华", "bizcircleName": "新华公园",
+            "resblockName": "成发紫东阳光", "resblockAlias": "双燕二巷19号",
+            "communityId": "1611063740147", "houseCount": None, "delType": "1",
+        }],
+    }
+    suggestions = _parse_sale_suggestions(body)
+    assert len(suggestions) == 1
+    assert suggestions[0].text == "成发紫东阳光"
+    assert suggestions[0].community_id == "1611063740147"
+    assert suggestions[0].district_name == "成华"
+    assert suggestions[0].bizcircle_name == "新华公园"
+    assert suggestions[0].resblock_alias == "双燕二巷19号"
+
+
+def test_sale_detail_head_parses_views_and_ext_info() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_detail
+
+    views = {
+        "code": 1,
+        "data": {
+            "housedelBaseInfo": {
+                "displayName": "水碾河路46号", "displayPrice": "65", "latestPrice": 650000.0,
+                "unitPrice": "13604", "area": 47.78, "bedroomAmount": 2,
+                "parlorAmount": 1, "toiletAmount": 1, "cookroomAmount": 1,
+                "displayFloor": "高/7", "orientation": "南,北", "delGrade": "B",
+                "brokerGrade": "S级:80.3分",
+                "holderInfo": {"name": "卢梦珂", "orgName": "富房祥和里卢胖子店A组"},
+                "lastDays": "37天（2026-07-06）", "ctime": "2026-07-06",
+                "houseOrigin": "线下来源-转介绍", "houseId": 44290219,
+                "acnHouseId": 44290220, "resblockId": 1611043057386,
+                "resBlockInfo": "水碾河路46号(成华-新华公园)", "vrStatus": 0,
+                "ownerReservePrice": "", "inventoryScore": "暂无",
+                "housedelStatus": 1, "isCredentialCompleted": True,
+            },
+            "basicInfo": {
+                "districtName": "成华", "bizcircleName": "新华公园",
+                "buildYear": 1998, "buildType": "塔楼", "buildStruct": "混合结构",
+                "dealProp": "商品房", "houseUsage": "普通住宅", "tenementFee": "0.3",
+                "heatFee": "0.0元/㎡", "gasFee": "2.02元/m³", "waterType": "民水",
+                "eletricType": "民电", "heatType": "自采暖", "hasGas": "有",
+                "hasHotWater": "无", "hasMidWater": "无", "midWaterFee": "0.0元/吨",
+                "hotWaterFee": "0.0元/吨", "carRatio": "1:0.3", "carOnground": 4,
+                "carUnderground": 0, "parkFee": "200 (元/日)", "hasLift": "无",
+                "liftHouseRatio": "0梯2户", "schoolInfo": "无", "propYears": "70",
+                "buildingDisgust": "无",
+            },
+        },
+    }
+    ext = {
+        "code": 1,
+        "data": {
+            "netWorkStatus": 1,
+            "lianjiaUrl": "https://m.ke.com/cd/ershoufang/106128356122.html",
+            "beikeUrl": "https://cd.ke.com/ershoufang/106128356122.html",
+            "vrUrl": "https://open.realsee.com/ke/xxx",
+        },
+    }
+    detail = _parse_sale_detail(views, ext, "106128356122")
+    assert detail.display_name == "水碾河路46号"
+    assert detail.latest_price_yuan == 650000.0
+    assert detail.display_floor == "高/7"
+    assert detail.holder_name == "卢梦珂"
+    assert detail.holder_org == "富房祥和里卢胖子店A组"
+    assert detail.build_year == 1998
+    assert detail.build_type == "塔楼"
+    assert detail.deal_prop == "商品房"
+    assert detail.external_url_lianjia == "https://m.ke.com/cd/ershoufang/106128356122.html"
+    assert detail.net_work_status == 1
+
+
+def test_sale_maintain_info_parses_modules_and_important_fields() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_maintain_info
+
+    body = {
+        "code": 1,
+        "data": {
+            "maintainBasicInfo": {
+                "completeRate": "9/9",
+                "maintainList": [{
+                    "name": "看房信息",
+                    "row": [{"list": [
+                        {"key": "houseStatus", "name": "房屋现状", "value": "空置",
+                         "important": True, "comment": ""},
+                    ]}],
+                }, {
+                    "name": "价格信息",
+                    "row": [{"list": [
+                        {"key": "isUnique", "name": "是否唯一", "value": "不唯一",
+                         "important": True, "comment": None},
+                    ]}],
+                }],
+            },
+            "importantBasicInfo": {
+                "importantList": [
+                    {"key": "houseStatus", "name": "房屋现状", "value": "空置",
+                     "important": True, "comment": ""},
+                ],
+                "completeRate": "9/9",
+                "lastUpdateTime": 1786093020000,
+            },
+        },
+    }
+    info = _parse_sale_maintain_info(body, "106128356122")
+    assert info.complete_rate == "9/9"
+    assert len(info.modules) == 2
+    assert info.modules[0].name == "看房信息"
+    assert info.modules[0].fields[0].name == "房屋现状"
+    assert info.modules[0].fields[0].value == "空置"
+    assert len(info.important_fields) == 1
+    assert info.last_update_time is not None
+
+
+def test_sale_follows_parses_records() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_follows
+
+    body = {
+        "code": 1,
+        "data": {
+            "totalCount": 1, "pageSize": 100, "list": [{
+                "id": 423103637,
+                "followContent": "房东诚心出售 房子在二楼",
+                "creatorName": "钟俊(维护人) - 富房顺驰创联蜀都店A组 - 13002871555",
+                "createTime": "2026-08-07 16:58", "onTop": True,
+                "remarks": "", "followLabel": "客户有意向", "videoUrl": "",
+            }],
+        },
+    }
+    records = _parse_sale_follows(body)
+    assert len(records) == 1
+    assert records[0].follow_id == 423103637
+    assert records[0].content == "房东诚心出售 房子在二楼"
+    assert records[0].creator_name.startswith("钟俊")
+    assert records[0].create_time == "2026-08-07 16:58"
+    assert records[0].on_top is True
+    assert records[0].follow_label == "客户有意向"
+
+
+def test_sale_get_detail_returns_single_row_or_invalid_input() -> None:
+    session = CapturingSession()
+    session.enqueue("sale_listing.search", 200, {
+        "code": 1, "msg": "ok",
+        "data": {"totalCount": 1, "currentPage": 1, "list": [{
+            "houseDelCode": "106128356122", "communityName": "水碾河路46号",
+            "unitType": "2-1-1-1", "areaSize": 47.78, "totalPrice": 650000.0,
+            "totalPriceStr": "65万", "floorType": "高", "totalFloor": "7",
+        }]},
+    })
+    client = KecomCrmClient(session)
+    listing = client.get_sale_listing_detail("106128356122")
+    assert listing.listing_id == "106128356122"
+    assert session.calls[0].query["del_code"] == "106128356122"
+    assert session.calls[0].query["vertical"] == "all"
+
+
+def test_sale_get_detail_rejects_unknown_id() -> None:
+    session = CapturingSession()
+    session.enqueue("sale_listing.search", 200, {
+        "code": 1, "msg": "ok",
+        "data": {"totalCount": 0, "currentPage": 1, "list": []},
+    })
+    client = KecomCrmClient(session)
+    with pytest.raises(UpstreamInvalidInputError):
+        client.get_sale_listing_detail("106128999999")
+
+
+def test_sale_detail_head_method_flows_views_then_ext() -> None:
+    session = CapturingSession()
+    session.enqueue("sale_listing.get_detail", 200, {
+        "code": 1,
+        "data": {"housedelBaseInfo": {
+            "displayName": "水碾河社区", "latestPrice": 600000.0, "area": 47.85,
+            "bedroomAmount": 2, "displayFloor": "低/6", "orientation": "南",
+        }, "basicInfo": {"buildYear": 1998}},
+    })
+    session.enqueue("sale_listing.get_ext_info", 200, {
+        "code": 1, "data": {"netWorkStatus": 1, "lianjiaUrl": "https://m.ke.com/x"},
+    })
+    client = KecomCrmClient(session)
+    detail = client.get_sale_listing_detail_head("106128785501")
+    assert detail.display_name == "水碾河社区"
+    assert detail.external_url_lianjia == "https://m.ke.com/x"
+    assert [call.route for call in session.calls] == [
+        "sale_listing.get_detail", "sale_listing.get_ext_info",
+    ]
+
+
+# -- 买卖 地图找房 (sale map) ------------------------------------------------
+
+
+def test_sale_map_suggest_builder_and_parser() -> None:
+    from app.infrastructure.kecom_crm_client import (
+        _build_sale_map_suggest_request,
+        _parse_sale_map_suggestions,
+    )
+
+    request = _build_sale_map_suggest_request("万象城", "510100")
+    assert request.route == "sale_map.suggest"
+    assert request.query == {"deltype": 1, "city_id": "510100", "query": "万象城"}
+
+    body = {
+        "code": 1,
+        "data": [{
+            "id": 1611048089809, "text": "华润广场(成华)", "alias": "万象城",
+            "bizcircleName": "万象城", "districtName": "成华", "type": "community",
+            "count": 0, "latitude": "30.655076", "longitude": "104.124096",
+            "unitPrice": 0,
+        }],
+    }
+    suggestions = _parse_sale_map_suggestions(body)
+    assert len(suggestions) == 1
+    assert suggestions[0].suggestion_id == "1611048089809"
+    assert suggestions[0].text == "华润广场(成华)"
+    assert suggestions[0].alias == "万象城"
+    assert suggestions[0].item_type == "community"
+    assert suggestions[0].latitude == 30.655076
+    assert suggestions[0].longitude == 104.124096
+
+
+def test_sale_map_bubbles_builder_and_parser() -> None:
+    from app.infrastructure.kecom_crm_client import (
+        _build_sale_map_bubbles_request,
+        _parse_sale_map_bubbles,
+    )
+
+    filters = SaleMapBubbleFilters(
+        city_id="510100",
+        bounds=MapBounds(min_longitude=104.1, max_longitude=104.15,
+                         min_latitude=30.64, max_latitude=30.67),
+        group_type="community",
+        filters={},
+    )
+    request = _build_sale_map_bubbles_request(filters)
+    assert request.route == "sale_map.bubbles"
+    assert request.query["group_type"] == "community"
+    assert request.query["min_lng"] == 104.1
+    assert request.query["max_lng"] == 104.15
+    assert request.query["min_lat"] == 30.64
+    assert request.query["max_lat"] == 30.67
+    assert request.query["filters"] == "{}"
+    assert request.query["punishCode"] == "500100000004"
+    assert request.query["deltype"] == 1
+
+    body = {
+        "code": 1,
+        "data": {
+            "is_need_hide_total_num": "True", "total_count": "331339",
+            "visible_count": "329419",
+            "list": {
+                "16000000002648": {
+                    "id": 16000000002648, "unit_price": 20029, "name": "鲁能城三期",
+                    "count": 44, "latitude": "30.6520202485181",
+                    "longitude": "104.14510477474087", "border": None, "desc": "",
+                },
+            },
+        },
+    }
+    bubbles = _parse_sale_map_bubbles(body, "community")
+    assert len(bubbles) == 1
+    assert bubbles[0].bubble_id == "16000000002648"
+    assert bubbles[0].name == "鲁能城三期"
+    assert bubbles[0].count == 44
+    assert bubbles[0].unit_price == 20029
+    assert bubbles[0].latitude == 30.6520202485181
+
+
+def test_sale_map_methods_flow_through_client() -> None:
+    session = CapturingSession()
+    session.enqueue("sale_map.suggest", 200, {
+        "code": 1,
+        "data": [{"id": 1611048089809, "text": "华润广场(成华)", "alias": "万象城",
+                  "type": "community", "latitude": "30.655076",
+                  "longitude": "104.124096"}],
+    })
+    session.enqueue("sale_map.bubbles", 200, {
+        "code": 1,
+        "data": {"list": {
+            "16000000002648": {"id": 16000000002648, "name": "鲁能城三期",
+                               "count": 44, "latitude": "30.652",
+                               "longitude": "104.145"},
+        }},
+    })
+    client = KecomCrmClient(session)
+    suggestions = client.sale_map_suggest("万象城", "510100")
+    assert suggestions[0].text == "华润广场(成华)"
+    assert session.calls[0].route == "sale_map.suggest"
+
+    bubbles = client.sale_map_bubbles(SaleMapBubbleFilters(
+        city_id="510100",
+        bounds=MapBounds(min_longitude=104.1, max_longitude=104.15,
+                         min_latitude=30.64, max_latitude=30.67),
+        group_type="community",
+        filters={},
+    ))
+    assert bubbles[0].name == "鲁能城三期"
+    assert session.calls[1].route == "sale_map.bubbles"

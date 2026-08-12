@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import os
@@ -101,6 +101,15 @@ async def test_tool_discovery_exposes_map_tools_with_read_only_hint(tmp_path) ->
             "rental_listing_search",
             "rental_map_nearby_search",
             "rental_map_suggest",
+            "sale_community_suggest",
+            "sale_listing_filter_options",
+            "sale_listing_get_detail",
+            "sale_listing_get_detail_head",
+            "sale_listing_get_follows",
+            "sale_listing_get_maintain_info",
+            "sale_listing_search",
+            "sale_map_nearby_search",
+            "sale_map_suggest",
         ]
         assert all(
             tool.annotations is not None and tool.annotations.read_only_hint
@@ -440,6 +449,12 @@ def test_tool_metadata_exposes_input_and_output_schemas() -> None:
     assert "community_ids" in nearby.output_schema["properties"]
     assert nearby.module_id == "property.rental.map_search"
     assert by_name["rental_listing_search"].module_id == "property.rental.listing_search"
+    assert by_name["sale_listing_search"].module_id == "property.sale.listing_search"
+    assert by_name["sale_listing_get_detail_head"].module_id == "property.sale.listing_detail"
+    sale_nearby = by_name["sale_map_nearby_search"]
+    assert sale_nearby.output_schema is not None
+    assert "community_ids_truncated" in sale_nearby.output_schema["properties"]
+    assert "$ref" not in json.dumps(by_name["sale_listing_search"].as_dict())
 
 
 @pytest.mark.anyio(backend="asyncio")
@@ -474,6 +489,15 @@ async def test_stdio_transport_serves_tools_from_real_entry_point(tmp_path) -> N
                 "rental_listing_search",
                 "rental_map_nearby_search",
                 "rental_map_suggest",
+                "sale_community_suggest",
+                "sale_listing_filter_options",
+                "sale_listing_get_detail",
+                "sale_listing_get_detail_head",
+                "sale_listing_get_follows",
+                "sale_listing_get_maintain_info",
+                "sale_listing_search",
+                "sale_map_nearby_search",
+                "sale_map_suggest",
             ]
             result = await session.call_tool("crm_connection_status", {})
             assert result.is_error is False

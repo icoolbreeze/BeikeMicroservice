@@ -79,6 +79,13 @@ class RentalListing:
     # Upstream delType: 2 = 普租, 5 = 托管.  Only 普租 houses have a
     # detailHead record; callers should not attempt detail for 托管 ids.
     del_type: int | None = None
+    # Raw img.ljcdn.com originals returned by the search rows. Fetching the
+    # original directly returns 403 for everyone; callers must append a size
+    # suffix (.450x.jpg / .750x.jpg / .800x.jpg / .1500x.jpg) to fetch a
+    # public variant (see docs/rental-image-cdn.md). Never append here —
+    # the raw URL is the stable contract.
+    title_image_url: str | None = None          # titleImage 封面图原图
+    floor_plan_image_url: str | None = None     # floorPlanImage 户型图原图
     # --- detail-only fields, populated by rental_listing_get_detail ---
     # (search rows leave them None; see docs/rental-api-catalog.md §房源详情)
     maintain_org: str | None = None          # orgName 维护门店
@@ -400,3 +407,338 @@ class RentalMapNearbySearchResult:
     matched_community_count: int
     community_ids: tuple[str, ...]
     result: RentalMapPage
+
+
+# ---------------------------------------------------------------------------
+# 买卖 (sale) domain. Upstream: house.link.lianjia.com workbench, captured
+# live 2026-08-11 from /search/sale/default/gdiv_mt (docs/sale-api-catalog.md).
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SaleListingFilters:
+    """Structured filters for the 买卖 全部房源 search (searchQueryNew).
+
+    ``scope`` is the upstream ``vertical`` radio (维护盘/共享盘/… pool), not a
+    permission mode like rental's relationRange. ``price_wan``/``area_sqm``
+    are comma-free ``lo,hi`` pairs (hi=-1 means open-ended). ``select``
+    carries the 筛选 dropdown values keyed by their catalog key
+    (appro_broker/key_broker/role/house_stat/…); values are the raw ids the
+    catalog returns, and ``-1`` means 不限 so it is dropped before sending.
+    """
+
+    scope: str
+    community_ids: tuple[str, ...]
+    district_id: str | None
+    listing_id: str | None
+    price_wan: tuple[float | None, float | None] | None
+    area_sqm: tuple[float | None, float | None] | None
+    rooms: tuple[int, ...]
+    floors: tuple[str, ...]
+    orientations: tuple[str, ...]
+    house_layouts: tuple[str, ...]
+    tags: tuple[str, ...]
+    select: tuple[tuple[str, str], ...]
+    house_age: int | None
+    visitable_times: int | None
+    payment_mode: str | None
+    building_type: str | None
+    sort: str
+    page: int
+
+
+@dataclass(frozen=True)
+class SaleListingFilterOption:
+    """One condition group from the 买卖 getSearchFilters catalog.
+
+    ``value`` mirrors the upstream ``id`` (e.g. price buckets ``50,70``,
+    orient codes ``100500000003``, select dropdown keys). Nested ``select``
+    groups carry their dropdowns as children whose own children hold the
+    id/name pairs.
+    """
+
+    key: str | None
+    name: str
+    value: str | None
+    selection_type: str
+    default_value: str | None
+    for_show: bool
+    ext: dict[str, object]
+    children: tuple["SaleListingFilterOption", ...]
+
+
+@dataclass(frozen=True)
+class SaleListing:
+    """One 在售房源 row from the 买卖 search list (searchQueryNew data.list)."""
+
+    listing_id: str                       # houseDelCode
+    community: str                        # communityName
+    biz_circle: str | None                # bizCircleName
+    layout: str | None                    # unitType 如 2-1-1-1
+    area_sqm: float | None                # areaSize
+    total_price_yuan: float | None        # totalPrice 总价（元）
+    total_price_text: str | None          # totalPriceStr 如 60万
+    unit_price_yuan_per_sqm: float | None # unitPrice 单价（元/平）
+    floor_desc: str | None                # showFloor 如 低/6
+    floor_type: str | None                # floorType 如 底层
+    orientation: str | None               # orientation
+    tags: tuple[str, ...]                 # tags
+    visit_count_15d: int | None           # visitCount 15天带看
+    follow_up: bool | None                # followUp 是否有跟进
+    create_time: datetime | None          # createTime 录入时间
+    maintainer_name: str | None           # maintainerName 维护人
+    maintainer_tag: str | None            # maintainerTag 如 A级
+    maintain_percentage: int | None       # maintainPercentage 维护完成度
+    quality_score: float | None           # qualityScore 评分
+    holder_level: str | None              # holderLevel 如 A/B/S
+    del_type: int | None                  # delType
+    community_id: str | None              # communityId
+    payment_mode: str | None              # paymentMode 交易权属
+    stat_function: str | None             # statFunction 房屋用途
+    subway_line: str | None               # subwayLineName 地铁线
+    subway_station: str | None            # subwayName 地铁站
+    vr_status: int | None                 # vrStatus
+    surface_image_url: str | None         # surfaceImage 封面图
+    floor_plan_image_url: str | None      # floorPlanImage 户型图
+
+
+@dataclass(frozen=True)
+class SaleListingPage:
+    items: tuple[SaleListing, ...]
+    page: int
+    total: int
+    has_more: bool
+    request_id: str
+
+
+@dataclass(frozen=True)
+class SaleCommunitySuggestion:
+    """One match from the 买卖 community suggest (sugCommunityInfo)."""
+
+    text: str                    # text 小区名
+    community_id: str            # communityId 传回 multi_community_id
+    resblock_name: str | None    # resblockName
+    resblock_alias: str | None   # resblockAlias 别名
+    district_name: str | None    # districtName 城区
+    bizcircle_name: str | None   # bizcircleName 商圈
+    house_count: int | None      # houseCount（当前为 null）
+    del_type: str | None         # delType 1 = 买卖
+
+
+@dataclass(frozen=True)
+class SaleListingDetail:
+    """The 买卖 detail head (housedel/views.housedelBaseInfo + basicInfo)."""
+
+    listing_id: str                       # housedelCode
+    display_name: str | None              # displayName 小区名
+    display_price: str | None             # displayPrice 总价文案 如 60
+    latest_price_yuan: float | None       # latestPrice 最新总价（元）
+    unit_price_text: str | None           # unitPrice 单价 如 12539
+    area_sqm: float | None                # area
+    bedroom_amount: int | None            # bedroomAmount
+    parlor_amount: int | None             # parlorAmount
+    toilet_amount: int | None             # toiletAmount
+    cookroom_amount: int | None           # cookroomAmount
+    display_floor: str | None             # displayFloor 如 低/6
+    orientation: str | None               # orientation
+    del_grade: str | None                 # delGrade 房屋等级
+    broker_grade: str | None              # brokerGrade 如 A级:64.1分
+    holder_name: str | None               # holderInfo.name 维护人
+    holder_org: str | None                # holderInfo.orgName 维护门店
+    last_days: str | None                 # lastDays 挂牌天数
+    ctime: str | None                     # ctime 录入时间文案
+    house_origin: str | None              # houseOrigin 房源来源
+    house_id: str | None                  # houseId 内部 ID
+    acn_house_id: str | None              # acnHouseId
+    resblock_id: str | None               # resblockId
+    res_block_info: str | None            # resBlockInfo 小区(城区-商圈)
+    vr_status: int | None                 # vrStatus
+    owner_reserve_price: str | None       # ownerReservePrice 业主预期价
+    inventory_score: str | None           # inventoryScore 库存分
+    del_status: int | None                # housedelStatus
+    is_credential_completed: bool | None  # isCredentialCompleted
+    # basicInfo（小区/楼栋属性）
+    district_name: str | None             # districtName
+    biz_circle: str | None                # bizcircleName
+    build_year: int | None                # buildYear
+    build_type: str | None                # buildType 建筑类型
+    build_struct: str | None              # buildStruct 建筑结构
+    deal_prop: str | None                 # dealProp 交易权属
+    house_usage: str | None               # houseUsage 房屋用途
+    tenement_fee: str | None              # tenementFee 物业费
+    heat_fee: str | None                  # heatFee 供暖费
+    gas_fee: str | None                   # gasFee 燃气费
+    water_type: str | None                # waterType 用水
+    electric_type: str | None             # eletricType 用电
+    heat_type: str | None                 # heatType 供暖
+    has_gas: str | None                   # hasGas
+    has_hot_water: str | None             # hasHotWater
+    has_mid_water: str | None             # hasMidWater
+    mid_water_fee: str | None             # midWaterFee
+    hot_water_fee: str | None             # hotWaterFee
+    car_ratio: str | None                 # carRatio 车位比
+    car_onground: int | None              # carOnground 地上车位数
+    car_underground: int | None           # carUnderground 地下车位数
+    park_fee: str | None                  # parkFee 停车费
+    has_lift: str | None                  # hasLift 是否有电梯
+    lift_house_ratio: str | None          # liftHouseRatio 梯户比
+    school_info: str | None               # schoolInfo 学区
+    prop_years: str | None                # propYears 产权年限
+    building_disgust: str | None          # buildingDisgust 凶宅/嫌恶
+    # extInfo（housedelExtInfo，外网呈现）
+    external_url_lianjia: str | None      # lianjiaUrl
+    external_url_beike: str | None        # beikeUrl
+    vr_url: str | None                    # vrUrl
+    net_work_status: int | None           # netWorkStatus 外网呈现状态
+
+
+@dataclass(frozen=True)
+class SaleMaintainField:
+    """One rendered field in the 买卖 getMaintainInfo modules.
+
+    ``value`` is the render-ready display text; ``comment`` is the page's
+    side note (如 与房产证一致); ``important`` marks key fields.
+    """
+
+    key: str
+    name: str
+    value: str | None
+    important: bool
+    comment: str | None
+
+
+@dataclass(frozen=True)
+class SaleMaintainModule:
+    """One grouped section of the 买卖 维护信息 (getMaintainInfo.maintainList).
+
+    Each module carries 看房信息/价格信息/业主信息/特色信息 sections as
+    rows of field lists.
+    """
+
+    name: str
+    fields: tuple[SaleMaintainField, ...]
+
+
+@dataclass(frozen=True)
+class SaleMaintainInfo:
+    """getMaintainInfo — the 买卖 detail page's 维护信息 section.
+
+    ``modules`` mirrors maintainBasicInfo.maintainList; ``important_fields``
+    mirrors importantBasicInfo.importantList (重点字段); ``complete_rate`` is
+    the 9/9 完备率 text and ``last_update_time`` the last edit timestamp.
+    """
+
+    listing_id: str
+    modules: tuple[SaleMaintainModule, ...]
+    important_fields: tuple[SaleMaintainField, ...]
+    complete_rate: str | None
+    last_update_time: datetime | None
+    remark: str | None
+
+
+@dataclass(frozen=True)
+class SaleFollowRecord:
+    """One 跟进 record from the 买卖 detailFollow (housedelfollow/queryfollows).
+
+    ``creator_name`` includes the role and 门店 (如 钟俊(维护人) - …店A组 -
+    13002871555); ``create_time`` is the page's display text (2026-08-07
+    16:58); ``follow_label`` carries tags such as 客户有意向.
+    """
+
+    follow_id: int | None                 # id
+    content: str | None                   # followContent
+    creator_name: str | None              # creatorName
+    create_time: str | None               # createTime 文案
+    on_top: bool                          # onTop 置顶
+    remarks: str | None                   # remarks
+    follow_label: str | None              # followLabel
+    video_url: str | None                 # videoUrl
+
+
+# ---------------------------------------------------------------------------
+# 买卖 地图找房 (sale mapSearch) domain. Upstream: house.link.lianjia.com
+# /search/sale/mapSearch (docs/sale-api-catalog.md §地图找房), captured live
+# 2026-08-11. The sale map domain lives on house.link itself (unlike the
+# rental map which proxies map.ke.com).
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class SaleMapSuggestion:
+    """One match from the 买卖 map suggest (/search/map/suggest).
+
+    Unlike the rental map's typed suggestions, the sale suggest returns
+    community entries only; ``type`` is always "community" in current
+    observations. ``latitude``/``longitude`` are the centroid used to centre
+    the map view and drive radius searches.
+    """
+
+    suggestion_id: str            # id
+    text: str                     # text 显示名（如 华润广场(成华)）
+    alias: str | None             # alias 别名（如 万象城）
+    bizcircle_name: str | None    # bizcircleName 商圈
+    district_name: str | None     # districtName 城区
+    item_type: str                # type（当前恒为 community）
+    count: int | None             # count 在售套数
+    latitude: float | None        # latitude
+    longitude: float | None       # longitude
+    unit_price: float | None      # unitPrice 均价
+
+
+@dataclass(frozen=True)
+class SaleMapBubble:
+    """One bubble from the 买卖 map bubbleSearch (district or community level)."""
+
+    bubble_id: str                # id（community 级即小区 id，回灌 multi_community_id）
+    name: str                     # name
+    count: int | None             # count 在售套数
+    unit_price: float | None      # unit_price 均价（元/平）
+    latitude: float | None        # latitude
+    longitude: float | None       # longitude
+    desc: str | None              # desc
+
+
+@dataclass(frozen=True)
+class SaleMapBubbleFilters:
+    """Bounds + level for the 买卖 map bubbleSearch.
+
+    ``group_type`` is "district" or "community". ``filters`` is the page's
+    JSON filter blob; an empty dict is the valid no-filter value.
+    """
+
+    city_id: str
+    bounds: MapBounds
+    group_type: str
+    filters: dict[str, object]
+
+
+@dataclass(frozen=True)
+class SaleMapNearbySearchFilters:
+    """Human-oriented 买卖 nearby search centred on a resolved map location.
+
+    Mirrors the rental nearby flow: resolve a place, load community bubbles
+    for its enclosing rectangle, select community ids inside the radius by
+    Haversine distance, then hand those ids back to the list search
+    (sale_listing_search.community_ids → multi_community_id). Not a
+    property-coordinate radius query — community centroids only.
+    """
+
+    location: str
+    center_latitude: float | None
+    center_longitude: float | None
+    radius_meters: int
+    scope: str
+    price_wan: tuple[float | None, float | None] | None
+    area_sqm: tuple[float | None, float | None] | None
+    rooms: tuple[int, ...]
+    page: int
+
+
+@dataclass(frozen=True)
+class SaleMapNearbySearchResult:
+    center: SaleMapSuggestion
+    radius_meters: int
+    matched_community_count: int
+    community_ids: tuple[str, ...]
+    community_ids_truncated: bool
+    result: SaleListingPage

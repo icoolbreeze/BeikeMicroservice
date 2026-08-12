@@ -81,7 +81,7 @@ class SessionWatchdog:
         logger.info("session_watchdog.tick state=%s", status.state.value)
         if self._qr_manager is None:
             return
-        if status.state is not ConnectionState.AUTH_REQUIRED:
+        if status.state not in (ConnectionState.AUTH_REQUIRED, ConnectionState.DEGRADED):
             return
         if not self._qr_manager.needs_login():
             return

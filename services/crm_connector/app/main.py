@@ -11,6 +11,7 @@ from app.api.router import router
 from app.application.qr_login import CredentialInstaller, QrLoginManager, auto_start_login
 from app.application.service import ConnectorService
 from app.application.session_watchdog import SessionWatchdog
+from app.application.featured_snapshot_push import FeaturedSnapshotPusher
 from app.bootstrap import UNCONFIGURED_PROFILE, build_providers
 from app.infrastructure.settings import Settings, load_settings
 from app.infrastructure.windows_dpapi_credential_store import WindowsDpapiCredentialStore
@@ -80,6 +81,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if resolved.upstream_profile != UNCONFIGURED_PROFILE
         else None
     )
+    if resolved.featured_push_enabled:
+        app.state.crm_featured_snapshot_pusher = FeaturedSnapshotPusher(resolved)
+        app.state.crm_featured_snapshot_pusher.start()
+
+        @app.on_event("shutdown")
+        def stop_featured_snapshot_pusher() -> None:
+            app.state.crm_featured_snapshot_pusher.stop()
     if resolved.cors_origins:
         app.add_middleware(
             CORSMiddleware,

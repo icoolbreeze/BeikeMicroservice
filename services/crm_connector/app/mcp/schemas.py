@@ -26,6 +26,17 @@ from app.api.schemas import (
     RentalMapSearchRequest,
     RentalMapSuggestionRequest,
     RentalMapSuggestionResponse,
+    SaleCommunitySuggestionResponse,
+    SaleFollowRecordResponse,
+    SaleListingDetailResponse,
+    SaleListingFilterOptionResponse,
+    SaleListingPageResponse,
+    SaleListingResponse,
+    SaleListingSearchRequest,
+    SaleMaintainInfoResponse,
+    SaleMapNearbySearchRequest,
+    SaleMapNearbySearchResponse,
+    SaleMapSuggestionResponse,
 )
 
 __all__ = [
@@ -46,6 +57,20 @@ __all__ = [
     "RentalMapSearchInput",
     "RentalMapSuggestionInput",
     "RentalMapSuggestionResponse",
+    "SaleCommunitySuggestionResponse",
+    "SaleFollowRecordResponse",
+    "SaleListingDetailInput",
+    "SaleListingDetailResponse",
+    "SaleListingFilterOptionResponse",
+    "SaleListingPageResponse",
+    "SaleListingResponse",
+    "SaleListingSearchInput",
+    "SaleMaintainInfoResponse",
+    "SaleCommunitySuggestInput",
+    "SaleMapNearbySearchInput",
+    "SaleMapNearbySearchResponse",
+    "SaleMapSuggestInput",
+    "SaleMapSuggestionResponse",
 ]
 
 
@@ -82,5 +107,38 @@ class RentalMapSuggestionInput(RentalMapSuggestionRequest):
 
 class RentalMapNearbySearchInput(RentalMapNearbySearchRequest):
     """Search around a named location using a community-centroid radius."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class SaleListingSearchInput(SaleListingSearchRequest):
+    """Search arguments accepted by the ``sale_listing_search`` MCP tool."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class SaleListingDetailInput(BaseModel):
+    """Arguments accepted by the ``sale_listing_*_detail`` MCP tools."""
+
+    listing_id: str = Field(min_length=1, max_length=64)
+    model_config = ConfigDict(extra="forbid")
+
+
+class SaleCommunitySuggestInput(BaseModel):
+    """Resolve a 买卖 community name via ``sale_community_suggest``."""
+
+    query: str = Field(min_length=1, max_length=128)
+    model_config = ConfigDict(extra="forbid")
+
+
+class SaleMapSuggestInput(BaseModel):
+    """Resolve a 买卖 map phrase via ``sale_map_suggest``."""
+
+    query: str = Field(min_length=1, max_length=128)
+    model_config = ConfigDict(extra="forbid")
+
+
+class SaleMapNearbySearchInput(SaleMapNearbySearchRequest):
+    """Search around a named 买卖 location using a community-centroid radius."""
 
     model_config = ConfigDict(extra="forbid")

@@ -272,6 +272,13 @@ def test_needs_login_reflects_session_state() -> None:
     assert manager.needs_login() is False
 
 
+def test_needs_login_for_degraded_session() -> None:
+    session = FakeSession(state=ConnectionState.DEGRADED)
+    manager, _, _ = _manager(session=session)
+
+    assert manager.needs_login() is True
+
+
 def test_needs_login_false_while_scan_pending() -> None:
     gate = threading.Event()
     manager, _, _ = _manager(gate=gate)

@@ -8,14 +8,10 @@ from pydantic import BaseModel, Field, model_validator
 from app.application.rental_budget import price_range_for_budget
 from app.domain.models import (
     ConnectionStatus,
-    FollowRecord,
     HqiScore,
     ListingDetailInfo,
-    ListingMaintainInfo,
     ListingProspect,
     ListingPropertyInfo,
-    MaintainField,
-    MaintainModule,
     Principal,
     ProspectPhoto,
     RentalListing,
@@ -32,6 +28,17 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleCommunitySuggestion,
+    SaleFollowRecord,
+    SaleListing,
+    SaleListingDetail,
+    SaleListingFilters,
+    SaleListingFilterOption,
+    SaleListingPage,
+    SaleMaintainInfo,
+    SaleMapNearbySearchFilters,
+    SaleMapNearbySearchResult,
+    SaleMapSuggestion,
 )
 from app.domain.modules import CrmModule
 
@@ -376,7 +383,10 @@ class RentalListingSearchRequest(BaseModel):
     )
     community_keyword: str | None = Field(default=None, max_length=128)
     listing_id: str | None = Field(default=None, max_length=64)
-    scope: Literal["my_maintained", "shared", "role_visible"] = "my_maintained"
+    # ``all`` is the CRM page's "不限" option (relationRange=0).  Keep the
+    # historical maintenance-pool default for general API callers; featured
+    # collection opts into ``all`` explicitly.
+    scope: Literal["all", "my_maintained", "shared", "role_visible"] = "my_maintained"
     monthly_rent_yuan: NumericRange | None = None
     area_sqm: NumericRange | None = None
     rooms: list[int] = Field(default_factory=list, max_length=8)
@@ -466,6 +476,11 @@ class RentalListingResponse(BaseModel):
     has_key: bool | None = None
     del_status_text: str | None = None
     house_id: str | None = None
+    # Raw img.ljcdn.com originals (titleImage / floorPlanImage). Direct fetch
+    # returns 403; append a size suffix (.450x/.750x/.800x/.1500x.jpg) to get
+    # a public variant (docs/rental-image-cdn.md). None for detail responses.
+    title_image_url: str | None = None
+    floor_plan_image_url: str | None = None
 
     @classmethod
     def from_domain(cls, listing: RentalListing) -> "RentalListingResponse":
@@ -821,4 +836,541 @@ class RentalMapNearbySearchResponse(BaseModel):
             matched_community_count=result.matched_community_count,
             community_ids=list(result.community_ids),
             result=RentalMapPageResponse.from_domain(result.result),
+        )
+
+
+# ---------------------------------------------------------------------------
+# 买卖 (sale) — house.link.lianjia.com. Request/response models mirror the
+# live workbench contract (docs/sale-api-catalog.md).
+# ---------------------------------------------------------------------------
+
+# 范围 (vertical) ids from the getSearchFilters catalog.
+SALE_SCOPE = Literal[
+    "all",
+    "gdiv_mt",               # 维护盘房源
+    "gdiv_share",            # 共享盘房源
+    "gdiv_score_division",   # 积分盘房源
+    "share_pool_org",        # 店共享池房源
+    "jmgroup_pool",          # 店东共享池房源
+    "acn_pool",              # 维护盘共享池房源
+    "follow_housenew",       # 关注房源
+    "rolenew",               # 角色房源
+]
+
+# 筛选 dropdown keys from the catalog's select group (appro_broker 实勘,
+# key_broker 钥匙, role 我的角色, house_stat 房屋现状, credential_type 证件状态,
+# isParkingPlace 车位, statFunction 房屋用途, del_grade 房屋等级,
+# fitment_status 装修, bathroom_n 卫生间数, appearance 外网呈现,
+# houseSpread 推广房源, isElevatorHouse 电梯, frameStructureFilter 户型结构,
+# beautifyHouse 美化房, haveOwnerReservePrice 业主预期价, hasSmartLock 智能门锁).
+_SALE_SELECT_KEYS = frozenset({
+    "appro_broker", "key_broker", "role", "house_stat", "credential_type",
+    "isParkingPlace", "statFunction", "del_grade", "fitment_status",
+    "bathroom_n", "appearance", "houseSpread", "isElevatorHouse",
+    "frameStructureFilter", "beautifyHouse", "haveOwnerReservePrice",
+    "hasSmartLock",
+})
+
+_SALE_SORT_VALUES = frozenset({
+    "period1_desc_createtime_desc",  # 默认（新上优先）
+    "period1_asc_totalprice",
+    "period1_desc_totalprice",
+})
+
+
+def _sale_select_filters(
+    select: dict[str, str | int],
+) -> tuple[tuple[str, str], ...]:
+    unknown = sorted(set(select) - _SALE_SELECT_KEYS)
+    if unknown:
+        raise ValueError(f"unsupported sale select filter keys: {', '.join(unknown)}")
+    normalized: list[tuple[str, str]] = []
+    for key, value in select.items():
+        normalized.append((key, str(value)))
+    return tuple(normalized)
+
+
+class SaleListingSearchRequest(BaseModel):
+    """买卖 全部房源 search. Filter values come from the sale filter catalog
+    (sale_listing_filter_options); community ids from sale_community_suggest."""
+
+    scope: SALE_SCOPE = "gdiv_mt"
+    community_ids: list[str] = Field(
+        default_factory=list,
+        max_length=100,
+        description=(
+            "Exact community identifiers from sale_community_suggest; maps to "
+            "the multi_community_id filter. Supports multiple communities."
+        ),
+    )
+    listing_id: str | None = Field(
+        default=None,
+        max_length=64,
+        description="Exact 房源编号 (del_code) to look up one listing.",
+    )
+    district_id: str | None = Field(
+        default=None,
+        max_length=32,
+        description="商圈 (disId) from the filter catalog; -1 means 不限.",
+    )
+    total_price_wan: NumericRange | None = Field(
+        default=None,
+        description="总价区间（万元），例如 50..70 对应 50-70万。",
+    )
+    area_sqm: NumericRange | None = Field(
+        default=None,
+        description="建筑面积区间（平米），例如 70..110。",
+    )
+    rooms: list[int] = Field(
+        default_factory=list,
+        max_length=8,
+        description="房型室数（1..5，5 表示 5 室以上）；多值按 min..max 区间发送。",
+    )
+    floors: list[str] = Field(
+        default_factory=list,
+        max_length=10,
+        description=(
+            "楼层条件（floorNew）：under_ground 地下室 / first_floor 一层 / "
+            "top_floor 顶层 / not_under_ground 不看地下室 / not_first_floor "
+            "不看一层 / not_top_floor 不看顶层。"
+        ),
+    )
+    orientations: list[str] = Field(
+        default_factory=list,
+        max_length=10,
+        description=(
+            "朝向（orient）编码：100500000001 东 … 100500000008 东北；"
+            "100500000003;100500000007 南北组合。"
+        ),
+    )
+    house_layouts: list[str] = Field(
+        default_factory=list,
+        max_length=10,
+        description=(
+            "户型（houseLayout）：withTerrace 带露台 / withCourtyard 带小院 / "
+            "withAttic 带阁楼 / brightBathroom 明卫 / northSouthTransparent "
+            "南北通透 / bedroomFacesSouth 卧室朝南。"
+        ),
+    )
+    tags: list[str] = Field(
+        default_factory=list,
+        max_length=20,
+        description=(
+            "标签（tag）：has_subway 地铁房 / mwwy 满五唯一 / mw 满五 / me 满二 / "
+            "bikan_haofang 必看好房 / rent_sale 租售 / vrStatus VR房 / "
+            "is_school 附近有学校 / buy_limit 不限购 / is_elevator_house 电梯房 / "
+            "new_house_in_7_days 新上房源 …"
+        ),
+    )
+    house_age: int | None = Field(
+        default=None,
+        ge=0,
+        le=6,
+        description="建成年代（h_age）：0 两年内 … 6 三十年以上。",
+    )
+    visitable_times: int | None = Field(
+        default=None,
+        ge=1,
+        le=4,
+        description="可看时间（visitable_times）：1 今天可看 … 4 随时可看。",
+    )
+    payment_mode: str | None = Field(
+        default=None,
+        max_length=32,
+        description=(
+            "交易权属（payment_mode）：307500000001 商品房 / 307500000002 "
+            "已购公房 / 307500000016 私产 …"
+        ),
+    )
+    building_type: str | None = Field(
+        default=None,
+        max_length=32,
+        description="建筑类型（b_type）：102200000001 塔楼 / …0002 板楼 / …",
+    )
+    select: dict[str, str | int] = Field(
+        default_factory=dict,
+        max_length=17,
+        description=(
+            "筛选 dropdown（key=value）：appro_broker 实勘 / key_broker 钥匙 / "
+            "role 我的角色 / house_stat 房屋现状 / credential_type 证件状态 / "
+            "isParkingPlace 车位 / statFunction 房屋用途 / del_grade 房屋等级 / "
+            "fitment_status 装修 / bathroom_n 卫生间数 / appearance 外网呈现 / "
+            "houseSpread 推广房源 / isElevatorHouse 电梯 / frameStructureFilter "
+            "户型结构 / beautifyHouse 美化房 / haveOwnerReservePrice 业主预期价。"
+            "value 取 catalog 枚举 id；-1（不限）会被省略。"
+        ),
+    )
+    sort: str = Field(
+        default="period1_desc_createtime_desc",
+        pattern=r"^(period1_desc_createtime_desc|period1_asc_totalprice|period1_desc_totalprice)$",
+        description="排序：period1_desc_createtime_desc 新上优先（默认）/ "
+        "period1_asc_totalprice 总价升序 / period1_desc_totalprice 总价降序。",
+    )
+    page: int = Field(default=1, ge=1, le=1000)
+
+    @model_validator(mode="after")
+    def validate_sale_filters(self) -> "SaleListingSearchRequest":
+        _sale_select_filters(self.select)
+        if any(not item.strip() for item in self.community_ids):
+            raise ValueError("community_ids cannot contain blank values")
+        if self.listing_id and self.community_ids:
+            raise ValueError("listing_id cannot be combined with community_ids")
+        if any(room < 1 or room > 5 for room in self.rooms):
+            raise ValueError("rooms values must be in the range 1..5")
+        return self
+
+    def to_domain(self) -> SaleListingFilters:
+        return SaleListingFilters(
+            scope=self.scope,
+            community_ids=tuple(dict.fromkeys(self.community_ids)),
+            district_id=None if self.district_id in (None, "-1") else self.district_id,
+            listing_id=self.listing_id,
+            price_wan=(
+                (self.total_price_wan.min, self.total_price_wan.max)
+                if self.total_price_wan
+                else None
+            ),
+            area_sqm=(self.area_sqm.min, self.area_sqm.max) if self.area_sqm else None,
+            rooms=tuple(sorted(set(self.rooms))),
+            floors=tuple(dict.fromkeys(self.floors)),
+            orientations=tuple(dict.fromkeys(self.orientations)),
+            house_layouts=tuple(dict.fromkeys(self.house_layouts)),
+            tags=tuple(dict.fromkeys(self.tags)),
+            select=_sale_select_filters(self.select),
+            house_age=self.house_age,
+            visitable_times=self.visitable_times,
+            payment_mode=self.payment_mode,
+            building_type=self.building_type,
+            sort=self.sort,
+            page=self.page,
+        )
+
+
+class SaleListingResponse(BaseModel):
+    listing_id: str
+    community: str
+    biz_circle: str | None = None
+    layout: str | None = None
+    area_sqm: float | None = None
+    total_price_yuan: float | None = None
+    total_price_text: str | None = None
+    unit_price_yuan_per_sqm: float | None = None
+    floor_desc: str | None = None
+    floor_type: str | None = None
+    orientation: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    visit_count_15d: int | None = None
+    follow_up: bool | None = None
+    create_time: datetime | None = None
+    maintainer_name: str | None = None
+    maintainer_tag: str | None = None
+    maintain_percentage: int | None = None
+    quality_score: float | None = None
+    holder_level: str | None = None
+    del_type: int | None = None
+    community_id: str | None = None
+    payment_mode: str | None = None
+    stat_function: str | None = None
+    subway_line: str | None = None
+    subway_station: str | None = None
+    vr_status: int | None = None
+    surface_image_url: str | None = None
+    floor_plan_image_url: str | None = None
+
+    @classmethod
+    def from_domain(cls, listing: SaleListing) -> "SaleListingResponse":
+        return cls(**listing.__dict__)
+
+
+class SaleListingPageResponse(BaseModel):
+    items: list[SaleListingResponse]
+    page: int
+    total: int
+    has_more: bool
+    request_id: str
+
+    @classmethod
+    def from_domain(cls, result: SaleListingPage) -> "SaleListingPageResponse":
+        return cls(
+            items=[SaleListingResponse.from_domain(item) for item in result.items],
+            page=result.page,
+            total=result.total,
+            has_more=result.has_more,
+            request_id=result.request_id,
+        )
+
+
+class SaleListingFilterOptionResponse(BaseModel):
+    key: str | None = None
+    name: str
+    value: str | None = None
+    selection_type: str = ""
+    default_value: str | None = None
+    for_show: bool = False
+    ext: dict[str, object] = Field(default_factory=dict)
+    children: list["SaleListingFilterOptionResponse"] = Field(default_factory=list)
+
+    @classmethod
+    def from_domain(
+        cls, option: SaleListingFilterOption
+    ) -> "SaleListingFilterOptionResponse":
+        return cls(
+            key=option.key,
+            name=option.name,
+            value=option.value,
+            selection_type=option.selection_type,
+            default_value=option.default_value,
+            for_show=option.for_show,
+            ext=option.ext,
+            children=[cls.from_domain(child) for child in option.children],
+        )
+
+
+SaleListingFilterOptionResponse.model_rebuild()
+
+
+class SaleCommunitySuggestionResponse(BaseModel):
+    text: str
+    community_id: str
+    resblock_name: str | None = None
+    resblock_alias: str | None = None
+    district_name: str | None = None
+    bizcircle_name: str | None = None
+    house_count: int | None = None
+    del_type: str | None = None
+
+    @classmethod
+    def from_domain(
+        cls, suggestion: SaleCommunitySuggestion
+    ) -> "SaleCommunitySuggestionResponse":
+        return cls(**suggestion.__dict__)
+
+
+class SaleListingDetailResponse(BaseModel):
+    listing_id: str
+    display_name: str | None = None
+    display_price: str | None = None
+    latest_price_yuan: float | None = None
+    unit_price_text: str | None = None
+    area_sqm: float | None = None
+    bedroom_amount: int | None = None
+    parlor_amount: int | None = None
+    toilet_amount: int | None = None
+    cookroom_amount: int | None = None
+    display_floor: str | None = None
+    orientation: str | None = None
+    del_grade: str | None = None
+    broker_grade: str | None = None
+    holder_name: str | None = None
+    holder_org: str | None = None
+    last_days: str | None = None
+    ctime: str | None = None
+    house_origin: str | None = None
+    house_id: str | None = None
+    acn_house_id: str | None = None
+    resblock_id: str | None = None
+    res_block_info: str | None = None
+    vr_status: int | None = None
+    owner_reserve_price: str | None = None
+    inventory_score: str | None = None
+    del_status: int | None = None
+    is_credential_completed: bool | None = None
+    district_name: str | None = None
+    biz_circle: str | None = None
+    build_year: int | None = None
+    build_type: str | None = None
+    build_struct: str | None = None
+    deal_prop: str | None = None
+    house_usage: str | None = None
+    tenement_fee: str | None = None
+    heat_fee: str | None = None
+    gas_fee: str | None = None
+    water_type: str | None = None
+    electric_type: str | None = None
+    heat_type: str | None = None
+    has_gas: str | None = None
+    has_hot_water: str | None = None
+    has_mid_water: str | None = None
+    mid_water_fee: str | None = None
+    hot_water_fee: str | None = None
+    car_ratio: str | None = None
+    car_onground: int | None = None
+    car_underground: int | None = None
+    park_fee: str | None = None
+    has_lift: str | None = None
+    lift_house_ratio: str | None = None
+    school_info: str | None = None
+    prop_years: str | None = None
+    building_disgust: str | None = None
+    external_url_lianjia: str | None = None
+    external_url_beike: str | None = None
+    vr_url: str | None = None
+    net_work_status: int | None = None
+
+    @classmethod
+    def from_domain(cls, detail: SaleListingDetail) -> "SaleListingDetailResponse":
+        return cls(**detail.__dict__)
+
+
+class SaleMaintainFieldResponse(BaseModel):
+    key: str
+    name: str
+    value: str | None = None
+    important: bool = False
+    comment: str | None = None
+
+
+class SaleMaintainModuleResponse(BaseModel):
+    name: str
+    fields: list[SaleMaintainFieldResponse] = Field(default_factory=list)
+
+
+class SaleMaintainInfoResponse(BaseModel):
+    listing_id: str
+    modules: list[SaleMaintainModuleResponse] = Field(default_factory=list)
+    important_fields: list[SaleMaintainFieldResponse] = Field(default_factory=list)
+    complete_rate: str | None = None
+    last_update_time: datetime | None = None
+    remark: str | None = None
+
+    @classmethod
+    def from_domain(cls, info: SaleMaintainInfo) -> "SaleMaintainInfoResponse":
+        return cls(
+            listing_id=info.listing_id,
+            modules=[
+                SaleMaintainModuleResponse(
+                    name=module.name,
+                    fields=[
+                        SaleMaintainFieldResponse(**field.__dict__)
+                        for field in module.fields
+                    ],
+                )
+                for module in info.modules
+            ],
+            important_fields=[
+                SaleMaintainFieldResponse(**field.__dict__)
+                for field in info.important_fields
+            ],
+            complete_rate=info.complete_rate,
+            last_update_time=info.last_update_time,
+            remark=info.remark,
+        )
+
+
+class SaleFollowRecordResponse(BaseModel):
+    follow_id: int | None = None
+    content: str | None = None
+    creator_name: str | None = None
+    create_time: str | None = None
+    on_top: bool = False
+    remarks: str | None = None
+    follow_label: str | None = None
+    video_url: str | None = None
+
+    @classmethod
+    def from_domain(cls, record: SaleFollowRecord) -> "SaleFollowRecordResponse":
+        return cls(**record.__dict__)
+
+
+# ---------------------------------------------------------------------------
+# 买卖 地图找房 (sale mapSearch) — house.link /search/sale/mapSearch.
+# ---------------------------------------------------------------------------
+
+
+class SaleMapSuggestionResponse(BaseModel):
+    suggestion_id: str
+    text: str
+    alias: str | None = None
+    bizcircle_name: str | None = None
+    district_name: str | None = None
+    item_type: str = ""
+    count: int | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    unit_price: float | None = None
+
+    @classmethod
+    def from_domain(cls, suggestion: SaleMapSuggestion) -> "SaleMapSuggestionResponse":
+        return cls(**suggestion.__dict__)
+
+
+class SaleMapNearbySearchRequest(BaseModel):
+    """Semantic 买卖 map search: listings in communities within a radius."""
+
+    location: str = Field(min_length=1, max_length=128)
+    center_latitude: float | None = Field(default=None, ge=-90, le=90)
+    center_longitude: float | None = Field(default=None, ge=-180, le=180)
+    radius_meters: int = Field(default=1000, ge=100, le=5000)
+    scope: SALE_SCOPE = "all"
+    total_price_wan: NumericRange | None = Field(
+        default=None,
+        description="总价区间（万元），例如 50..70 对应 50-70万。",
+    )
+    area_sqm: NumericRange | None = Field(
+        default=None,
+        description="建筑面积区间（平米），例如 70..110。",
+    )
+    rooms: list[int] = Field(
+        default_factory=list,
+        max_length=8,
+        description="房型室数（1..5，5 表示 5 室以上）。",
+    )
+    page: int = Field(default=1, ge=1, le=1000)
+
+    @model_validator(mode="after")
+    def validate_sale_map(self) -> "SaleMapNearbySearchRequest":
+        if any(room < 1 or room > 5 for room in self.rooms):
+            raise ValueError("rooms values must be in the range 1..5")
+        if (self.center_latitude is None) != (self.center_longitude is None):
+            raise ValueError("center_latitude and center_longitude must be supplied together")
+        return self
+
+    def to_domain(self) -> SaleMapNearbySearchFilters:
+        return SaleMapNearbySearchFilters(
+            location=self.location,
+            center_latitude=self.center_latitude,
+            center_longitude=self.center_longitude,
+            radius_meters=self.radius_meters,
+            scope=self.scope,
+            price_wan=(
+                (self.total_price_wan.min, self.total_price_wan.max)
+                if self.total_price_wan
+                else None
+            ),
+            area_sqm=(self.area_sqm.min, self.area_sqm.max) if self.area_sqm else None,
+            rooms=tuple(sorted(set(self.rooms))),
+            page=self.page,
+        )
+
+
+class SaleMapNearbySearchResponse(BaseModel):
+    center: SaleMapSuggestionResponse
+    radius_meters: int
+    matched_community_count: int
+    community_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Community ids whose centroids fall inside the radius circle. "
+            "Pass as community_ids to sale_listing_search to continue filtering "
+            "the same circle with the full 买卖 filter catalog. At most 100 ids "
+            "are returned; check community_ids_truncated before treating the "
+            "circle as complete."
+        ),
+    )
+    community_ids_truncated: bool = Field(
+        default=False,
+        description="Whether the circle matched more communities than were returned.",
+    )
+    result: SaleListingPageResponse
+    approximation: Literal["community_centroid"] = "community_centroid"
+
+    @classmethod
+    def from_domain(cls, result: SaleMapNearbySearchResult) -> "SaleMapNearbySearchResponse":
+        return cls(
+            center=SaleMapSuggestionResponse.from_domain(result.center),
+            radius_meters=result.radius_meters,
+            matched_community_count=result.matched_community_count,
+            community_ids=list(result.community_ids),
+            community_ids_truncated=result.community_ids_truncated,
+            result=SaleListingPageResponse.from_domain(result.result),
         )

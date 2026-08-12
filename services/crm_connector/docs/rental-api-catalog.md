@@ -41,6 +41,13 @@ CRM
 该方式可继续叠加房源列表的全部丰富筛选。`community_keyword` 仅保留为页面的模糊文本搜索，
 不能替代精确小区 ID。
 
+列表行返回图片字段（2026-08-10 接入）：`title_image_url`（上游 `titleImage`，封面图，
+实勘照片也常在此）与 `floor_plan_image_url`（上游 `floorPlanImage`，户型图）。两者均为
+`img.ljcdn.com` **原图 URL，连接器刻意不加尺寸后缀**——调用方需自行拼接 CDN 尺寸后缀
+（`.450x.jpg` 缩略图 → `.750x`/`.800x` → `.1500x.jpg` 最高清）后即可免凭证公开下载；
+原图直连按路径而异：`lease-image` 封面桶公开 200，实勘/户型图桶 403（含登录态）。
+规则见 [rental-image-cdn.md](rental-image-cdn.md)，MCP 工具描述中已内置该指引。
+
 `rental_listing_search.condition_filters` 用于这些页面原生筛选。调用方必须先读取
 `rental_listing_filter_options`，再传入其中的键和值；连接器只接受这份已核验目录中的键，
 不会把 MCP 变成任意上游参数代理。已用真实 CRM 验证的组合包括：
@@ -49,8 +56,9 @@ CRM
 标签类条件必须走 `condition_filters.label`（如 `label=81` 宠物友好、`label=2` VR房）；
 顶层不存在 `tags` 参数（上游会静默忽略）。
 
-`scope` 映射到页面原生「范围」条件：`my_maintained`→`relationRange=1`（维护盘，默认）、
-`shared`→4（店共享池）、`role_visible`→9（角色房源）。区县筛选使用
+`scope` 映射到页面原生「范围」条件：`all`→`relationRange=0`（不限）、
+`my_maintained`→`relationRange=1`（维护盘，默认）、`shared`→4（店共享池）、
+`role_visible`→9（角色房源）。区县筛选使用
 `condition_filters.districtId`（如 `510107` 武侯、`510113` 青白江），顶层无 `districts`
 参数。
 
@@ -124,6 +132,11 @@ ID 语义：列表返回的每条房源带有 `del_type`（上游 `delType`）�
 
 detailProspect 返回的其它键（`houseProspectRoomList`、`huXingPicUrl`、`titleImage`、
 `uploadProspectUrl`、`vrJsonResp`）暂未建模到响应中。
+
+**图片访问规则见 [rental-image-cdn.md](rental-image-cdn.md)**（2026-08-10 实测）：
+URL 获取需凭证（本接口已覆盖），但 API 返回的 `img.ljcdn.com` 原图 URL 对任何请求
+（含登录态）都是 403，必须拼接 CDN 尺寸后缀（`.450x`/`.750x`/`.1500x`/`.jpg`）才能
+公开下载；公开变体带平台水印，无水印原图无公开通道。
 
 ### 房源详细信息（house-info 聚合）
 

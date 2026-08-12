@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
 
-import pytest
 
 from app.application.session_watchdog import SessionWatchdog
 from app.domain.errors import QrLoginConflictError
@@ -104,6 +102,16 @@ def test_tick_relogs_when_auth_required_and_no_scan_pending() -> None:
     assert qr_manager.start_calls == 1
     # A second tick must not spam another QR window while one is pending.
     watchdog._tick()
+    assert qr_manager.start_calls == 1
+
+
+def test_tick_relogs_when_degraded_and_no_scan_pending() -> None:
+    watchdog, provider, qr_manager = _watchdog(
+        provider=FakeProvider(state=ConnectionState.DEGRADED)
+    )
+
+    watchdog._tick()
+
     assert qr_manager.start_calls == 1
 
 

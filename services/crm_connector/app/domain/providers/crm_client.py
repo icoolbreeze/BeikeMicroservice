@@ -16,6 +16,17 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleCommunitySuggestion,
+    SaleFollowRecord,
+    SaleListing,
+    SaleListingDetail,
+    SaleListingFilters,
+    SaleListingFilterOption,
+    SaleListingPage,
+    SaleMaintainInfo,
+    SaleMapBubble,
+    SaleMapBubbleFilters,
+    SaleMapSuggestion,
 )
 
 
@@ -58,3 +69,35 @@ class CrmClient(Protocol):
         self, filters: RentalMapSuggestionFilters
     ) -> tuple[RentalMapSuggestion, ...]:
         """Resolve a map search phrase into typed geographic targets."""
+
+    # -- 买卖 (sale, house.link) --------------------------------------------
+
+    def search_sale_listings(self, filters: SaleListingFilters) -> SaleListingPage:
+        """Return a page of 在售 listings within the upstream user's permissions."""
+
+    def sale_filter_options(self) -> tuple[SaleListingFilterOption, ...]:
+        """Return the current 买卖 全部房源 filter catalog (getSearchFilters)."""
+
+    def sale_community_suggest(self, query: str) -> tuple[SaleCommunitySuggestion, ...]:
+        """Resolve a 买卖 community name into community identifiers."""
+
+    def get_sale_listing_detail(self, listing_id: str) -> SaleListing:
+        """Return one 在售 listing from the 买卖 search rows (allows detail
+        by id without a full search round-trip)."""
+
+    def get_sale_listing_detail_head(self, listing_id: str) -> SaleListingDetail:
+        """Return the 买卖 detail head (housedel/views) plus ext info."""
+
+    def get_sale_listing_maintain_info(self, listing_id: str) -> SaleMaintainInfo:
+        """Return the 买卖 detail-page 维护信息 section (getMaintainInfo)."""
+
+    def get_sale_listing_follows(self, listing_id: str) -> tuple[SaleFollowRecord, ...]:
+        """Return the 买卖 detail-page 跟进记录 (queryfollows)."""
+
+    def sale_map_suggest(self, query: str, city_id: str) -> tuple[SaleMapSuggestion, ...]:
+        """Resolve a 买卖 map phrase into a coordinate-bearing community entry."""
+
+    def sale_map_bubbles(
+        self, filters: SaleMapBubbleFilters
+    ) -> tuple[SaleMapBubble, ...]:
+        """Return district or community map bubbles for a viewport rectangle."""

@@ -56,6 +56,10 @@ _BUSINESS_COOKIE_NAMES = (
     "lianjia_uuid",
     "saas_token",
     "login_ucid",
+    # house.link shiro-cas session planted by the second CAS hop. Required
+    # together with saas_token for the 买卖 (house.link) business APIs:
+    # without it searchQueryNew returns 403 未登录认证 (probed 2026-08-11).
+    "HOUSEJSESSIONID",
 )
 
 _REFRESH_COOKIE_NAMES = (

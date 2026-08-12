@@ -250,9 +250,9 @@ class QrLoginManager:
         watchdog, auto-start) use this to avoid spamming duplicate windows.
         """
         with self._lock:
-            if (
-                self._session_provider.status().state
-                is not ConnectionState.AUTH_REQUIRED
+            if self._session_provider.status().state not in (
+                ConnectionState.AUTH_REQUIRED,
+                ConnectionState.DEGRADED,
             ):
                 return False
             self._prune_locked()

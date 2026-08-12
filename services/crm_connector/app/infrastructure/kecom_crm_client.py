@@ -35,6 +35,19 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleCommunitySuggestion,
+    SaleFollowRecord,
+    SaleListing,
+    SaleListingDetail,
+    SaleListingFilters,
+    SaleListingFilterOption,
+    SaleListingPage,
+    SaleMaintainField,
+    SaleMaintainInfo,
+    SaleMaintainModule,
+    SaleMapBubble,
+    SaleMapBubbleFilters,
+    SaleMapSuggestion,
 )
 from app.domain.providers.crm_client import CrmClient as CrmClientProtocol
 from app.domain.providers.session_provider import (
@@ -53,9 +66,10 @@ _CODE_UNAUTHORIZED = 403
 _SEARCH_SCENE_CODE = "puzu_mix_list_pc"
 _SEARCH_CLIENT_OS = 3
 
-# scope -> upstream relationRange (from the live 范围 catalog: 1 维护盘,
-# 4 店共享池, 9 角色房源).  The old code hard-coded 1 and never read scope.
+# scope -> upstream relationRange (from the live 范围 catalog: 0 不限,
+# 1 维护盘, 4 店共享池, 9 角色房源).
 _SCOPE_TO_RELATION_RANGE = {
+    "all": 0,
     "my_maintained": 1,
     "shared": 4,
     "role_visible": 9,
@@ -227,6 +241,231 @@ def _build_whoami_request() -> AuthorizedRequest:
         body=None,
         request_id=str(uuid.uuid4()),
     )
+
+
+# -- 买卖 (sale) request construction ----------------------------------------
+# Captured live 2026-08-11 from house.link.lianjia.com/search/sale/default/gdiv_mt
+# (docs/sale-api-catalog.md). Fixed params mirror the browser's searchQueryNew
+# call; filter values are the catalog ids (getSearchFilters).
+
+_SALE_FIXED_QUERY: dict[str, str | int] = {
+    "alertContent": "",
+    "alertTitle": "",
+    "algorithmPunishType": 0,
+    "buttonVoList": "",
+    "del_type": 1,
+    "evtId": "",
+    "level": 0,
+    "maskAllHouse": "false",
+    "punish": "false",
+    "punishCode": "500100000004",
+    "riskLabelAction": 0,
+    "riskLabelPerson": 1,
+    "riskProtectMainHouse": 0,
+    "riskStrategy": "",
+    "riskStrategyInfo": "",
+    "season": "",
+    "tabSort": "default",
+    "timeLocal": "",
+    "ucid": "",
+}
+
+# Sort tokens captured from the live table header controls.
+_SALE_SORT_TOKENS = frozenset({
+    "period1_desc_createtime_desc",  # 默认：新上房源优先
+    "period1_asc_totalprice",
+    "period1_desc_totalprice",
+})
+
+
+def _range_bound(value: float | None, *, open_high: bool = False) -> int:
+    """Round a price/area range bound to an integer upstream token.
+
+    Price/area are whole 万元/平米 on the CRM side; float bounds from the
+    MCP NumericRange are normalised here so the emitted token matches the
+    page's catalog ids (50,70 not 50.0,70.0)."""
+    if value is None:
+        return -1 if open_high else 0
+    return int(round(value))
+
+
+def _sale_query(filters: SaleListingFilters) -> dict[str, str | int]:
+    params: dict[str, str | int] = dict(_SALE_FIXED_QUERY)
+    params["currentPage"] = filters.page
+    params["vertical"] = filters.scope
+    params["sort"] = filters.sort
+    if filters.listing_id:
+        params["del_code"] = filters.listing_id
+    if filters.community_ids:
+        params["multi_community_id"] = ",".join(filters.community_ids)
+    if filters.district_id:
+        params["disId"] = filters.district_id
+    if filters.price_wan is not None:
+        lo, hi = filters.price_wan
+        params["price"] = f"{_range_bound(lo)},{_range_bound(hi, open_high=True)}"
+    if filters.area_sqm is not None:
+        lo, hi = filters.area_sqm
+        params["area"] = f"{_range_bound(lo)},{_range_bound(hi, open_high=True)}"
+    if filters.rooms:
+        rooms = sorted(filters.rooms)
+        lo, hi = rooms[0], rooms[-1]
+        params["room"] = f"{lo},{hi}"
+    if filters.floors:
+        params["floorNew"] = ",".join(filters.floors)
+    if filters.orientations:
+        params["orient"] = ",".join(filters.orientations)
+    if filters.house_layouts:
+        params["houseLayout"] = ",".join(filters.house_layouts)
+    if filters.tags:
+        params["tag"] = ",".join(filters.tags)
+    if filters.house_age is not None:
+        params["h_age"] = filters.house_age
+    if filters.visitable_times is not None:
+        params["visitable_times"] = filters.visitable_times
+    if filters.payment_mode:
+        params["payment_mode"] = filters.payment_mode
+    if filters.building_type:
+        params["b_type"] = filters.building_type
+    for key, value in filters.select:
+        if value and value != "-1":
+            params[key] = value
+    return params
+
+
+def _build_sale_search_request(filters: SaleListingFilters) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.search",
+        method="GET",
+        query=_sale_query(filters),
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_filter_options_request() -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.filter_options",
+        method="GET",
+        query={"del_type": 1, "searchTab": "ALL_TAB"},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_suggest_request(query: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.suggest",
+        method="GET",
+        query={"delType": 1, "q": query},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_detail_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_detail",
+        method="GET",
+        query={"housedelCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_ext_info_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_ext_info",
+        method="GET",
+        query={"housedelCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_maintain_info_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_maintain_info",
+        method="GET",
+        query={"housedelCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_follow_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_follow",
+        method="GET",
+        query={"type": 0, "currentPage": 1, "housedelCode": listing_id, "pageSize": 100},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+# -- 买卖 地图找房 (sale map) request construction --------------------------
+# Captured live 2026-08-11 from house.link.lianjia.com/search/sale/mapSearch.
+# The sale map domain lives on house.link itself: /search/map/suggest and
+# /search/map/bubbleSearch (unlike the rental map which proxies map.ke.com).
+
+_SALE_MAP_FIXED_QUERY = {
+    "deltype": 1,
+    "ucid": None,
+    "evtId": None,
+    "punishCode": "500100000004",
+    "alertContent": None,
+    "alertTitle": None,
+    "buttonVoList": None,
+    "season": None,
+    "riskStrategy": None,
+    "riskStrategyInfo": None,
+    "timeLocal": None,
+    "algorithmPunishType": 0,
+    "level": 0,
+    "riskLabelPerson": 1,
+    "riskLabelAction": 0,
+    "riskProtectMainHouse": 0,
+    "maskAllHouse": "false",
+    "punish": "false",
+}
+
+
+def _build_sale_map_suggest_request(query: str, city_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_map.suggest",
+        method="GET",
+        query={"deltype": 1, "city_id": city_id, "query": query},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_map_bubbles_request(filters: SaleMapBubbleFilters) -> AuthorizedRequest:
+    query: dict[str, str | int | float | None] = dict(_SALE_MAP_FIXED_QUERY)
+    query.update(
+        {
+            "city_id": filters.city_id,
+            "group_type": filters.group_type,
+            "max_lat": filters.bounds.max_latitude,
+            "min_lat": filters.bounds.min_latitude,
+            "max_lng": filters.bounds.max_longitude,
+            "min_lng": filters.bounds.min_longitude,
+            "filters": _sale_map_filters_blob(filters.filters),
+        }
+    )
+    return AuthorizedRequest(
+        route="sale_map.bubbles",
+        method="GET",
+        query=query,
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _sale_map_filters_blob(filters: dict[str, object]) -> str:
+    """The map page sends filters as a JSON string (empty object when none)."""
+    import json
+
+    return json.dumps(filters, ensure_ascii=False, separators=(",", ":"))
 
 
 def _bounds_query(bounds: MapBounds) -> dict[str, float]:
@@ -523,12 +762,32 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         visible_scope=scope,
         # 2 = 普租, 5 = 托管. Only 普租 ids resolve via detailHead.
         del_type=_as_int(row.get("delType")),
+        # Raw CDN originals; direct fetch is 403 for everyone — callers append
+        # a size suffix (.450x/.750x/.800x/.1500x.jpg) for a public variant
+        # (docs/rental-image-cdn.md). Passed through unsuffixed on purpose.
+        title_image_url=_opt_str(row.get("titleImage")),
+        floor_plan_image_url=_opt_str(row.get("floorPlanImage")),
     )
 
 
 def _as_float(value: Any) -> float | None:
     if isinstance(value, (int, float)):
         return float(value)
+    return None
+
+
+def _as_numeric_float(value: Any) -> float | None:
+    """float coercion that also accepts numeric strings (the 买卖 search rows
+    return qualityScore as '8.78' and unitPrice as 12539.0)."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str) and value.strip():
+        try:
+            return float(value.strip())
+        except ValueError:
+            return None
     return None
 
 
@@ -668,6 +927,11 @@ def _as_int(value: Any) -> int | None:
         return None
     if isinstance(value, (int, float)):
         return int(value)
+    if isinstance(value, str) and value.strip():
+        try:
+            return int(float(value.strip()))
+        except ValueError:
+            return None
     return None
 
 
@@ -687,6 +951,11 @@ def _as_positive_flag(value: Any) -> bool | None:
 def _ts_to_datetime(value: Any) -> datetime | None:
     if isinstance(value, (int, float)):
         return datetime.fromtimestamp(value / 1000, tz=UTC)
+    if isinstance(value, str) and value.strip():
+        try:
+            return datetime.fromtimestamp(float(value.strip()) / 1000, tz=UTC)
+        except ValueError:
+            return None
     return None
 
 
@@ -986,6 +1255,416 @@ def _clean_opt_str(value: Any) -> str | None:
     return text if text else None
 
 
+def _id_value(value: Any) -> str | None:
+    """Filter-catalog id coercion: the root groups carry id='' and the
+    catalogue's 不限 entries id='-1'; both are not real values."""
+    text = _opt_str(value)
+    if not text or text == "-1":
+        return None
+    return text
+
+
+def _sale_business_error(body: Mapping[str, Any]) -> None:
+    """Raise for non-success 买卖 (house.link) business envelopes.
+
+    The house domain uses code=1 for success (not the lease domain's
+    100000); 403/31002/未登录 are handled by the session provider's
+    auth-failure detection before we ever parse the body.
+    """
+    code = body.get("code")
+    if code in (1, "1", 0, "0"):
+        return
+    if code in (403, "403", 31002, "31002") or (
+        isinstance(body.get("msg"), str)
+        and ("未登录" in body["msg"] or "请先登录" in body["msg"])
+    ):
+        raise AuthenticationRequiredError("CRM 买卖 authorization was rejected")
+    if code == 100001 or code == "100001":
+        raise UpstreamInvalidInputError(str(body.get("msg") or "house upstream rejected input"))
+    raise UpstreamChangedError(
+        f"house upstream returned unknown business code={code!r} msg={body.get('msg')!r}"
+    )
+
+
+def _parse_sale_filter_option(row: Mapping[str, Any]) -> SaleListingFilterOption:
+    raw_children = row.get("children") or []
+    children: list[SaleListingFilterOption] = []
+    if isinstance(raw_children, list):
+        for child in raw_children:
+            if not isinstance(child, Mapping):
+                continue
+            if row.get("key") == "select":
+                # Nested select dropdowns: child has its own key and children.
+                children.append(_parse_sale_filter_option(child))
+            else:
+                children.append(
+                    SaleListingFilterOption(
+                        key=None,
+                        name=_opt_str(child.get("name")) or "",
+                        value=_id_value(child.get("id")),
+                        selection_type="",
+                        default_value=None,
+                        for_show=False,
+                        ext={},
+                        children=(),
+                    )
+                )
+    return SaleListingFilterOption(
+        key=_opt_str(row.get("key")),
+        name=_opt_str(row.get("name")) or "",
+        value=_id_value(row.get("id")),
+        selection_type=_opt_str(row.get("type")) or "",
+        default_value=(
+            _id_value(row["defaultValue"].get("id"))
+            if isinstance(row.get("defaultValue"), Mapping)
+            else None
+        ),
+        for_show=bool(row.get("forShow")),
+        ext=dict(row["ext"]) if isinstance(row.get("ext"), dict) else {},
+        children=tuple(children),
+    )
+
+
+def _parse_sale_filter_options(body: Mapping[str, Any]) -> tuple[SaleListingFilterOption, ...]:
+    raw_options = body.get("data")
+    if not isinstance(raw_options, list):
+        raise UpstreamChangedError("sale filter-options response 'data' is not an array")
+    return tuple(
+        _parse_sale_filter_option(option)
+        for option in raw_options
+        if isinstance(option, Mapping)
+    )
+
+
+def _parse_sale_listing(row: Mapping[str, Any]) -> SaleListing:
+    tags = row.get("tags") or []
+    if not isinstance(tags, list):
+        tags = []
+    floor_type = _opt_str(row.get("floorType"))
+    total_floor = _as_int(row.get("totalFloor"))
+    floor_desc: str | None
+    if floor_type and total_floor is not None:
+        floor_desc = f"{floor_type}/{total_floor}"
+    else:
+        floor_desc = _opt_str(row.get("showFloor"))
+    return SaleListing(
+        listing_id=_opt_str(row.get("houseDelCode")) or "",
+        community=_opt_str(row.get("communityName")) or "",
+        biz_circle=_opt_str(row.get("bizCircleName")),
+        layout=_opt_str(row.get("unitType")),
+        area_sqm=_as_float(row.get("areaSize")),
+        total_price_yuan=_as_float(row.get("totalPrice")),
+        total_price_text=_opt_str(row.get("totalPriceStr")),
+        unit_price_yuan_per_sqm=_as_float(row.get("unitPrice")),
+        floor_desc=floor_desc,
+        floor_type=floor_type,
+        orientation=_opt_str(row.get("orientation")),
+        tags=tuple(dict.fromkeys(str(tag) for tag in tags if str(tag))),
+        visit_count_15d=_as_int(row.get("visitCount")),
+        follow_up=row.get("followUp") if isinstance(row.get("followUp"), bool) else None,
+        create_time=_ts_to_datetime(row.get("createTime")),
+        maintainer_name=_opt_str(row.get("maintainerName")),
+        maintainer_tag=_opt_str(row.get("maintainerTag")),
+        maintain_percentage=_as_int(row.get("maintainPercentage")),
+        quality_score=_as_numeric_float(row.get("qualityScore")),
+        holder_level=_opt_str(row.get("holderLevel")),
+        del_type=_as_int(row.get("delType")),
+        community_id=_opt_str(row.get("communityId")),
+        payment_mode=_opt_str(row.get("paymentMode")),
+        stat_function=_opt_str(row.get("statFunction")),
+        subway_line=_opt_str(row.get("subwayLineName")),
+        subway_station=_opt_str(row.get("subwayName")),
+        vr_status=_as_int(row.get("vrStatus")),
+        surface_image_url=_opt_str(row.get("surfaceImage")),
+        floor_plan_image_url=_opt_str(row.get("floorPlanImage")),
+    )
+
+
+def _parse_sale_page(
+    body: Mapping[str, Any], filters: SaleListingFilters, request_id: str
+) -> SaleListingPage:
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        raise UpstreamChangedError("sale search response missing 'data' object")
+    raw_list = data.get("list")
+    if raw_list is None:
+        # totalCount=0 with list=null is the upstream's honest empty answer
+        # (verified live: a multi_community_id query with no visible listings).
+        raw_list = []
+    if not isinstance(raw_list, list):
+        raise UpstreamChangedError("sale search response 'data.list' is not an array")
+    items = tuple(_parse_sale_listing(row) for row in raw_list if isinstance(row, Mapping))
+    total = _as_int(data.get("totalCount")) or 0
+    page = _as_int(data.get("currentPage")) or filters.page
+    total_page = _as_int(data.get("totalPage"))
+    has_more = total_page is not None and page < total_page
+    return SaleListingPage(
+        items=items,
+        page=page,
+        total=total,
+        has_more=has_more,
+        request_id=request_id,
+    )
+
+
+def _parse_sale_suggestions(body: Mapping[str, Any]) -> tuple[SaleCommunitySuggestion, ...]:
+    raw = body.get("data")
+    if not isinstance(raw, list):
+        raise UpstreamChangedError("sale suggest response 'data' is not an array")
+    suggestions: list[SaleCommunitySuggestion] = []
+    for row in raw:
+        if not isinstance(row, Mapping):
+            continue
+        text = _opt_str(row.get("text"))
+        community_id = _opt_str(row.get("communityId"))
+        if not text or not community_id:
+            continue
+        suggestions.append(
+            SaleCommunitySuggestion(
+                text=text,
+                community_id=community_id,
+                resblock_name=_opt_str(row.get("resblockName")),
+                resblock_alias=_opt_str(row.get("resblockAlias")),
+                district_name=_opt_str(row.get("districtName")),
+                bizcircle_name=_opt_str(row.get("bizcircleName")),
+                house_count=_as_int(row.get("houseCount")),
+                del_type=_opt_str(row.get("delType")),
+            )
+        )
+    return tuple(suggestions)
+
+
+def _parse_sale_detail(
+    views_body: Mapping[str, Any], ext_body: Mapping[str, Any], listing_id: str
+) -> SaleListingDetail:
+    data = views_body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        raise UpstreamInvalidInputError(
+            f"no housedel/views record for {listing_id}; the id is not served by the 买卖 detail domain"
+        )
+    head = data.get("housedelBaseInfo")
+    basic = data.get("basicInfo")
+    if not isinstance(head, Mapping):
+        raise UpstreamChangedError("housedel/views 'data.housedelBaseInfo' is not an object")
+    if not isinstance(basic, Mapping):
+        basic = {}
+    holder = head.get("holderInfo")
+    ext_raw = ext_body.get("data")
+    ext_data = ext_raw if isinstance(ext_raw, Mapping) else {}
+    head_get = head.get
+    basic_get = basic.get
+    ext_get = ext_data.get
+    return SaleListingDetail(
+        listing_id=listing_id,
+        display_name=_opt_str(head_get("displayName")),
+        display_price=_opt_str(head_get("displayPrice")),
+        latest_price_yuan=_as_float(head_get("latestPrice")),
+        unit_price_text=_opt_str(head_get("unitPrice")),
+        area_sqm=_as_float(head_get("area")),
+        bedroom_amount=_as_int(head_get("bedroomAmount")),
+        parlor_amount=_as_int(head_get("parlorAmount")),
+        toilet_amount=_as_int(head_get("toiletAmount")),
+        cookroom_amount=_as_int(head_get("cookroomAmount")),
+        display_floor=_opt_str(head_get("displayFloor")),
+        orientation=_opt_str(head_get("orientation")),
+        del_grade=_opt_str(head_get("delGrade")),
+        broker_grade=_opt_str(head_get("brokerGrade")),
+        holder_name=_opt_str(holder.get("name")) if isinstance(holder, Mapping) else None,
+        holder_org=_opt_str(holder.get("orgName")) if isinstance(holder, Mapping) else None,
+        last_days=_opt_str(head_get("lastDays")),
+        ctime=_opt_str(head_get("ctime")),
+        house_origin=_opt_str(head_get("houseOrigin")),
+        house_id=_opt_str(head_get("houseId")),
+        acn_house_id=_opt_str(head_get("acnHouseId")),
+        resblock_id=_opt_str(head_get("resblockId")),
+        res_block_info=_opt_str(head_get("resBlockInfo")),
+        vr_status=_as_int(head_get("vrStatus")),
+        owner_reserve_price=_opt_str(head_get("ownerReservePrice")),
+        inventory_score=_opt_str(head_get("inventoryScore")),
+        del_status=_as_int(head_get("housedelStatus")),
+        is_credential_completed=(
+            head_get("isCredentialCompleted")
+            if isinstance(head_get("isCredentialCompleted"), bool)
+            else None
+        ),
+        district_name=_opt_str(basic_get("districtName")),
+        biz_circle=_opt_str(basic_get("bizcircleName")),
+        build_year=_as_int(basic_get("buildYear")),
+        build_type=_opt_str(basic_get("buildType")),
+        build_struct=_opt_str(basic_get("buildStruct")),
+        deal_prop=_opt_str(basic_get("dealProp")),
+        house_usage=_opt_str(basic_get("houseUsage")),
+        tenement_fee=_opt_str(basic_get("tenementFee")),
+        heat_fee=_opt_str(basic_get("heatFee")),
+        gas_fee=_opt_str(basic_get("gasFee")),
+        water_type=_opt_str(basic_get("waterType")),
+        electric_type=_opt_str(basic_get("eletricType")),
+        heat_type=_opt_str(basic_get("heatType")),
+        has_gas=_opt_str(basic_get("hasGas")),
+        has_hot_water=_opt_str(basic_get("hasHotWater")),
+        has_mid_water=_opt_str(basic_get("hasMidWater")),
+        mid_water_fee=_opt_str(basic_get("midWaterFee")),
+        hot_water_fee=_opt_str(basic_get("hotWaterFee")),
+        car_ratio=_opt_str(basic_get("carRatio")),
+        car_onground=_as_int(basic_get("carOnground")),
+        car_underground=_as_int(basic_get("carUnderground")),
+        park_fee=_opt_str(basic_get("parkFee")),
+        has_lift=_opt_str(basic_get("hasLift")),
+        lift_house_ratio=_opt_str(basic_get("liftHouseRatio")),
+        school_info=_opt_str(basic_get("schoolInfo")),
+        prop_years=_opt_str(basic_get("propYears")),
+        building_disgust=_opt_str(basic_get("buildingDisgust")),
+        external_url_lianjia=_opt_str(ext_get("lianjiaUrl")),
+        external_url_beike=_opt_str(ext_get("beikeUrl")),
+        vr_url=_opt_str(ext_get("vrUrl")),
+        net_work_status=_as_int(ext_get("netWorkStatus")),
+    )
+
+
+def _parse_sale_maintain_field(field: Mapping[str, Any]) -> SaleMaintainField:
+    return SaleMaintainField(
+        key=_opt_str(field.get("key")) or "",
+        name=_opt_str(field.get("name")) or "",
+        value=_opt_str(field.get("value")),
+        important=bool(field.get("important")),
+        comment=_opt_str(field.get("comment")),
+    )
+
+
+def _parse_sale_maintain_info(
+    body: Mapping[str, Any], listing_id: str
+) -> SaleMaintainInfo:
+    data = body.get("data")
+    if not isinstance(data, Mapping) or not data:
+        raise UpstreamInvalidInputError(
+            f"no getMaintainInfo record for {listing_id}; the id is not served by the 买卖 detail domain"
+        )
+    basic = data.get("maintainBasicInfo")
+    if not isinstance(basic, Mapping):
+        basic = {}
+    modules: list[SaleMaintainModule] = []
+    raw_modules = basic.get("maintainList")
+    if isinstance(raw_modules, list):
+        for module in raw_modules:
+            if not isinstance(module, Mapping):
+                continue
+            fields: list[SaleMaintainField] = []
+            for row in module.get("row") or []:
+                if not isinstance(row, Mapping):
+                    continue
+                for field_list in row.get("list") or []:
+                    if isinstance(field_list, Mapping):
+                        fields.append(_parse_sale_maintain_field(field_list))
+            modules.append(
+                SaleMaintainModule(
+                    name=_opt_str(module.get("name")) or "",
+                    fields=tuple(fields),
+                )
+            )
+    important: list[SaleMaintainField] = []
+    important_info = data.get("importantBasicInfo")
+    if isinstance(important_info, Mapping):
+        for field in important_info.get("importantList") or []:
+            if isinstance(field, Mapping):
+                important.append(_parse_sale_maintain_field(field))
+    return SaleMaintainInfo(
+        listing_id=listing_id,
+        modules=tuple(modules),
+        important_fields=tuple(important),
+        complete_rate=_opt_str(basic.get("completeRate")),
+        last_update_time=_ts_to_datetime(important_info.get("lastUpdateTime"))
+        if isinstance(important_info, Mapping)
+        else None,
+        remark=None,
+    )
+
+
+def _parse_sale_follows(body: Mapping[str, Any]) -> tuple[SaleFollowRecord, ...]:
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        return ()
+    raw_list = data.get("list")
+    if not isinstance(raw_list, list):
+        return ()
+    records: list[SaleFollowRecord] = []
+    for row in raw_list:
+        if not isinstance(row, Mapping):
+            continue
+        records.append(
+            SaleFollowRecord(
+                follow_id=_as_int(row.get("id")),
+                content=_opt_str(row.get("followContent")),
+                creator_name=_opt_str(row.get("creatorName")),
+                create_time=_opt_str(row.get("createTime")),
+                on_top=bool(row.get("onTop")),
+                remarks=_opt_str(row.get("remarks")),
+                follow_label=_opt_str(row.get("followLabel")),
+                video_url=_opt_str(row.get("videoUrl")),
+            )
+        )
+    return tuple(records)
+
+
+def _parse_sale_map_suggestions(body: Mapping[str, Any]) -> tuple[SaleMapSuggestion, ...]:
+    raw = body.get("data")
+    if not isinstance(raw, list):
+        raise UpstreamChangedError("sale map suggest response 'data' is not an array")
+    suggestions: list[SaleMapSuggestion] = []
+    for row in raw:
+        if not isinstance(row, Mapping):
+            continue
+        text = _opt_str(row.get("text"))
+        suggestion_id = _opt_str(row.get("id"))
+        if not text or not suggestion_id:
+            continue
+        suggestions.append(
+            SaleMapSuggestion(
+                suggestion_id=suggestion_id,
+                text=text,
+                alias=_opt_str(row.get("alias")),
+                bizcircle_name=_opt_str(row.get("bizcircleName")),
+                district_name=_opt_str(row.get("districtName")),
+                item_type=_opt_str(row.get("type")) or "",
+                count=_as_int(row.get("count")),
+                latitude=_as_numeric_float(row.get("latitude")),
+                longitude=_as_numeric_float(row.get("longitude")),
+                unit_price=_as_numeric_float(row.get("unitPrice")),
+            )
+        )
+    return tuple(suggestions)
+
+
+def _parse_sale_map_bubbles(
+    body: Mapping[str, Any], group_type: str
+) -> tuple[SaleMapBubble, ...]:
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        raise UpstreamChangedError("sale map bubble response missing 'data' object")
+    raw = data.get("list")
+    if not isinstance(raw, Mapping):
+        raise UpstreamChangedError("sale map bubble response 'data.list' is not an object")
+    bubbles: list[SaleMapBubble] = []
+    for row in raw.values():
+        if not isinstance(row, Mapping):
+            continue
+        bubble_id = _opt_str(row.get("id"))
+        name = _opt_str(row.get("name"))
+        if not bubble_id or not name:
+            continue
+        bubbles.append(
+            SaleMapBubble(
+                bubble_id=bubble_id,
+                name=name,
+                count=_as_int(row.get("count")),
+                unit_price=_as_numeric_float(row.get("unit_price")),
+                latitude=_as_numeric_float(row.get("latitude")),
+                longitude=_as_numeric_float(row.get("longitude")),
+                desc=_opt_str(row.get("desc")),
+            )
+        )
+    return tuple(bubbles)
+
+
 class KecomCrmClient:
     """CRM business adapter that drives upstream calls via SessionProvider.
 
@@ -1172,6 +1851,153 @@ class KecomCrmClient:
                 f"rental_map.suggest returned status {response.status_code}"
             )
         return _parse_map_suggestions(response.body)
+
+    # -- 买卖 (sale, house.link) --------------------------------------------
+
+    def search_sale_listings(self, filters: SaleListingFilters) -> SaleListingPage:
+        request = _build_sale_search_request(filters)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.search returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_page(body, filters, request.request_id)
+
+    def sale_filter_options(self) -> tuple[SaleListingFilterOption, ...]:
+        request = _build_sale_filter_options_request()
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.filter_options returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_filter_options(body)
+
+    def sale_community_suggest(self, query: str) -> tuple[SaleCommunitySuggestion, ...]:
+        request = _build_sale_suggest_request(query)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.suggest returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_suggestions(body)
+
+    def get_sale_listing_detail(self, listing_id: str) -> SaleListing:
+        # 买卖 detailHead equivalent: searchQueryNew with del_code returns the
+        # single row; a missing row means the id is not visible to the caller.
+        request = _build_sale_search_request(
+            SaleListingFilters(
+                # A housedelCode can come from any permission-visible pool
+                # (including sale_map_nearby_search, whose scope is ``all``).
+                # ``all`` still remains upstream permission-scoped; it only
+                # avoids incorrectly restricting a detail lookup to the
+                # maintenance pool.
+                scope="all",
+                community_ids=(),
+                district_id=None,
+                listing_id=listing_id,
+                price_wan=None,
+                area_sqm=None,
+                rooms=(),
+                floors=(),
+                orientations=(),
+                house_layouts=(),
+                tags=(),
+                select=(),
+                house_age=None,
+                visitable_times=None,
+                payment_mode=None,
+                building_type=None,
+                sort="period1_desc_createtime_desc",
+                page=1,
+            )
+        )
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.search returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        data = body.get("data")
+        raw_list = data.get("list") if isinstance(data, Mapping) else None
+        if not isinstance(raw_list, list) or not raw_list:
+            raise UpstreamInvalidInputError(
+                f"no search row for 买卖 listing id {listing_id}; the id is "
+                "not visible to the caller or belongs to another domain"
+            )
+        return _parse_sale_listing(raw_list[0])
+
+    def get_sale_listing_detail_head(self, listing_id: str) -> SaleListingDetail:
+        views_request = _build_sale_detail_request(listing_id)
+        views_response = self._session.authorized_fetch(views_request)
+        if views_response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_detail returned status {views_response.status_code}"
+            )
+        views_body = _coerce_mapping(views_response.body)
+        _sale_business_error(views_body)
+
+        ext_request = _build_sale_ext_info_request(listing_id)
+        ext_response = self._session.authorized_fetch(ext_request)
+        if ext_response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_ext_info returned status {ext_response.status_code}"
+            )
+        ext_body = _coerce_mapping(ext_response.body)
+        _sale_business_error(ext_body)
+        return _parse_sale_detail(views_body, ext_body, listing_id)
+
+    def get_sale_listing_maintain_info(self, listing_id: str) -> SaleMaintainInfo:
+        request = _build_sale_maintain_info_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_maintain_info returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_maintain_info(body, listing_id)
+
+    def get_sale_listing_follows(self, listing_id: str) -> tuple[SaleFollowRecord, ...]:
+        request = _build_sale_follow_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_follow returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_follows(body)
+
+    def sale_map_suggest(self, query: str, city_id: str) -> tuple[SaleMapSuggestion, ...]:
+        request = _build_sale_map_suggest_request(query, city_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_map.suggest returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_map_suggestions(body)
+
+    def sale_map_bubbles(
+        self, filters: SaleMapBubbleFilters
+    ) -> tuple[SaleMapBubble, ...]:
+        request = _build_sale_map_bubbles_request(filters)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_map.bubbles returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_map_bubbles(body, filters.group_type)
 
 
 # satisfy static Protocol check without runtime isinstance

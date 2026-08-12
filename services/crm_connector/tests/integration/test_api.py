@@ -145,6 +145,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
         "showing_total": None, "showing_last_7d": None,
         "external_url_ke": None, "external_url_lianjia": None,
         "has_key": None, "del_status_text": None, "house_id": None,
+        "title_image_url": None, "floor_plan_image_url": None,
     }
     # The request reached SessionProvider with the documented upstream params.
     assert len(session.calls) == 1
@@ -154,6 +155,26 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
     assert request.query["sceneCode"] == "puzu_mix_list_pc"
     assert request.query["relationRange"] == 1
     assert request.query["clientOsType"] == 3
+
+
+def test_search_accepts_unrestricted_rental_scope(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "rental_listing.search", 200,
+        {
+            "code": 100000,
+            "data": {"result": [], "totalCount": 0, "totalPage": 1},
+        },
+    )
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.post(
+        "/api/v1/listings/rental/search",
+        json={"scope": "all", "page": 1, "page_size": 20},
+    )
+
+    assert response.status_code == 200
+    assert session.calls[0].query["relationRange"] == 0
 
 
 def test_search_accepts_multiple_exact_community_ids(tmp_path) -> None:
@@ -653,4 +674,102 @@ def test_nearby_map_search_accepts_a_pre_resolved_center(tmp_path) -> None:
     assert [call.route for call in session.calls] == [
         "rental_map.bubbles", "rental_map.search_circle",
     ]
+
+
+def test_sale_map_nearby_resolves_location_then_reuses_community_ids(tmp_path) -> None:
+    """买卖 nearby: sale suggest -> community bubbles -> radius filter -> list search."""
+    session = StubSession()
+    session.enqueue(
+        "sale_map.suggest", 200,
+        {"code": 1, "data": [{
+            "id": 1611048089809, "text": "华润广场(成华)", "alias": "万象城",
+            "type": "community", "latitude": "30.655076", "longitude": "104.124096",
+        }]},
+    )
+    session.enqueue(
+        "sale_map.bubbles", 200,
+        {"code": 1, "data": {"list": {
+            "1611044656331": {"id": 1611044656331, "name": "尖东旺座一期", "count": 7,
+                              "latitude": "30.6495", "longitude": "104.1195"},
+            "1611059597918": {"id": 1611059597918, "name": "银通苑", "count": 13,
+                              "latitude": "30.6626", "longitude": "104.1249"},
+        }}},
+    )
+    session.enqueue(
+        "sale_listing.search", 200,
+        {"code": 1, "data": {
+            "totalCount": 2, "currentPage": 1, "totalPage": 1,
+            "list": [{
+                "houseDelCode": "S-map-1", "communityName": "尖东旺座一期",
+                "unitType": "2-1-1-1", "areaSize": 47.78, "totalPrice": 650000.0,
+                "totalPriceStr": "65万", "floorType": "高", "totalFloor": "7",
+            }],
+        }},
+    )
+    _app, client = _wired_app(session, tmp_path)
+
+    response = client.post(
+        "/api/v1/listings/sale/map/nearby",
+        json={
+            "location": "万象城", "radius_meters": 1000,
+            "total_price_wan": {"min": 50, "max": 70}, "rooms": [2],
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["center"]["text"] == "华润广场(成华)"
+    assert body["matched_community_count"] == 2
+    assert body["community_ids"] == ["1611044656331", "1611059597918"]
+    assert body["community_ids_truncated"] is False
+    assert body["approximation"] == "community_centroid"
+    assert body["result"]["items"][0]["listing_id"] == "S-map-1"
+    assert [call.route for call in session.calls] == [
+        "sale_map.suggest", "sale_map.bubbles", "sale_listing.search",
+    ]
+    assert session.calls[1].query["group_type"] == "community"
+    assert session.calls[2].query["multi_community_id"] == (
+        "1611044656331,1611059597918"
+    )
+    assert session.calls[2].query["price"] == "50,70"
+    assert session.calls[2].query["room"] == "2,2"
+
+
+def test_sale_map_nearby_marks_communities_truncated(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "sale_map.suggest", 200,
+        {"code": 1, "data": [{
+            "id": 1611048089809, "text": "华润广场(成华)", "alias": "万象城",
+            "type": "community", "latitude": "30.655076", "longitude": "104.124096",
+        }]},
+    )
+    bubbles = {
+        str(index): {
+            "id": index,
+            "name": f"测试小区{index}",
+            "count": 1,
+            "latitude": "30.655",
+            "longitude": "104.124",
+        }
+        for index in range(101)
+    }
+    session.enqueue("sale_map.bubbles", 200, {"code": 1, "data": {"list": bubbles}})
+    session.enqueue(
+        "sale_listing.search", 200,
+        {"code": 1, "data": {"totalCount": 0, "currentPage": 1, "totalPage": 0, "list": []}},
+    )
+    _app, client = _wired_app(session, tmp_path)
+
+    response = client.post(
+        "/api/v1/listings/sale/map/nearby",
+        json={"location": "万象城", "radius_meters": 1000},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["matched_community_count"] == 101
+    assert len(body["community_ids"]) == 100
+    assert body["community_ids_truncated"] is True
+    assert len(session.calls[2].query["multi_community_id"].split(",")) == 100
 
