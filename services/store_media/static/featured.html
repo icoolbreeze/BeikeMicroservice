@@ -978,20 +978,27 @@
                 ${p.tags.slice(0, 2).map(renderMiniTag).join('')}
               </div>
             </div>
-            <div class="flex items-center gap-[0.4rem] text-[1rem] text-[var(--gold)] truncate mt-[0.35rem]">
-              <i class="fas fa-location-dot text-[0.85rem]"></i>${p.location || '位置待定'}
-            </div>
-            <div class="text-[1.1rem] text-[var(--muted)] truncate mt-[0.3rem]">${p.layout} · ${p.area}㎡ · ${p.orient}</div>
-            <div class="text-[0.95rem] text-[var(--muted)] truncate mt-[0.25rem]">${p.desc || '真实房源 · 欢迎咨询'}</div>
           </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-baseline gap-[0.2rem]">
-              <span class="font-num text-[2.3rem] text-[var(--gold)] font-bold leading-none">${p.price}</span>
-              <span class="text-[1.1rem] text-[var(--gold)] font-bold">${p.priceUnit}</span>
+          <div class="flex items-center justify-between gap-[0.6rem] min-w-0">
+            <div class="min-w-0">
+              <div class="flex items-center gap-[0.4rem] text-[1rem] text-[var(--gold)] truncate">
+                <i class="fas fa-location-dot text-[0.85rem]"></i>${p.location || '位置待定'}
+              </div>
+              <div class="flex items-center gap-[0.6rem] mt-[0.45rem]">
+                <span class="px-[0.8rem] py-[0.15rem] rounded-[0.8rem] bg-[var(--dark)] font-bold text-[1.5rem] text-[var(--gold-light)] leading-tight whitespace-nowrap">${p.layout}</span>
+                <span class="text-[1.7rem] text-[var(--dark)] font-medium leading-tight whitespace-nowrap">${p.area}<span class="text-[1.1rem]">㎡</span></span>
+                <span class="text-[1.05rem] text-[var(--muted)] truncate min-w-0">${p.orient}</span>
+              </div>
             </div>
-            <div class="flex items-center gap-[0.4rem] text-[1.05rem] text-[var(--muted)] whitespace-nowrap">
-              <i class="fas fa-layer-group text-[0.9rem] text-[var(--gold)]"></i>
-              ${p.floor || '楼层待定'}
+            <div class="flex flex-col items-end justify-center flex-shrink-0">
+              <div class="flex items-baseline gap-[0.2rem]">
+                <span class="font-num text-[2.7rem] text-[var(--gold)] font-bold leading-none">${p.price}</span>
+                <span class="text-[1.25rem] text-[var(--gold)] font-bold">${p.priceUnit}</span>
+              </div>
+              <div class="flex items-center gap-[0.4rem] text-[1.05rem] text-[var(--muted)] whitespace-nowrap mt-[0.3rem]">
+                <i class="fas fa-layer-group text-[0.9rem] text-[var(--gold)]"></i>
+                ${p.floor || '楼层待定'}
+              </div>
             </div>
           </div>
         </div>

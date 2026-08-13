@@ -89,10 +89,22 @@
 | `.800x.jpg` | 200 | 251 KB |
 | `.1500x.jpg` | 200 | 774 KB |
 | `.450x.png` | 200 | 166 KB（支持任意目标格式） |
+| `.720x540.jpg` | 200 | 66~73 KB（2026-08-13 补测，买卖 12 套房源 12/12） |
 
 页面实际请求的 `pc0_HUEypeSmt.jpg.450x.jpg` 正是"原图 URL + 后缀"的形态。
 `/lease-image/`、`/110000-inspection/`、`/hdic-frame/`、`/510100-frame/` 全部适用
 同一规则。10 个房源 × 户型图 + 90 个房源封面抽样验证无一例外。
+
+#### 3.1 残缺指令后缀（2026-08-13 实测，买卖接口新坑）
+
+买卖搜索/详情接口（`sale_listing_search` 的 `surface_image_url` / `floor_plan_image_url`，
+列表接口 `titleImage` 同理）返回的 URL 尾部可能带残缺 CDN 指令
+`!m_fill,l_dy`（缺宽高参数）。此形态直接请求返回 **400**（
+`InvalidCommand: command 'width' or 'height' is required`），与 403 不同——不是鉴权，
+是指令非法。处理规则：**拼尺寸后缀前必须先剥掉 `!` 及其后全部内容**，
+再拼 `.720x540.jpg` / `.1500x.jpg` 等公开后缀，即可 200 下载（带水印）。
+例：`.../pc1_xxx.jpg!m_fill,l_dy` → `.../pc1_xxx.jpg.720x540.jpg`。
+已覆盖 `pc1_xxx.jpg` 与 md5 命名（`95a5d23d…-074.jpg`）两种文件名形态。
 
 ## 四、水印情况
 

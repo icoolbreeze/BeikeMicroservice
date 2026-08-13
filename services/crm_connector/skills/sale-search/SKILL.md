@@ -26,7 +26,7 @@ Use `sale_map_nearby_search` for phrases such as “万象城附近 1 公里” 
 
 - `location` accepts communities, malls, landmarks, and roads — the connector's sale map suggest resolves all of them to a coordinate-bearing community entry (万象城 → 华润广场(成华)). The response's `center.text` states what was actually resolved; report it so the user sees their mall became a community.
 - Report `approximation`, the matched-community count, and the center resolution in every answer.
-- **scope 语义**：`sale_map_nearby_search` 默认 `scope=all`（不限）— a radius circle legitimately crosses pool boundaries, and pool-scoped queries (gdiv_mt 维护盘) often return 0 for a circle the agent does not maintain. Only pass `gdiv_mt`/`gdiv_share`/… when the user explicitly restricts to their own pools. `sale_listing_search` keeps `gdiv_mt` as its default (workbench default), so the two tools differ here on purpose.
+- **scope 语义**：`sale_map_nearby_search` 默认 `scope=all`（不限）— a radius circle legitimately crosses pool boundaries, and pool-scoped queries (gdiv_mt 维护盘) often return 0 for a circle the agent does not maintain. Only pass `gdiv_mt`/`gdiv_share`/… when the user explicitly restricts to their own pools. `sale_listing_search`'s API default is `gdiv_mt` (workbench default), but the standing rule is to pass `scope: "all"` explicitly whenever the user gave no scope — with that, both tools default to 不限.
 - “N 万元左右” on a nearby search becomes an explicit price range `total_price_wan` (e.g. 100万左右 → 50..150). Preserve an explicitly stated range instead.
 - “套二 / 两居” → `rooms: [2]`; “两到三居” → `rooms: [2, 3]`.
 - When the user says “附近” without a distance, use the API's default radius (1000 m) and state that radius in the answer.
@@ -40,7 +40,7 @@ The map flow (suggest / nearby) answers “where”; the list flow (`sale_listin
 | Scenario | Combine how | Notes |
 | --- | --- | --- |
 | User names community(ies) + rich filters | `sale_community_suggest` → `community_ids` → `sale_listing_search` with the user's filters | Full catalog available; preferred path (see Exact community workflow) |
-| Nearby + catalog-only filters (满五唯一, 实勘, 电梯, 外网呈现…) | Take the circle's `community_ids` from `sale_map_nearby_search` → pass them as `community_ids` into `sale_listing_search` with the catalog filters | **Preferred path** — one extra call, circle semantics preserved (list search only touches those communities). Note scope: pass `scope` explicitly since list default is gdiv_mt |
+| Nearby + catalog-only filters (满五唯一, 实勘, 电梯, 外网呈现…) | Take the circle's `community_ids` from `sale_map_nearby_search` → pass them as `community_ids` into `sale_listing_search` with the catalog filters | **Preferred path** — one extra call, circle semantics preserved (list search only touches those communities). Note scope: pass `scope` explicitly (`"all"` unless the user named a scope), since the list API default is gdiv_mt. |
 
 In every combined query, keep the map semantics in the answer: resolved center, `approximation`, matched-community count, and whether the circle or the list filter decided the result set.
 
@@ -68,7 +68,7 @@ Call `sale_listing_filter_options` before using unfamiliar keys or values. Use o
 - **交易权属 (payment_mode)**: 307500000001 商品房 / 307500000002 已购公房 / 307500000016 私产 …
 - **建筑类型 (building_type)**: 102200000001 塔楼 / …0002 板楼 / …0003 塔板结合 / …0004 平房.
 - **筛选 dropdown (select)**: key=value, e.g. `{"appro_broker": 1}` 有实勘, `{"key_broker": 1}` 有钥匙, `{"house_stat": "002"}` 空置, `{"fitment_status": "003"}` 精装, `{"appearance": 1}` 外网已呈现, `{"haveOwnerReservePrice": 1}` 业主预期价已填写, `{"del_grade": "A"}` A级房屋. Value `-1` (不限) is dropped automatically.
-- **范围 (scope)**: `gdiv_mt` 维护盘 (default) / `gdiv_share` 共享盘 / `gdiv_score_division` 积分盘 / `share_pool_org` 店共享池 / `jmgroup_pool` 店东共享池 / `acn_pool` 维护盘共享池 / `follow_housenew` 关注房源 / `rolenew` 角色房源. Honor the user's explicit scope wording when given; otherwise keep the default.
+- **范围 (scope)**: `all` 不限 (**user's standing rule: default to `all` when the user gave no scope — never restrict to 维护盘 implicitly**) / `gdiv_mt` 维护盘 / `gdiv_share` 共享盘 / `gdiv_score_division` 积分盘 / `share_pool_org` 店共享池 / `jmgroup_pool` 店东共享池 / `acn_pool` 维护盘共享池 / `follow_housenew` 关注房源 / `rolenew` 角色房源. Use `all` unless the user explicitly names a scope.
 - **排序 (sort)**: `period1_desc_createtime_desc` 新上优先 (default) / `period1_asc_totalprice` 总价升序 / `period1_desc_totalprice` 总价降序.
 
 **The user's stated criteria are the complete filter set — never add filters of your own.**
