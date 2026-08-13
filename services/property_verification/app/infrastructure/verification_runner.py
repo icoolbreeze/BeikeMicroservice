@@ -11,11 +11,12 @@ from __future__ import annotations
 import json
 import re
 import sys
-import threading
 from pathlib import Path
 
 from app.infrastructure.config.settings import Settings
 from app.infrastructure.job_store import JobStore, SUCCEEDED, FAILED
+from app.infrastructure.model_health import (ModelHealthRegistry,
+                                             build_model_entries)
 
 
 class _StdoutTee:
@@ -51,7 +52,8 @@ class _StdoutTee:
 def _public_message(message: str, settings: Settings) -> str:
     """删除面向用户与控制台日志中的模型标识及其调用细节。"""
     result = str(message)
-    for model in (settings.vl_model, settings.vl_model_fallback):
+    for model in (settings.vl_model, settings.vl_model_fallback,
+                  settings.vl_model_fallback2):
         if model:
             result = result.replace(model, "识别服务")
     # 兜底覆盖第三方返回的「model: provider/name」等形式，避免新增配置漏网。
@@ -84,38 +86,78 @@ def _load_house_verify(scripts_dir: Path):
     return house_verify
 
 
+def _filter_available(tasks: list[dict],
+                      health: ModelHealthRegistry | None) -> tuple[list[dict],
+                                                                    list[dict]]:
+    """过滤掉被健康注册表标记为不可用的模型，返回 (可用任务, 被跳过任务)。"""
+    if health is None:
+        return list(tasks), []
+    available = [task for task in tasks if health.is_available(task["key"])]
+    skipped = [task for task in tasks if not health.is_available(task["key"])]
+    return available, skipped
+
+
 def run_verification(job_id: str, cert_path: Path, settings: Settings,
-                    store: JobStore, before_model_request=None) -> None:
+                     store: JobStore, before_openrouter=None, before_nvidia=None,
+                     health: ModelHealthRegistry | None = None) -> None:
     """执行完整验证流程并更新任务状态。在后台线程调用。"""
-    emit = lambda t, m: store.append_event(job_id, t, _public_message(m, settings))
+    def _emit(etype: str, message: str) -> None:
+        store.append_event(job_id, etype, _public_message(message, settings))
 
     def _emit_milestone(msg: str) -> None:
-        emit("milestone", msg)
+        _emit("milestone", msg)
 
     work_dir = Path(store.require(job_id).work_dir)
     work_dir.mkdir(parents=True, exist_ok=True)
 
     real_stdout = sys.stdout
-    tee = _StdoutTee(real_stdout, emit, lambda m: _public_message(m, settings))
+    tee = _StdoutTee(real_stdout, _emit, lambda m: _public_message(m, settings))
     saved_stdout = sys.stdout
 
     try:
         sys.stdout = tee
         hv = _load_house_verify(_scripts_dir(settings))
-        api_key = settings.openrouter_api_key
-        if not api_key:
-            raise RuntimeError("OPENROUTER_API_KEY 未配置，无法调用视觉模型")
 
-        def _fallback_hook(primary: str, fallback: str, err: str) -> None:
-            _emit_milestone("当前识别服务响应异常，正在切换备用识别服务")
+        entries = build_model_entries(settings)
+        if not entries:
+            raise RuntimeError(
+                "未配置任何视觉模型 API Key（OPENROUTER_API_KEY / NVIDIA_API_KEY）")
+
+        prompts = {
+            "openrouter": hv.EXTRACT_PROMPT,
+            "nvidia": hv.OMNI_PROMPT,
+            "nvidia2": hv.EXTRACT_PROMPT,
+        }
+        tasks: list[dict] = []
+        for entry in entries:
+            key = entry["key"]
+            tasks.append({
+                **entry,
+                "prompt": prompts.get(key, hv.EXTRACT_PROMPT),
+                "before_request": (before_nvidia if entry["channel"] == "nvidia"
+                                   else before_openrouter),
+            })
+            if health is not None:
+                tasks[-1]["on_success"] = (
+                    lambda k=key: health.mark_ok(k))
+                tasks[-1]["on_failure"] = (
+                    lambda exc, k=key: health.mark_unavailable(k, str(exc)))
+
+        available, skipped = _filter_available(tasks, health)
+        for task in skipped:
+            reason = ""
+            status = health.status(task["key"]) if health else None
+            if status:
+                reason = f"（{status['reason']}）"
+            _emit_milestone(f"{task['label']} 当前不可用，已跳过{reason}")
+        if not available:
+            raise RuntimeError("所有识别服务当前均不可用，请稍后再试")
 
         _emit_milestone("正在识别证件图片，提取关键字段…")
-        cred = hv.extract_credentials(
-            api_key, settings.vl_model, cert_path,
-            fallback_model=settings.vl_model_fallback or None,
-            on_fallback=_fallback_hook,
-            before_model_request=before_model_request,
-        )
+        result = hv.extract_credentials_chained(
+            available, cert_path, retries=settings.vl_retries,
+            timeout=settings.vl_timeout)
+        cred = result["cred"]
         (work_dir / "extracted.json").write_text(
             json.dumps(cred, ensure_ascii=False, indent=2), encoding="utf-8")
         _emit_milestone(
@@ -133,7 +175,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
         store.finish(job_id, SUCCEEDED)
     except BaseException as exc:  # noqa: BLE001 - 捕获 SystemExit 与异常
         msg = _public_message(str(exc) or exc.__class__.__name__, settings)
-        emit("error", f"验证失败：{msg}")
+        _emit("error", f"验证失败：{msg}")
         store.finish(job_id, FAILED, error=msg)
     finally:
         sys.stdout = saved_stdout
@@ -161,15 +203,16 @@ def _collect_artifacts(work_dir: Path, outputs: dict) -> list[dict]:
                 "content_type": ctype,
             })
 
-    # 打包：全部图片 + extracted.json
+    # 打包：全部图片 + extracted.json + result.json
     zip_path = work_dir / "all_artifacts.zip"
     try:
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for a in artifacts:
                 zf.write(a["path"], a["filename"])
-            ex = work_dir / "extracted.json"
-            if ex.exists():
-                zf.write(ex, "extracted.json")
+            for extra in ("extracted.json", "result.json"):
+                p = work_dir / extra
+                if p.exists():
+                    zf.write(p, extra)
         artifacts.append({
             "spec": "zip", "title": "全部产物打包", "filename": "all_artifacts.zip",
             "path": str(zip_path), "size": zip_path.stat().st_size,

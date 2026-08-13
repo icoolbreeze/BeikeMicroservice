@@ -32,6 +32,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 DEFAULT_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 MODEL_REQUEST_TIMEOUT_SECONDS = 20
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -81,6 +82,22 @@ def load_api_key(cli_key: str | None) -> str:
             if line.startswith("OPENROUTER_API_KEY="):
                 return line.split("=", 1)[1].strip().strip('"').strip("'")
     sys.exit("未找到 OPENROUTER_API_KEY：请通过 --api-key、环境变量或仓库根目录 .env 提供。")
+
+
+def load_nvidia_api_key(cli_key: str | None) -> str:
+    """从命令行参数、环境变量或仓库根目录 .env 读取 NVIDIA (build.nvidia.com) Key。"""
+    if cli_key:
+        return cli_key.strip()
+    key = os.environ.get("NVIDIA_API_KEY", "").strip()
+    if key:
+        return key
+    env_file = ROOT / ".env"
+    if env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("NVIDIA_API_KEY="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return ""
 
 
 def _enhance_text_image(img: Image.Image, max_side: int) -> Image.Image:
@@ -145,8 +162,15 @@ def image_to_data_url(path: Path, max_side: int = 1600) -> str:
 
 def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
                   enhance_text: bool = False,
-                  before_request: Callable[[], None] | None = None) -> dict:
-    """调用 OpenRouter VL 模型解析图片，返回解析后的 dict。
+                  before_request: Callable[[], None] | None = None,
+                  channel: str = "openrouter",
+                  timeout: int = MODEL_REQUEST_TIMEOUT_SECONDS,
+                  max_attempts: int = 3) -> dict:
+    """调用 VL 模型解析图片，返回解析后的 dict。
+
+    ``channel`` 支持 "openrouter"（https://openrouter.ai）与 "nvidia"
+    （https://build.nvidia.com，integrate.api.nvidia.com），两者均为
+    OpenAI 兼容协议。
 
     ``enhance_text`` 用于证件类文字识别：请求会带上经对比度/锐化处理后的图片；
     对明显横放的双页证件还会附带两个转正方向，提升号码读取成功率。
@@ -173,17 +197,18 @@ def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
         ],
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    url = NVIDIA_URL if channel == "nvidia" else OPENROUTER_URL
     last_err: Exception | None = None
-    for attempt in (1, 2, 3):
+    for attempt in range(1, max_attempts + 1):
         # 账户级预算不足时由调用方决定等待或终止，不能被网络重试吞掉。
         if before_request:
             before_request()
         try:
             resp = requests.post(
-                OPENROUTER_URL,
+                url,
                 headers=headers,
                 json=payload,
-                timeout=MODEL_REQUEST_TIMEOUT_SECONDS,
+                timeout=timeout,
             )
             resp.raise_for_status()
             body = resp.json()
@@ -194,16 +219,44 @@ def call_vl_model(api_key: str, model: str, image_path: Path, prompt: str,
         except Exception as exc:  # noqa: BLE001 - 重试后统一报错
             last_err = exc
             print(f"  模型调用第 {attempt} 次失败：{exc}")
-    raise SystemExit(f"模型调用失败（已重试 3 次）：{last_err}")
+    raise SystemExit(f"模型调用失败（已重试 {max_attempts} 次）：{last_err}")
 
 
 def extract_json(text: str) -> dict:
-    """从模型输出中提取 JSON（容忍 markdown 代码块与多余文字）。"""
+    """从模型输出中提取第一个完整 JSON 对象。
+
+    容忍：markdown 代码块、推理模型（step-3.7-flash 等）以 </think> 结尾的
+    思考内容、以及思考内容中可能出现的示例 JSON（按花括号配平提取）。
+    """
     text = re.sub(r"```(?:json)?", "", text).replace("```", "").strip()
-    start, end = text.find("{"), text.rfind("}")
-    if start == -1 or end == -1 or end <= start:
+    think_end = text.rfind("</think>")
+    if think_end != -1:
+        text = text[think_end + len("</think>"):]
+    start = text.find("{")
+    if start == -1:
         raise ValueError(f"模型输出中未找到 JSON：{text[:200]}")
-    return json.loads(text[start : end + 1])
+    depth = 0
+    in_string = False
+    escaped = False
+    for index, ch in enumerate(text[start:], start):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\" and in_string:
+            escaped = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return json.loads(text[start:index + 1])
+    raise ValueError(f"模型输出中 JSON 不完整：{text[:200]}")
 
 
 ADDRESS_REREAD_PROMPT = (

@@ -3,6 +3,7 @@
 接口：
 - POST /verification            上传不动产权证图片，创建验证任务（无需登录）。
 - GET  /verification/{id}/events  SSE 实时进度与错误流。
+- GET  /verification/{id}/result  结构化核验结果（官方查询表格解析）。
 - GET  /verification/{id}/artifacts  产物清单。
 - GET  /verification/{id}/download/{spec}  下载指定规格截图或打包。
 
@@ -12,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -22,8 +24,10 @@ from app.api.dependencies import (get_client_ip, get_job_store,
 from app.application.services.verification_service import (
     QueueFull, RateLimitExceeded, VerificationService)
 from app.infrastructure.job_store import JobStore
-from app.security.file_validation import UploadValidationError
 from app.schemas.common import ApiResponse
+from app.security.file_validation import UploadValidationError
+from app.security.share_token import (process_secret, sign_share_token,
+                                      verify_share_token)
 
 router = APIRouter(prefix="/verification", tags=["verification"])
 
@@ -108,6 +112,17 @@ async def job_events(job_id: str):
                              headers=headers)
 
 
+@router.get("/{job_id}/result", response_model=ApiResponse)
+def job_result(job_id: str,
+               svc: VerificationService = Depends(get_verification_service)):
+    """结构化核验结果（服务端在官方查询时解析的页面表格数据）。"""
+    status = svc.get_status(job_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    return ApiResponse(data={"status": status["status"],
+                             "result": status["result"]})
+
+
 @router.get("/{job_id}/artifacts", response_model=ApiResponse)
 def job_artifacts(job_id: str,
                  svc: VerificationService = Depends(get_verification_service)):
@@ -119,11 +134,42 @@ def job_artifacts(job_id: str,
                              "artifacts": status["artifacts"]})
 
 
+@router.get("/{job_id}/share/{spec}", response_model=ApiResponse)
+def share_link(job_id: str, spec: str, ttl: int = 600,
+               svc: VerificationService = Depends(get_verification_service)):
+    """生成短期签名下载链接（供转发给最终用户；原始 job_id 访问不受影响）。"""
+    status = svc.get_status(job_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail="任务不存在")
+    if not any(a["spec"] == spec for a in status["artifacts"]):
+        raise HTTPException(status_code=404, detail="无此规格产物")
+    settings = get_settings()
+    max_ttl = max(settings.download_token_ttl_seconds, 60)
+    ttl = min(max(ttl, 10), max_ttl)
+    expires_at = int(time.time()) + ttl
+    token = sign_share_token(job_id, spec, expires_at,
+                             process_secret(settings.download_token_secret))
+    return ApiResponse(data={
+        "url": f"/api/v1/verification/{job_id}/download/{spec}?token={token}",
+        "expires_at": expires_at,
+        "ttl_seconds": ttl,
+    })
+
+
 @router.get("/{job_id}/download/{spec}")
-def download_artifact(job_id: str, spec: str,
+def download_artifact(job_id: str, spec: str, token: str | None = None,
                       svc: VerificationService = Depends(
                           get_verification_service)):
-    """下载指定规格产物（panel / full / zip）。"""
+    """下载指定规格产物（panel / full / zip）。
+
+    带 ``token`` 时按短期签名校验（转发场景），无 token 时维持
+    job_id 直接访问（本地工具/MCP 拉取）。
+    """
+    if token is not None:
+        settings = get_settings()
+        if not verify_share_token(job_id, spec, token,
+                                  process_secret(settings.download_token_secret)):
+            raise HTTPException(status_code=403, detail="链接无效或已过期")
     status = svc.get_status(job_id)
     if status is None:
         raise HTTPException(status_code=404, detail="任务不存在")

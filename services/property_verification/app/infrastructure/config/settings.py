@@ -27,11 +27,20 @@ class Settings:
     # 本地文件存储目录（位于服务 storage/ 下）
     storage_dir: str = ""
 
-    # OpenRouter 视觉模型
+    # 视觉模型（顺序主备：前一个失败重试后仍失败，由下一个接管）
+    # 主模型走 OpenRouter；兜底模型走 NVIDIA build.nvidia.com。
     openrouter_api_key: str = ""
+    nvidia_api_key: str = ""
     vl_model: str = "nvidia/nemotron-nano-12b-v2-vl:free"
-    # 兜底模型：主模型提取字段缺失时自动切换；留空则不启用兜底
-    vl_model_fallback: str = "google/gemma-4-26b-a4b-it:free"
+    vl_model_fallback: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
+    # 第二兜底（可选）：留空则不启用
+    vl_model_fallback2: str = "stepfun-ai/step-3.7-flash"
+    # 每个模型失败（连接异常或未识别出有效字段）后的重试次数
+    vl_retries: int = 2
+    # 单次模型调用的超时（秒）
+    vl_timeout: float = 30.0
+    # 模型健康探活间隔（分钟）；不可用模型在提取链中直接跳过
+    model_health_interval_minutes: int = 60
 
     # 验证渠道页面地址（合法授权来源）
     verification_channel_url: str = ""
@@ -40,12 +49,20 @@ class Settings:
     rate_per_minute: int = 2
     rate_per_day: int = 30
 
-    # OpenRouter 免费模型的账户级预算；按实际模型请求（含重试）计数。
+    # 视觉模型账户级预算（OpenRouter 与 NVIDIA 各自独立；按实际模型请求计数）
     model_rate_per_minute: int = 15
     model_rate_per_day: int = 800
 
     # 上传限制
     max_upload_mb: int = 10
+
+    # 产物保留与短期链接
+    # 任务产物（截图等）保留天数，超过后由后台清理任务删除
+    artifact_retention_days: int = 7
+    # 短期签名链接的最大有效期（秒）
+    download_token_ttl_seconds: int = 600
+    # 签名密钥；留空则每次进程启动随机生成（链接随服务重启失效）
+    download_token_secret: str = ""
 
     # 并发浏览器会话上限与等待队列上限（等待数不含正在运行的任务）。
     max_concurrent_jobs: int = 3
@@ -53,6 +70,15 @@ class Settings:
 
     # 仓库 scripts 目录（复用已有验证逻辑），留空则按本文件位置推断
     scripts_dir: str = ""
+
+    # MCP（pv-mcp）：指向已部署服务的 HTTP 客户端
+    pv_base_url: str = "http://127.0.0.1:8000"
+    # 提交核验的本地限流（与服务端 2 次/分钟对齐）
+    mcp_rate_limit_per_min: int = 2
+    # 状态轮询/产物下载等只读操作的本地限流
+    mcp_poll_rate_limit_per_min: int = 60
+    # 产物下载目录（留空则用系统临时目录）
+    mcp_download_dir: str = ""
 
     @property
     def jobs_root(self) -> Path:
@@ -80,9 +106,17 @@ def load_settings() -> Settings:
         port=int(_env("PV_PORT", "8000") or 8000),
         storage_dir=storage,
         openrouter_api_key=_env("OPENROUTER_API_KEY"),
+        nvidia_api_key=_env("NVIDIA_API_KEY"),
         vl_model=_env("PV_VL_MODEL", "nvidia/nemotron-nano-12b-v2-vl:free"),
         vl_model_fallback=_env(
-            "PV_VL_MODEL_FALLBACK", "google/gemma-4-26b-a4b-it:free"),
+            "PV_VL_MODEL_FALLBACK",
+            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"),
+        vl_model_fallback2=_env(
+            "PV_VL_MODEL_FALLBACK2", "stepfun-ai/step-3.7-flash"),
+        vl_retries=int(_env("PV_VL_RETRIES", "2") or 2),
+        vl_timeout=float(_env("PV_VL_TIMEOUT", "30") or 30),
+        model_health_interval_minutes=int(
+            _env("PV_MODEL_HEALTH_INTERVAL_MINUTES", "60") or 60),
         verification_channel_url=_env(
             "PV_VERIFICATION_URL",
             "https://blmp.cdzjryb.com/fplc_daas_portal/#/integratedQueryNew"
@@ -93,7 +127,14 @@ def load_settings() -> Settings:
         model_rate_per_minute=int(_env("PV_MODEL_RATE_PER_MIN", "15") or 15),
         model_rate_per_day=int(_env("PV_MODEL_RATE_PER_DAY", "800") or 800),
         max_upload_mb=int(_env("PV_MAX_UPLOAD_MB", "10") or 10),
+        artifact_retention_days=int(_env("PV_ARTIFACT_RETENTION_DAYS", "7") or 7),
+        download_token_ttl_seconds=int(_env("PV_DOWNLOAD_TOKEN_TTL", "600") or 600),
+        download_token_secret=_env("PV_DOWNLOAD_TOKEN_SECRET"),
         max_concurrent_jobs=int(_env("PV_MAX_CONCURRENT", "3") or 3),
         max_queued_jobs=int(_env("PV_MAX_QUEUED", "12") or 12),
         scripts_dir=_env("PV_SCRIPTS_DIR"),
+        pv_base_url=_env("PV_BASE_URL", "http://127.0.0.1:8000"),
+        mcp_rate_limit_per_min=int(_env("PV_MCP_RATE_PER_MIN", "2") or 2),
+        mcp_poll_rate_limit_per_min=int(_env("PV_MCP_POLL_RATE_PER_MIN", "60") or 60),
+        mcp_download_dir=_env("PV_MCP_DOWNLOAD_DIR"),
     )

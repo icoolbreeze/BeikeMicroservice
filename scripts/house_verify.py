@@ -28,11 +28,13 @@ import json
 import os
 import re
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from verify_archive import ROOT, call_vl_model, load_api_key  # noqa: E402
+from verify_archive import (ROOT, call_vl_model, load_api_key,
+                            load_nvidia_api_key)  # noqa: E402
 
 try:  # 后台运行时确保 print 实时输出
     sys.stdout.reconfigure(line_buffering=True)
@@ -47,10 +49,31 @@ DEFAULT_URL = (
 EXTRACT_PROMPT = (
     "请从这张不动产权证照片中提取两个字段，以严格 JSON 输出（不要解释、不要 markdown）：\n"
     "{\n"
-    '  "业务件号": "附记中的业务号（形如 2025112701F90697）",\n'
-    '  "证件编码": "产权证号（形如 川（2025）成都市不动产权第0373259号）"\n'
+    '  "业务件号": "附记中的业务号（常见格式：\n'
+    "    新版：2025112701F90697 等「数字F数字」，F 前为办理日期，位数随年代不同（如 2016092042F1234）；\n"
+    "    旧版：权1234 等「权」开头的编号）\",\n"
+    '  "证件编码": "产权证号（常见格式：\n'
+    "    新版：川（2025）成都市不动产权第0373259号；\n"
+    "    旧版：监证1234567 等「监证」开头的编号）\"\n"
     "}\n"
+    "注意：业务件号请从附记中取，不要取「登记编号」「权证号」等其他编号；"
     "无法辨认的字段填 null。"
+)
+
+OMNI_PROMPT = (
+    "你是不动产登记证件识别专家。请仔细识读这张不动产权证照片，"
+    "以严格 JSON 输出（不要解释、不要 markdown）：\n"
+    "{\n"
+    '  "业务件号": "位于附记栏的业务号",\n'
+    '  "证件编码": "位于证件首页右上或上方的产权证号"\n'
+    "}\n"
+    "两个字段的常见格式（新旧证件差异大，务必按实际文字抄录）：\n"
+    "- 业务件号：新版为「数字F数字」（F 前为办理日期，如 2025112701F90697、"
+    "2016092042F1234，日期位数随年代变化）；旧版为「权」开头的编号（如 权1234）。\n"
+    "- 证件编码：新版为「省（年份）城市不动产权第N号」（如 川（2025）成都市不动产权第0373259号）；"
+    "旧版为「监证」开头的编号（如 监证1234567）。\n"
+    "注意：业务件号从附记中取，不要与「登记编号」「权证号」「不动产单元号」混淆；"
+    "括号按证件原样保留（中文括号）；无法辨认的字段填 null。"
 )
 
 
@@ -61,56 +84,125 @@ def clean_field(value: str) -> str:
     return re.sub(r"\s+", "", value).replace("(", "（").replace(")", "）")
 
 
-def _try_extract(api_key: str, model: str, cert_image: Path,
-                 before_model_request: object = None) -> dict:
-    """单次调用 VL 模型提取字段，返回清洗后的 dict。任一字段为空则抛 ValueError。"""
+_BUSINESS_NUMBER_PATTERNS = (
+    re.compile(r"^\d{6,12}[A-Z]\d{2,10}$"),   # 新版：办理日期 + 类型字母(常见 F，另有 P 等) + 编号
+    re.compile(r"^权\d+$"),                    # 旧版：权 开头编号
+)
+_CERTIFICATE_NUMBER_PATTERNS = (
+    re.compile(r"^监证\d+$"),              # 旧版：监证 开头编号
+    re.compile(r"^.*第\d+号$"),            # 新版：省(年份)市不动产权第N号
+)
+
+
+def is_valid_business_number(value: str) -> bool:
+    """宽容校验业务件号（新旧版格式）。"""
+    return any(p.fullmatch(value or "") for p in _BUSINESS_NUMBER_PATTERNS)
+
+
+def is_valid_certificate_number(value: str) -> bool:
+    """宽容校验证件编码（新旧版格式）。"""
+    return any(p.fullmatch(value or "") for p in _CERTIFICATE_NUMBER_PATTERNS)
+
+
+def _try_extract(task: dict, cert_image: Path, timeout: float) -> dict:
+    """单次调用一个视觉模型提取字段，返回清洗后的 dict。
+
+    字段为空或格式不符抛 ValueError；连接异常由 call_vl_model 抛出。
+    """
     data = call_vl_model(
-        api_key, model, cert_image, EXTRACT_PROMPT, enhance_text=True,
-        before_request=before_model_request)
+        task["api_key"], task["model"], cert_image, task["prompt"],
+        enhance_text=True, before_request=task.get("before_request"),
+        channel=task.get("channel", "openrouter"),
+        timeout=max(int(timeout) - 5, 10), max_attempts=1,
+    )
     ywh = clean_field(data.get("业务件号") or "")
     zsbm = clean_field(data.get("证件编码") or "")
-    if not ywh or not zsbm:
+    if not is_valid_business_number(ywh) or not is_valid_certificate_number(zsbm):
         raise ValueError(
-            f"业务件号={ywh!r} 证件编码={zsbm!r}，请更换清晰照片"
+            f"业务件号={ywh!r} 证件编码={zsbm!r}，格式不符"
         )
     return {"业务件号": ywh, "证件编码": zsbm}
 
 
-def extract_credentials(
-    api_key: str, model: str, cert_image: Path,
-    fallback_model: str | None = None,
-    on_fallback: object = None,
-    before_model_request: object = None,
-) -> dict:
-    """从产权证图片提取业务件号与证件编码。
+def extract_credentials_chained(tasks: list[dict], cert_image: Path,
+                                retries: int = 2, timeout: float = 30) -> dict:
+    """顺序调用视觉模型提取字段：主模型失败重试后仍失败，由备用模型兜底。
 
-    先用主模型；任一字段为空时自动切换到 fallback_model 重试一次；
-    两次都失败才抛 SystemExit。
+    ``tasks``：按优先级排列的模型调用任务：
+        {label, api_key, model, channel, prompt, before_request}
+    ``retries``：每个模型在失败（连接异常或未识别出有效字段）后的重试次数。
+    ``timeout``：单次模型调用的超时（秒）。
 
-    如果提供了 on_fallback 回调，切换兜底模型时会调用它（参数为
-    primary_model, fallback_model, error_message），便于调用方上报进度。
+    返回：
+        {"status": "ok", "cred": {...}, "used_label": ...}
+    所有模型均失败时抛 ValueError。
     """
-    try:
-        return _try_extract(api_key, model, cert_image, before_model_request)
-    except ValueError as primary_err:
-        if not fallback_model or fallback_model == model:
-            raise SystemExit(f"字段提取失败：{primary_err}") from primary_err
-        if on_fallback:
+    if not tasks:
+        raise ValueError("未配置任何视觉模型调用任务")
+
+    def _attempt_with_deadline(task: dict, attempt_timeout: float):
+        """在守护线程中执行一次提取，超时即放弃（网络层挂起时 requests 超时不可靠）。"""
+        box: dict = {}
+
+        def _run() -> None:
             try:
-                on_fallback(model, fallback_model, str(primary_err))
-            except Exception:  # noqa: BLE001 - 回调异常不影响主流程
+                box["cred"] = _try_extract(task, cert_image, attempt_timeout)
+            except BaseException as exc:  # noqa: BLE001 - 连接异常与格式不符均可重试
+                box["error"] = exc
+
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
+        thread.join(timeout=max(attempt_timeout, 1.0))
+        if thread.is_alive():
+            return {"timeout": True}
+        return box
+
+    last_err: BaseException | None = None
+    for index, task in enumerate(tasks):
+        label = task["label"]
+        if index:
+            print(f"  [{label}] 主识别服务未成功，切换备用识别服务兜底")
+        max_attempts = 1 + retries
+        for attempt in range(1, max_attempts + 1):
+            if attempt > 1:
+                print(f"  [{label}] 上次尝试失败，正在进行第 {attempt} 次重试")
+            box = _attempt_with_deadline(task, timeout)
+            if box.get("cred"):
+                cred = box["cred"]
+                print(f"  [{label}] 提取成功："
+                      f"业务件号={cred['业务件号']} 证件编码={cred['证件编码']}")
+                if task.get("on_success"):
+                    try:
+                        task["on_success"]()
+                    except Exception:  # noqa: BLE001 - 回调失败不影响主流程
+                        pass
+                return {"status": "ok", "cred": cred, "used_label": label}
+            error = box.get("error")
+            if error is not None:
+                last_err = error
+                print(f"  [{label}] 提取失败（第 {attempt}/{max_attempts} 次）：{error}")
+            else:
+                print(f"  [{label}] 提取超时（第 {attempt}/{max_attempts} 次，"
+                      f"超过 {timeout}s 未返回），放弃本次尝试")
+        if task.get("on_failure") and last_err is not None:
+            try:
+                task["on_failure"](last_err)
+            except Exception:  # noqa: BLE001 - 回调失败不影响主流程
                 pass
-        print(
-            f"  ⚠ 主模型提取失败（{model}：{primary_err}），"
-            f"切换到兜底模型 {fallback_model}"
-        )
-        try:
-            return _try_extract(api_key, fallback_model, cert_image,
-                                before_model_request)
-        except ValueError as fb_err:
-            raise SystemExit(
-                f"字段提取失败：主模型与兜底模型均失败（{fb_err}）"
-            ) from fb_err
+    raise ValueError(f"所有识别服务均未能提取有效字段：{last_err}")
+
+
+def _build_result(headers: list[str], cells: list[str]) -> dict:
+    """组装官方查询结果的原始数据。
+
+    返回 {headers, row, fields}；表头与数据列数不一致时 fields 留空
+    （只保留原始 headers/row），避免错位。不做任何总结——结论由调用方
+    （agent）根据数据自行归纳。
+    """
+    result = {"headers": headers, "row": cells, "fields": {}}
+    if headers and cells and len(headers) == len(cells):
+        result["fields"] = dict(zip(headers, cells))
+    return result
 
 
 def _first_visible(page, selectors: list[str], timeout: int = 8000):
@@ -248,6 +340,33 @@ def run_query(ywh: str, zsbm: str, url: str, out_dir: Path, headed: bool) -> dic
             raise SystemExit("查询结果未返回或不包含该业务件号（已保存 debug_no_result 快照）")
         page.wait_for_timeout(1200)  # 等表格渲染稳定
 
+        # 解析结果表格：表头与数据行一一对应，写入 result.json（结构化结论）
+        try:
+            table = page.locator(
+                f'xpath=//td[contains(.,"{ywh}")]/ancestor::table[1]').first
+            headers = [t.strip() for t in
+                       table.locator("thead th").all_inner_texts()]
+            if not headers:
+                headers = [t.strip() for t in
+                           table.locator("tr").first.locator("th").all_inner_texts()]
+            cells = [t.strip() for t in page.locator(
+                f'xpath=//td[contains(.,"{ywh}")]/ancestor::tr[1]'
+            ).first.locator("td").all_inner_texts()]
+            parsed = _build_result(headers, cells)
+            result_path = out_dir / "result.json"
+            result_path.write_text(
+                json.dumps(parsed, ensure_ascii=False, indent=2), encoding="utf-8")
+            outputs["result"] = str(result_path)
+            if parsed["fields"]:
+                print(f"  查询结果已解析：{len(headers)} 列，"
+                      f"是否查封={parsed['fields'].get('是否查封')} "
+                      f"是否抵押={parsed['fields'].get('是否抵押')}")
+            else:
+                print(f"  查询结果已解析（列数不匹配，未生成字段映射）："
+                      f"{len(headers)} 表头 / {len(cells)} 单元格")
+        except Exception as exc:  # noqa: BLE001 - 解析失败不影响截图产物
+            print(f"  结果表格解析失败（仅保留截图）：{exc}")
+
         # 适配表头宽度，避免截图中表头/单元格换行
         adapt_table_width(page, ywh)
 
@@ -288,14 +407,20 @@ def run_query(ywh: str, zsbm: str, url: str, out_dir: Path, headed: bool) -> dic
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="房源信息验证：证件提取 + 实时查询 + 结果截图")
+    ap = argparse.ArgumentParser(description="房源信息验证：证件提取（主备模型）+ 实时查询 + 结果截图")
     ap.add_argument("cert_image", type=Path, help="产权证照片路径")
-    ap.add_argument("--model", default="nvidia/nemotron-nano-12b-v2-vl:free")
-    ap.add_argument("--model-fallback",
-                    default="google/gemma-4-26b-a4b-it:free",
-                    help="主模型提取失败时的兜底模型（默认 google/gemma-4-26b-a4b-it:free；"
-                         "传空字符串可关闭）")
-    ap.add_argument("--api-key", default=None)
+    ap.add_argument("--model", default="nvidia/nemotron-nano-12b-v2-vl:free",
+                    help="主识别模型（OpenRouter）")
+    ap.add_argument("--model-fallback", default="nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+                    help="兜底模型（NVIDIA build.nvidia.com；主模型重试后仍失败时启用）")
+    ap.add_argument("--model-fallback2", default="stepfun-ai/step-3.7-flash",
+                    help="第二兜底模型（NVIDIA build.nvidia.com；传空字符串可关闭）")
+    ap.add_argument("--api-key", default=None, help="OpenRouter API Key（默认读环境变量/.env）")
+    ap.add_argument("--nvidia-key", default=None, help="NVIDIA API Key（默认读环境变量/.env）")
+    ap.add_argument("--retries", type=int, default=2,
+                    help="主模型失败后的重试次数（默认 2）")
+    ap.add_argument("--timeout", type=float, default=30,
+                    help="单次模型调用超时（秒，默认 30）")
     ap.add_argument("--url", default=DEFAULT_URL, help="房源信息验证页面地址")
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--headed", action="store_true", help="显示浏览器窗口（调试用）")
@@ -304,14 +429,31 @@ def main() -> int:
     if not args.cert_image.exists():
         sys.exit(f"输入文件不存在：{args.cert_image}")
 
-    api_key = load_api_key(args.api_key)
+    nvidia_key = load_nvidia_api_key(args.nvidia_key)
+    openrouter_key = load_api_key(args.api_key)
+    tasks: list[dict] = []
+    if openrouter_key:
+        tasks.append({"label": "主识别服务(OpenRouter)", "api_key": openrouter_key,
+                      "model": args.model, "channel": "openrouter",
+                      "prompt": EXTRACT_PROMPT})
+    if nvidia_key:
+        tasks.append({"label": "备用识别服务(NVIDIA)", "api_key": nvidia_key,
+                      "model": args.model_fallback, "channel": "nvidia",
+                      "prompt": OMNI_PROMPT})
+        if args.model_fallback2.strip():
+            tasks.append({"label": "备用识别服务2(StepFun)", "api_key": nvidia_key,
+                          "model": args.model_fallback2.strip(), "channel": "nvidia",
+                          "prompt": EXTRACT_PROMPT})
+    if not tasks:
+        sys.exit("未找到任何模型 API Key：请设置 NVIDIA_API_KEY 或 OPENROUTER_API_KEY。")
+
     out_dir = args.out or (ROOT / "outputs" / f"house_verify_{datetime.now():%Y%m%d_%H%M%S}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"[1/3] 提取证件字段：{args.cert_image.name}")
-    fallback = args.model_fallback.strip() or None
-    cred = extract_credentials(
-        api_key, args.model, args.cert_image, fallback_model=fallback)
+    result = extract_credentials_chained(tasks, args.cert_image,
+                                         retries=args.retries, timeout=args.timeout)
+    cred = result["cred"]
     print(f"      业务件号={cred['业务件号']}　证件编码={cred['证件编码']}")
     (out_dir / "extracted.json").write_text(
         json.dumps(cred, ensure_ascii=False, indent=2), encoding="utf-8")

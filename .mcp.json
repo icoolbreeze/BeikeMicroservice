@@ -8,6 +8,15 @@
         "CC_UPSTREAM_PROFILE": "kecom-prod",
         "PYTHONIOENCODING": "utf-8"
       }
+    },
+    "property-verification": {
+      "command": "python",
+      "args": ["-m", "app.mcp.server"],
+      "cwd": "C:/Users/shipi/vswp/BeikeMicroservice/services/property_verification",
+      "env": {
+        "PV_BASE_URL": "http://119.29.187.184:8000",
+        "PYTHONIOENCODING": "utf-8"
+      }
     }
   }
 }

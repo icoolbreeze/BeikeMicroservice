@@ -107,6 +107,15 @@ class JobStore:
                 return []
             return list(rec.events[index:])
 
+    def purge(self, older_than_ts: float) -> int:
+        """驱逐创建时间早于 ``older_than_ts`` 的任务记录，返回移除数量。"""
+        with self._lock:
+            stale = [job_id for job_id, rec in self._jobs.items()
+                     if rec.created_at < older_than_ts]
+            for job_id in stale:
+                del self._jobs[job_id]
+            return len(stale)
+
 
 # 进程级单例（单实例部署）
 _store: JobStore | None = None

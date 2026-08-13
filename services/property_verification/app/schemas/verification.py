@@ -42,4 +42,5 @@ class JobStatusView(BaseModel):
     created_at: float
     finished_at: Optional[float]
     error: Optional[str]
+    result: Optional[dict] = None
     artifacts: list[ArtifactView]

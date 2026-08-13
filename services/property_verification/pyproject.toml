@@ -16,6 +16,7 @@ dependencies = [
     "requests>=2.31",
     "numpy>=1.26",
     "playwright>=1.40",
+    "mcp>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +27,9 @@ dev = [
     "ruff",
     "mypy",
 ]
+
+[project.scripts]
+pv-mcp = "app.mcp.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]

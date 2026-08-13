@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import json
 import shutil
 import threading
 import time
@@ -13,10 +14,12 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from app.infrastructure.config.settings import Settings
-from app.infrastructure.job_store import (JobStore, PENDING, get_store)
+from app.infrastructure.job_store import JobStore, get_store
+from app.infrastructure.model_health import (ModelHealthRegistry,
+                                             build_model_entries, probe_entry)
 from app.infrastructure.rate_limiter import IPRateLimiter, RateDecision
 from app.infrastructure.verification_runner import run_verification
-from app.security.file_validation import UploadValidationError, validate_upload
+from app.security.file_validation import validate_upload
 
 
 class RateLimitExceeded(Exception):
@@ -46,6 +49,8 @@ class VerificationService:
             settings.rate_per_minute, settings.rate_per_day)
         self._model_limiter = IPRateLimiter(
             settings.model_rate_per_minute, settings.model_rate_per_day)
+        self._model_limiter_nvidia = IPRateLimiter(
+            settings.model_rate_per_minute, settings.model_rate_per_day)
         self._max_concurrent_jobs = max(settings.max_concurrent_jobs, 1)
         self._max_queued_jobs = max(settings.max_queued_jobs, 0)
         self._executor = ThreadPoolExecutor(
@@ -59,6 +64,14 @@ class VerificationService:
         self._counter_lock = threading.Lock()
         self._counter_path = self.settings.jobs_root / "served_count.txt"
         self._served_count = self._load_served_count()
+        self._stop_event = threading.Event()
+        self._cleanup_thread = threading.Thread(
+            target=self._cleanup_loop, name="pv-cleanup", daemon=True)
+        self._cleanup_thread.start()
+        self._health = ModelHealthRegistry()
+        self._health_thread = threading.Thread(
+            target=self._health_loop, name="pv-model-health", daemon=True)
+        self._health_thread.start()
 
     # ---- 提交 -----------------------------------------------------------
     def submit(self, ip: str, filename: str, data: bytes) -> dict:
@@ -144,7 +157,11 @@ class VerificationService:
             self.store.append_event(job_id, "milestone", "已轮到您，开始处理")
             run_verification(
                 job_id, cert_path, self.settings, self.store,
-                before_model_request=lambda: self._wait_for_model_slot(job_id),
+                before_openrouter=lambda: self._wait_for_model_slot(
+                    job_id, "openrouter"),
+                before_nvidia=lambda: self._wait_for_model_slot(
+                    job_id, "nvidia"),
+                health=self._health,
             )
             # 清理上传原件（含个人敏感信息，核验后即删）
             try:
@@ -162,19 +179,21 @@ class VerificationService:
             self.store.append_event(
                 queued_job_id, "queue", message)
 
-    def _wait_for_model_slot(self, job_id: str) -> None:
+    def _wait_for_model_slot(self, job_id: str, account: str = "openrouter") -> None:
         """在调用模型前守住账户级预算；分钟级满载时等待，日额度耗尽则失败。"""
+        limiter = (self._model_limiter_nvidia if account == "nvidia"
+                   else self._model_limiter)
         announced = False
         while True:
-            decision = self._model_limiter.check("openrouter")
+            decision = limiter.check(account)
             if decision.allowed:
                 return
             if "每日" in decision.reason:
-                raise RuntimeError("今日识别服务额度已用完，请明日再试")
+                raise RuntimeError(f"{account} 识别服务今日额度已用完，请明日再试")
             if not announced:
                 self.store.append_event(
                     job_id, "queue",
-                    "识别服务繁忙，正在等待可用调用额度")
+                    f"{account} 识别服务繁忙，正在等待可用调用额度")
                 announced = True
             time.sleep(min(max(decision.retry_after_seconds, 1), 60))
 
@@ -187,12 +206,20 @@ class VerificationService:
         if rec is None:
             return None
         base = f"/api/v1/verification/{job_id}/download"
+        result = None
+        result_path = Path(rec.work_dir) / "result.json"
+        if result_path.exists():
+            try:
+                result = json.loads(result_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                result = None
         return {
             "job_id": rec.job_id,
             "status": rec.status,
             "created_at": rec.created_at,
             "finished_at": rec.finished_at,
             "error": rec.error,
+            "result": result,
             "artifacts": [
                 {
                     "spec": a["spec"], "title": a["title"],
@@ -205,5 +232,45 @@ class VerificationService:
         }
 
     def shutdown(self) -> None:
-        """优雅关闭线程池。"""
+        """优雅关闭线程池与清理线程。"""
+        self._stop_event.set()
         self._executor.shutdown(wait=False, cancel_futures=True)
+
+    # ---- 产物保留期清理 -------------------------------------------------
+    def _cleanup_loop(self) -> None:
+        """后台周期清理：删除超过保留期的任务目录与内存记录。"""
+        while not self._stop_event.wait(3600):
+            self._purge_expired()
+
+    # ---- 模型健康探活 ---------------------------------------------------
+    def _health_loop(self) -> None:
+        """每小时探活一次所有配置的模型；不可用者在提取链中被跳过。"""
+        while True:
+            self._probe_models()
+            interval = max(self.settings.model_health_interval_minutes, 1) * 60
+            if self._stop_event.wait(interval):
+                return
+
+    def _probe_models(self) -> None:
+        for entry in build_model_entries(self.settings):
+            ok, reason = probe_entry(entry)
+            if ok:
+                self._health.mark_ok(entry["key"])
+            else:
+                self._health.mark_unavailable(entry["key"], reason)
+
+    def _purge_expired(self) -> None:
+        """删除超过保留期的任务目录，并驱逐对应内存记录。"""
+        cutoff = time.time() - max(self.settings.artifact_retention_days, 1) * 86400
+        try:
+            for path in self.settings.jobs_root.iterdir():
+                if not path.is_dir():
+                    continue
+                try:
+                    if path.stat().st_mtime < cutoff:
+                        shutil.rmtree(path, ignore_errors=True)
+                except OSError:
+                    continue
+        except OSError:
+            pass
+        self.store.purge(cutoff)
