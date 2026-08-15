@@ -193,3 +193,61 @@ Playwright 抓包 57 个详情页接口确认，2026-08-09）：
 已知缺口（靠接口验证后仍未接入）：`getComment`（装修描述/户型介绍/房源亮点/小区介绍/
 周边配套/交通出行）——实测两套角色房源 `commentList` 均为 `null`，非空结构无法验证，
 故不接入；`detailDaiKan`（带看记录）属经营记录而非房源信息，未接入。
+
+## 已实现：托管房源详情（省心租工作台，2026-08-15 实测接入）
+
+模块 ID：`property.rental.tuoguan`。托管房源（列表行 `del_type=5`，贝壳省心租·自营）
+**不受普租详情域服务**：`detailHead`/`detailHdicInfo` 对托管 ID 返回 `code=100001`
+房源编码错误（invalid-input），`detailProspect` 返回 200 但 `houseProspectImageList`
+为 null——因此托管详情必须走省心租工作台自己的域
+`trusteeship.link.lianjia.com`（页面标题「品质租赁 / 省心租工作台」）。
+
+| MCP 工具 | 上游 API | 覆盖 |
+|---|---|---|
+| `tuoguan_listing_get_detail` | `GET /api/trusteeship/broker/out/detail/pageInfoForPc?cellCode=<id>` | 详情头（见下）+ 实勘照片 + 户型图 + VR + 费用项 + 成交参考 |
+| `tuoguan_listing_get_deals` | `GET /api/vRoute/house/trusteeship/broker/out/deal/list?cellCode=<id>&pageIndex=&pageSize=` | 成交参考分页 |
+
+### ID 语义
+
+- `cell_code`（bizCode）= 托管业务编码（如 `10612612882101`），详情页 URL
+  `trusteeship.link.lianjia.com/house/detail/agent/<cell_code>` 使用它。
+- `house_del_code` = 列表搜索的 `listing_id`（如 `106126181022`），pageInfoForPc
+  响应头内回带该字段，供调用方对齐列表行与托管详情。
+- 若仅有列表行 `listing_id`，先尝试以 `cellCode=<listing_id>` 调 pageInfoForPc；
+  上游不接受时按 invalid-input 报错，不要自行猜测编码。
+
+### 详情响应要点（pageInfoForPc → houseHeadInfo）
+
+- 基础：`resblockName`/`houseName`/`houseTypeDesc`（1-0-1-1）/`area`+`areaNumber`/
+  `guidePrice`（指导租金）/`orientationArr`/`floorType`/`signalFloor`/`totalFloor`。
+- 时间与租期：`canLiveTime`（可入住）、`viewingHouseTime`（看房时间）、
+  `rentHousePeriodRequireDesc(V2)`（租期要求）、`tgEndDate`（托管到期）、`delayDays`。
+- `tagList[].desc`：钻石好房/贝壳省心租·自营/预约券/整租…；`managerInfo`：房管人
+  （姓名/门店/电话）；`keyInfo.desc` 钥匙形态（智能门锁）+ `hasSmartKey`；
+  `outShow.showDesc` 外网呈现；`hqiEntranceDto.hqiScore`。
+- **实勘照片 `houseProspectList[]`**（实测 5 张/套，轮播 1/5）：每张含 `name`
+  （01间-主卧/01间-厨房/02间-卫生间…）、`url`（根相对路径 `/lease-image/house/…`，
+  连接器转绝对 `https://img.ljcdn.com/...`）、`primaryFlag`（封面标记）、
+  `createTime`（上传时间展示文本）。
+- 户型图 `houseTypeList[].url`；VR：`vrDataDetail.vrUrl`/`pictureUrl`。
+- 成交参考 `dealInfo.dealDetails[]`：`dealPrice`/`dealTime`/`desc`（面积朝向楼层）/
+  `layout`/`prospect`/`onRentTime`；汇总 `dealInfo.dealInfo.trusteeshipDealAvgPrice`
+  /`trusteeshipDealTotalCount`。
+- 费用项 `feeInfoDto.feeConfigDataList`：矩阵按行 flatten 为 `"类型值 | 租期值 |
+  支付周期 | 月租金 | 服务费…"` 字符串（`fee_groups`）。
+
+### 图片访问
+
+托管实勘图与户型图都在 `lease-image/house/`（公开封面桶）与 `hdic-frame/`（户型图桶）。
+页面以 `!m_fit,h_630,w_516,l_bk,f_jpg`（实勘大图）或 `!m_fill,h_450,w_600,l_fbk,
+ls_50,f_jpg`（缩略）指令后缀加载，**该形态裸请求 200（带灰色数字水印）**。连接器
+返回的 URL 不含指令，调用方自行拼指令后缀或 `.450x/.750x/.1500x.jpg` 尺寸后缀；
+URL 尾部若已有残缺 `!...` 指令先剥掉再拼（同 rental-image-cdn.md §3.1）。
+
+### 会话
+
+托管域复用同一 ke.com 凭证体系：bootstrap/refresh 的 CAS 链新增第三跳
+`login.ke.com/login?service=<trusteeship origin>/login`，刷新 `security_ticket`；
+托管 API 未登录时返回 `code=403 用户未登录` 或 `code=100001 msg=请重新登录`，
+由会话边界统一触发自动刷新重试。空结果语义：无实勘（`prospects=[]`）、无成交
+（`dealDetails=[]`）、无 VR（`vrUrl=null`）均为合法答案，不是错误。

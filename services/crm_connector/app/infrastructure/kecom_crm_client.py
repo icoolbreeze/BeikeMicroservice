@@ -48,6 +48,11 @@ from app.domain.models import (
     SaleMapBubble,
     SaleMapBubbleFilters,
     SaleMapSuggestion,
+    TrusteeshipDeal,
+    TrusteeshipDealPage,
+    TrusteeshipDetail,
+    TrusteeshipManagerInfo,
+    TrusteeshipProspectPhoto,
 )
 from app.domain.providers.crm_client import CrmClient as CrmClientProtocol
 from app.domain.providers.session_provider import (
@@ -214,6 +219,34 @@ def _build_follow_request(listing_id: str) -> AuthorizedRequest:
         route="rental_listing.get_follow",
         method="GET",
         query={"delCode": listing_id, "pageSize": "100"},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_trusteeship_detail_request(cell_code: str) -> AuthorizedRequest:
+    # Captured live 2026-08-15 from the 托管 (省心租) detail page: the SPA
+    # calls /api/trusteeship/broker/out/detail/pageInfoForPc?cellCode=<id>
+    # for the head record including the 实勘 photo list.
+    return AuthorizedRequest(
+        route="trusteeship.get_detail",
+        method="GET",
+        query={"cellCode": cell_code},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_trusteeship_deals_request(
+    cell_code: str, *, page: int, page_size: int
+) -> AuthorizedRequest:
+    # Captured live 2026-08-15 from the 托管 detail page's 成交参考 block:
+    # /api/vRoute/house/trusteeship/broker/out/deal/list?cellCode=<id>
+    # &pageIndex=1&pageSize=5.
+    return AuthorizedRequest(
+        route="trusteeship.get_deals",
+        method="GET",
+        query={"cellCode": cell_code, "pageIndex": page, "pageSize": page_size},
         body=None,
         request_id=str(uuid.uuid4()),
     )
@@ -729,6 +762,223 @@ def _raise_for_business_code(body: Mapping[str, Any]) -> None:
         raise UpstreamChangedError("upstream reported 403 but auth boundary did not raise")
     raise UpstreamChangedError(
         f"upstream returned unknown business code={code!r} msg={body.get('msg')!r}"
+    )
+
+
+# 托管 (省心租) photo URLs are returned as root-relative paths
+# (``/lease-image/house/...``) by pageInfoForPc; the SPA prefixes this CDN
+# origin before appending an image instruction suffix. We keep the raw URL
+# stable (no suffix) and expose the absolute form only.
+_CDN_IMAGE_BASE = "https://img.ljcdn.com"
+
+
+def _trusteeship_envelope(body: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Validate a trusteeship business envelope and return its ``data``."""
+    _raise_for_business_code(body)
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        raise UpstreamChangedError("trusteeship response 'data' is not an object")
+    return data
+
+
+def _trusteeship_image_url(value: Any) -> str | None:
+    raw = _opt_str(value)
+    if not raw:
+        return None
+    if raw.startswith("http://") or raw.startswith("https://"):
+        return raw
+    return f"{_CDN_IMAGE_BASE}{raw}"
+
+
+def _parse_trusteeship_deal(row: Mapping[str, Any]) -> TrusteeshipDeal:
+    return TrusteeshipDeal(
+        deal_price=_opt_str(row.get("dealPrice")),
+        deal_time=_opt_str(row.get("dealTime")),
+        desc=_opt_str(row.get("desc")),
+        layout_url=_trusteeship_image_url(row.get("layout")),
+        prospect_url=_trusteeship_image_url(row.get("prospect")),
+        on_rent_time=_opt_str(row.get("onRentTime")),
+    )
+
+
+def _parse_trusteeship_deals(
+    body: Mapping[str, Any], *, page: int, request_id: str
+) -> TrusteeshipDealPage:
+    data = _trusteeship_envelope(body)
+    raw_list = data.get("result") or []
+    if not isinstance(raw_list, list):
+        raise UpstreamChangedError("trusteeship deal/list 'result' is not an array")
+    items = tuple(
+        _parse_trusteeship_deal(row) for row in raw_list if isinstance(row, Mapping)
+    )
+    total = _as_int(data.get("totalCount")) or len(items)
+    has_more = bool(data.get("hasMore"))
+    return TrusteeshipDealPage(
+        items=items,
+        page=page,
+        total=total,
+        has_more=has_more,
+        request_id=request_id,
+    )
+
+
+def _parse_trusteeship_fee_groups(fee_info: Any) -> tuple[str, ...]:
+    """Flatten feeInfoDto.feeConfigDataList into render-ready lines.
+
+    Each group is a matrix row of ``{desc, descV2, type}`` cells; joining the
+    cell descs with ' | ' preserves the 类型/租期/出房类型/支付周期/月租金/
+    服务费/押金 column order the page displays.
+    """
+    if not isinstance(fee_info, Mapping):
+        return ()
+    raw_groups = fee_info.get("feeConfigDataList")
+    if not isinstance(raw_groups, list):
+        return ()
+    lines: list[str] = []
+    for group in raw_groups:
+        if not isinstance(group, list):
+            continue
+        cells = [
+            str(cell.get("descV2") or cell.get("desc") or "").strip()
+            for cell in group
+            if isinstance(cell, Mapping)
+        ]
+        line = " | ".join(cells).rstrip(";| ")
+        if line:
+            lines.append(line)
+    return tuple(lines)
+
+
+def _parse_trusteeship_detail(
+    body: Mapping[str, Any], cell_code: str
+) -> TrusteeshipDetail:
+    data = _trusteeship_envelope(body)
+    head = data.get("houseHeadInfo")
+    if not isinstance(head, Mapping):
+        raise UpstreamChangedError("pageInfoForPc has no houseHeadInfo object")
+
+    manager = head.get("managerInfo")
+    manager_info = (
+        TrusteeshipManagerInfo(
+            user_name=_opt_str(manager.get("userName")),
+            role_name=_opt_str(manager.get("roleName")),
+            org_name=_opt_str(manager.get("orgName")),
+            phone=_opt_str(manager.get("phone")),
+        )
+        if isinstance(manager, Mapping)
+        else None
+    )
+
+    key_info = head.get("keyInfo")
+    key_desc = None
+    has_smart_key = None
+    if isinstance(key_info, Mapping):
+        key_desc = _opt_str(key_info.get("desc"))
+        has_smart_key = _as_bool(key_info.get("hasSmartKey"))
+
+    out_show = head.get("outShow")
+    out_show_desc = (
+        _opt_str(out_show.get("showDesc")) if isinstance(out_show, Mapping) else None
+    )
+
+    vr = head.get("vrDataDetail")
+    vr_url = None
+    vr_picture_url = None
+    if isinstance(vr, Mapping):
+        vr_url = _opt_str(vr.get("vrUrl"))
+        vr_picture_url = _opt_str(vr.get("pictureUrl"))
+
+    hqi = head.get("hqiEntranceDto")
+    hqi_score = _opt_str(hqi.get("hqiScore")) if isinstance(hqi, Mapping) else None
+
+    tags: list[str] = []
+    raw_tags = head.get("tagList")
+    if isinstance(raw_tags, list):
+        for tag in raw_tags:
+            if isinstance(tag, Mapping):
+                desc = _opt_str(tag.get("desc"))
+                if desc:
+                    tags.append(desc)
+
+    prospects: list[TrusteeshipProspectPhoto] = []
+    raw_prospects = head.get("houseProspectList")
+    if isinstance(raw_prospects, list):
+        for item in raw_prospects:
+            if not isinstance(item, Mapping):
+                continue
+            url = _trusteeship_image_url(item.get("url"))
+            if not url:
+                continue
+            prospects.append(
+                TrusteeshipProspectPhoto(
+                    name=_opt_str(item.get("name")),
+                    url=url,
+                    primary_flag=bool(item.get("primaryFlag")),
+                    create_time=_opt_str(item.get("createTime")),
+                )
+            )
+
+    house_type_images: list[str] = []
+    raw_type_list = head.get("houseTypeList")
+    if isinstance(raw_type_list, list):
+        for item in raw_type_list:
+            if isinstance(item, Mapping):
+                url = _trusteeship_image_url(item.get("url"))
+                if url:
+                    house_type_images.append(url)
+
+    deal_info = data.get("dealInfo")
+    deal_details: tuple[TrusteeshipDeal, ...] = ()
+    deal_avg_price = None
+    deal_total_count = None
+    if isinstance(deal_info, Mapping):
+        raw_details = deal_info.get("dealDetails")
+        if isinstance(raw_details, list):
+            deal_details = tuple(
+                _parse_trusteeship_deal(row)
+                for row in raw_details
+                if isinstance(row, Mapping)
+            )
+        inner = deal_info.get("dealInfo")
+        if isinstance(inner, Mapping):
+            deal_avg_price = _opt_str(inner.get("trusteeshipDealAvgPrice"))
+            deal_total_count = _opt_str(inner.get("trusteeshipDealTotalCount"))
+
+    return TrusteeshipDetail(
+        cell_code=cell_code,
+        house_del_code=_opt_str(head.get("houseDelCode")),
+        resblock_name=_opt_str(head.get("resblockName")),
+        house_name=_opt_str(head.get("houseName")),
+        house_type_desc=_opt_str(head.get("houseTypeDesc")),
+        area_text=_opt_str(head.get("area")),
+        area_number=_as_float(head.get("areaNumber")),
+        guide_price_yuan=_as_int(head.get("guidePrice")),
+        orientation=_opt_str(head.get("orientationArr")),
+        floor_type=_opt_str(head.get("floorType")),
+        signal_floor=_opt_str(head.get("signalFloor")),
+        total_floor=_as_int(head.get("totalFloor")),
+        can_live_time=_opt_str(head.get("canLiveTime")),
+        viewing_house_time=_opt_str(head.get("viewingHouseTime")),
+        rent_period_desc=_opt_str(head.get("rentHousePeriodRequireDesc")),
+        rent_period_desc_v2=_opt_str(head.get("rentHousePeriodRequireDescV2")),
+        tg_end_date=_opt_str(head.get("tgEndDate")),
+        delay_days=_as_int(head.get("delayDays")),
+        tags=tuple(tags),
+        manager=manager_info,
+        key_desc=key_desc,
+        has_smart_key=has_smart_key,
+        out_show_desc=out_show_desc,
+        prospects=tuple(prospects),
+        house_type_images=tuple(house_type_images),
+        vr_url=vr_url,
+        vr_picture_url=vr_picture_url,
+        hqi_score=hqi_score,
+        deal_details=deal_details,
+        deal_avg_price=deal_avg_price,
+        deal_total_count=deal_total_count,
+        fee_groups=_parse_trusteeship_fee_groups(data.get("feeInfoDto")),
+        del_status=_as_int(head.get("delStatus")),
+        district_name=_opt_str(head.get("districtName")),
     )
 
 
@@ -1851,6 +2101,34 @@ class KecomCrmClient:
                 f"rental_map.suggest returned status {response.status_code}"
             )
         return _parse_map_suggestions(response.body)
+
+    # -- 托管 (省心租, trusteeship.link.lianjia.com) --------------------------
+
+    def get_trusteeship_detail(self, cell_code: str) -> TrusteeshipDetail:
+        request = _build_trusteeship_detail_request(cell_code)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"trusteeship.get_detail returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        return _parse_trusteeship_detail(body, cell_code)
+
+    def get_trusteeship_deals(
+        self, cell_code: str, *, page: int, page_size: int
+    ) -> TrusteeshipDealPage:
+        request = _build_trusteeship_deals_request(
+            cell_code, page=page, page_size=page_size
+        )
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"trusteeship.get_deals returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        return _parse_trusteeship_deals(
+            body, page=page, request_id=request.request_id
+        )
 
     # -- 买卖 (sale, house.link) --------------------------------------------
 

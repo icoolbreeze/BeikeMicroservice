@@ -40,6 +40,8 @@ from app.domain.models import (
     SaleMapNearbySearchFilters,
     SaleMapNearbySearchResult,
     SaleMapSuggestion,
+    TrusteeshipDealPage,
+    TrusteeshipDetail,
 )
 from app.domain.modules import CrmModule, crm_modules
 from app.domain.providers.crm_client import CrmClient
@@ -96,6 +98,18 @@ class ConnectorService:
     def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
         self._require_ready()
         return self._crm_client.get_rental_listing_house_info(listing_id)
+
+    def get_trusteeship_detail(self, cell_code: str) -> TrusteeshipDetail:
+        self._require_ready()
+        return self._crm_client.get_trusteeship_detail(cell_code)
+
+    def get_trusteeship_deals(
+        self, cell_code: str, *, page: int = 1, page_size: int = 5
+    ) -> TrusteeshipDealPage:
+        self._require_ready()
+        return self._crm_client.get_trusteeship_deals(
+            cell_code, page=page, page_size=page_size
+        )
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
         self._require_ready()
@@ -302,7 +316,7 @@ class ConnectorService:
                 condition_tokens=condition_tokens,
             )
         )
-        community_ids = tuple(
+        all_community_ids = tuple(
             dict.fromkeys(
                 bubble.bubble_id
                 for bubble in bubbles
@@ -313,7 +327,11 @@ class ConnectorService:
                     center.latitude, center.longitude, bubble.latitude, bubble.longitude
                 ) <= filters.radius_meters
             )
-        )[:200]
+        )
+        # rental_listing_search.resblock_ids is capped at 100, so expose the
+        # truncation explicitly instead of silently presenting an incomplete
+        # circle as complete (mirrors the sale map nearby behaviour).
+        community_ids = all_community_ids[:100]
 
         result = self._crm_client.search_rental_map(
             RentalMapSearchFilters(
@@ -338,19 +356,25 @@ class ConnectorService:
         return RentalMapNearbySearchResult(
             center=center,
             radius_meters=filters.radius_meters,
-            matched_community_count=len(community_ids),
+            matched_community_count=len(all_community_ids),
             community_ids=community_ids,
+            community_ids_truncated=len(all_community_ids) > len(community_ids),
             result=result,
         )
 
     def _require_ready(self) -> None:
+        # Hard-fail only when no usable credential exists or the upstream is
+        # unreachable. DEGRADED/EXPIRING still carry an active credential
+        # whose local deadline is a conservative estimate; the session
+        # provider's authorized_fetch already refreshes on local expiry and
+        # retries once on upstream rejection before raising, so failing fast
+        # here would convert a transient upstream hiccup (or a stale
+        # degraded latch) into a latched outage with zero requests sent.
         status = self._session_provider.status()
         if status.state is ConnectionState.AUTH_REQUIRED:
             raise AuthenticationRequiredError(status.message)
         if status.state is ConnectionState.NETWORK_REQUIRED:
             raise NetworkRequiredError(status.message)
-        if status.state is not ConnectionState.READY:
-            raise ConnectorDegradedError(status.message)
 
     def _verify_bound_principal(self, principal: Principal) -> None:
         expected = self._settings.bound_employee_principal

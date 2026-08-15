@@ -273,6 +273,57 @@ def test_fresh_credential_install_clears_previous_degraded_latch() -> None:
     assert provider.status().state is ConnectionState.READY
 
 
+def _fresh_result_with_ssid(ssid: str) -> BootstrapResult:
+    return BootstrapResult(
+        credential_material=json.dumps(
+            {
+                "puzu_lease_token": "token-fresh",
+                "puzu_lease_token_secure": "token-fresh",
+                "UCID": "1000000031696069",
+                "UCID_secure": "1000000031696069",
+                "csrfSecret": "csrf",
+                "saas_token": "saas",
+                "lianjia_ssid": ssid,
+            }
+        ).encode("utf-8"),
+        expires_at=NOW + timedelta(hours=1),
+        credential_version=1,
+        refresh_material=b'{"TGC": "TGT-fake"}',
+    )
+
+
+def test_stale_session_deactivation_does_not_poison_fresh_credential() -> None:
+    """A rejection of a replaced session id must not latch the process
+    into the degraded 'upstream rejected' mode while a valid credential
+    is active (the race that locked the stdio MCP process until restart)."""
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
+    bootstrap = FakeBootstrap(None)
+    provider = _provider(store, bootstrap, handler=lambda req: httpx.Response(500))
+
+    provider.install_fresh_credential(_fresh_result_with_ssid("ssid-fresh"))
+
+    # Late response of a request sent with the old credential is rejected.
+    provider._deactivate("ssid-1", "upstream_rejected")
+
+    status = provider.status()
+    assert status.state is ConnectionState.READY
+    active = store.load_active()
+    assert active is not None and active.session_id == "ssid-fresh"
+
+
+def test_current_session_deactivation_still_sets_degraded_latch() -> None:
+    """Deactivating the credential that is actually active keeps the
+    original semantics: slot cleared and the degraded latch raised."""
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
+    bootstrap = FakeBootstrap(None)
+    provider = _provider(store, bootstrap, handler=lambda req: httpx.Response(500))
+
+    provider._deactivate("ssid-1", "upstream_rejected")
+
+    assert store.load_active() is None
+    assert provider.status().state is ConnectionState.AUTH_REQUIRED
+
+
 def test_keepalive_refresh_exception_deactivates_for_qr_login() -> None:
     store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
     bootstrap = FakeBootstrap(None, refresh_error=RuntimeError("bootstrap failed"))

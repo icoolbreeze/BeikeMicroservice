@@ -88,6 +88,53 @@ def test_unconfigured_session_prevents_business_requests() -> None:
         raise AssertionError("business request must not execute without an authorized session")
 
 
+def test_degraded_state_does_not_block_business_requests() -> None:
+    """A degraded latch (stale upstream rejection) must not short-circuit
+    calls while a credential is still active — the session provider's
+    authorized_fetch owns the real auth handling."""
+    service = ConnectorService(
+        Settings(),
+        session_provider=type(
+            "DegradedSession",
+            (),
+            {
+                "status": lambda self: ProviderStatus(
+                    ConnectionState.DEGRADED,
+                    "upstream rejected credential; refresh attempted",
+                )
+            },
+        )(),
+        crm_client=FakeCrmClient(),
+    )
+
+    page = service.search_rental_listings(filters())
+
+    assert page.items[0].listing_id == "listing-1"
+
+
+def test_expiring_state_does_not_block_business_requests() -> None:
+    """The local expiry estimate is conservative; a call may still proceed
+    and let the session provider renew via the TGC on the way out."""
+    service = ConnectorService(
+        Settings(),
+        session_provider=type(
+            "ExpiringSession",
+            (),
+            {
+                "status": lambda self: ProviderStatus(
+                    ConnectionState.EXPIRING,
+                    "CRM authorization nearing expiry; refresh scheduled",
+                )
+            },
+        )(),
+        crm_client=FakeCrmClient(),
+    )
+
+    page = service.search_rental_listings(filters())
+
+    assert page.items[0].listing_id == "listing-1"
+
+
 def test_ready_service_queries_through_crm_client() -> None:
     service = ConnectorService(
         Settings(bound_employee_principal="employee-1"), ReadySessionProvider(), FakeCrmClient()

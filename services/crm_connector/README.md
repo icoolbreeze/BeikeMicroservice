@@ -111,7 +111,7 @@ python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 }
 ```
 
-- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_*`（搜索/筛选字典/详情/实勘/房源信息）、`rental_map_*`（联想/附近）、`sale_listing_*`（搜索/筛选字典/小区联想/详情/详情头/维护信息/跟进记录）、`sale_map_*`（买卖地点联想/附近范围查询）；
+- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_*`（搜索/筛选字典/详情/实勘/房源信息）、`rental_map_*`（联想/附近）、`tuoguan_listing_*`（托管省心租详情/成交参考）、`sale_listing_*`（搜索/筛选字典/小区联想/详情/详情头/维护信息/跟进记录）、`sale_map_*`（买卖地点联想/附近范围查询）；
 - `crm_connection_status` 不限额；其余 MCP 工具按调用者主体（`getpass.getuser()`）受 `CC_MCP_RATE_LIMIT_PER_MIN`（默认 30 次/分钟）滑动窗口限流，超限返回 `RATE_LIMITED`；
 - 未配置凭据时业务工具返回 `CRM_AUTH_REQUIRED`，不会访问上游；
 - 凭据只经 `SessionProvider.authorizedFetch()` 注入，MCP 响应与日志不含任何认证材料。

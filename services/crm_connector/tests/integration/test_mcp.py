@@ -110,6 +110,8 @@ async def test_tool_discovery_exposes_map_tools_with_read_only_hint(tmp_path) ->
             "sale_listing_search",
             "sale_map_nearby_search",
             "sale_map_suggest",
+            "tuoguan_listing_get_deals",
+            "tuoguan_listing_get_detail",
         ]
         assert all(
             tool.annotations is not None and tool.annotations.read_only_hint
@@ -215,6 +217,7 @@ async def test_nearby_map_tool_follows_draw_circle_pipeline(tmp_path) -> None:
         body = _text(result)
         assert body["matched_community_count"] == 1
         assert body["community_ids"] == ["rb-1"]
+        assert body["community_ids_truncated"] is False
         assert body["result"]["items"][0]["listing_id"] == "RC-map-1"
         assert [call.route for call in session.calls] == [
             "rental_map.suggest", "rental_map.bubbles", "rental_map.search_circle",
@@ -306,6 +309,83 @@ async def test_get_prospect_tool_reports_not_surveyed_without_error(tmp_path) ->
         prospect = _text(result)
         assert prospect["has_survey_photo"] is False
         assert prospect["photos"] == []
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_tuoguan_get_detail_tool_serves_trusteeship_head(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "trusteeship.get_detail", 200,
+        {
+            "code": 100000, "msg": "提交成功",
+            "data": {
+                "houseHeadInfo": {
+                    "houseDelCode": 106126181022,
+                    "resblockName": "环球汇广场",
+                    "guidePrice": 2000,
+                    "houseProspectList": [
+                        {"name": "01间-主卧", "url": "/lease-image/house/ec59fd2505.jpeg",
+                         "primaryFlag": 1, "createTime": "2026-08-14 14:32:08"},
+                    ],
+                    "houseTypeList": [{"name": "户型图", "url": "/hdic-frame/x.jpg"}],
+                    "tagList": [{"desc": "贝壳省心租·自营"}],
+                    "managerInfo": {"userName": "陈蒋", "roleName": "房管人",
+                                    "orgName": "川师区", "phone": "15608003828"},
+                },
+                "dealInfo": {"dealDetails": [], "dealInfo": {}},
+            },
+        },
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "tuoguan_listing_get_detail",
+            {"input": {"cell_code": "10612612882101"}},
+        )
+        assert result.is_error is False
+        detail = _text(result)
+        assert detail["resblock_name"] == "环球汇广场"
+        assert detail["house_del_code"] == "106126181022"
+        assert detail["prospects"][0]["name"] == "01间-主卧"
+        assert detail["prospects"][0]["url"] == (
+            "https://img.ljcdn.com/lease-image/house/ec59fd2505.jpeg"
+        )
+        assert detail["manager"]["user_name"] == "陈蒋"
+        assert session.calls[0].route == "trusteeship.get_detail"
+        assert session.calls[0].query == {"cellCode": "10612612882101"}
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_tuoguan_get_deals_tool_paginates(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "trusteeship.get_deals", 200,
+        {
+            "code": 100000, "msg": "加载成功",
+            "data": {
+                "hasMore": False, "totalCount": 1,
+                "result": [{"dealPrice": "2100元/月", "dealTime": "2026.08.10",
+                            "desc": "41.87m²｜西南｜7/29｜电梯", "layout": None,
+                            "onRentTime": "2026.07.05", "prospect": None}],
+            },
+        },
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "tuoguan_listing_get_deals",
+            {"input": {"cell_code": "10612612882101", "page": 2, "page_size": 10}},
+        )
+        assert result.is_error is False
+        page = _text(result)
+        assert page["total"] == 1 and page["has_more"] is False
+        assert page["items"][0]["deal_price"] == "2100元/月"
+        assert session.calls[0].route == "trusteeship.get_deals"
+        assert session.calls[0].query == {
+            "cellCode": "10612612882101", "pageIndex": 2, "pageSize": 10,
+        }
 
 
 @pytest.mark.anyio(backend="asyncio")
@@ -447,6 +527,7 @@ def test_tool_metadata_exposes_input_and_output_schemas() -> None:
     assert nearby.output_schema is not None
     assert "matched_community_count" in nearby.output_schema["properties"]
     assert "community_ids" in nearby.output_schema["properties"]
+    assert "community_ids_truncated" in nearby.output_schema["properties"]
     assert nearby.module_id == "property.rental.map_search"
     assert by_name["rental_listing_search"].module_id == "property.rental.listing_search"
     assert by_name["sale_listing_search"].module_id == "property.sale.listing_search"
@@ -455,6 +536,12 @@ def test_tool_metadata_exposes_input_and_output_schemas() -> None:
     assert sale_nearby.output_schema is not None
     assert "community_ids_truncated" in sale_nearby.output_schema["properties"]
     assert "$ref" not in json.dumps(by_name["sale_listing_search"].as_dict())
+    tuoguan_detail = by_name["tuoguan_listing_get_detail"]
+    assert "input" in tuoguan_detail.input_schema["properties"]
+    assert "prospects" in tuoguan_detail.output_schema["properties"]
+    assert tuoguan_detail.module_id == "property.rental.tuoguan"
+    assert by_name["tuoguan_listing_get_deals"].module_id == "property.rental.tuoguan"
+    assert "$ref" not in json.dumps(tuoguan_detail.as_dict())
 
 
 @pytest.mark.anyio(backend="asyncio")
@@ -498,6 +585,8 @@ async def test_stdio_transport_serves_tools_from_real_entry_point(tmp_path) -> N
                 "sale_listing_search",
                 "sale_map_nearby_search",
                 "sale_map_suggest",
+                "tuoguan_listing_get_deals",
+                "tuoguan_listing_get_detail",
             ]
             result = await session.call_tool("crm_connection_status", {})
             assert result.is_error is False

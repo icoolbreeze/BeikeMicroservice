@@ -33,6 +33,8 @@ from app.infrastructure.kecom_crm_client import (
     _build_map_bubbles_request,
     _build_map_search_request,
     _build_map_suggest_request,
+    _build_trusteeship_deals_request,
+    _build_trusteeship_detail_request,
     _parse_follow_records,
     _parse_map_bubbles,
     _parse_map_page,
@@ -45,6 +47,8 @@ from app.infrastructure.kecom_crm_client import (
     _parse_principal,
     _parse_property_info,
     _parse_prospect,
+    _parse_trusteeship_deals,
+    _parse_trusteeship_detail,
     _route_query,
 )
 
@@ -226,6 +230,207 @@ def test_parse_prospect_raises_when_data_empty() -> None:
     # Empty data mirrors detailHead: the id is not served by the 普租 domain.
     with pytest.raises(UpstreamInvalidInputError):
         _parse_prospect({"code": 100000, "data": {}}, "10611245074901")
+
+
+# -- 托管 (省心租, trusteeship.link.lianjia.com) -----------------------------
+
+
+def _tuoguan_detail_body() -> dict[str, Any]:
+    return {
+        "code": 100000,
+        "msg": "提交成功",
+        "data": {
+            "houseHeadInfo": {
+                "cellCode": 10612612882101,
+                "houseDelCode": 106126181022,
+                "resblockName": "环球汇广场",
+                "houseName": "615",
+                "houseTypeDesc": "1-0-1-1",
+                "area": "42.05㎡",
+                "areaNumber": 42.05,
+                "guidePrice": 2000,
+                "orientationArr": "东南",
+                "floorType": "低楼层",
+                "signalFloor": "6层",
+                "totalFloor": 40,
+                "canLiveTime": "2026.08.13",
+                "viewingHouseTime": "随时可看",
+                "rentHousePeriodRequireDesc": "可租33个月",
+                "rentHousePeriodRequireDescV2": "长租1年 | 长租2年",
+                "tgEndDate": "2029.03.07",
+                "delayDays": 90,
+                "delStatus": 3,
+                "districtName": "锦江",
+                "tagList": [
+                    {"desc": "钻石好房"},
+                    {"desc": "贝壳省心租·自营"},
+                ],
+                "managerInfo": {
+                    "userName": "陈蒋", "roleName": "房管人",
+                    "orgName": "川师区", "phone": "15608003828",
+                },
+                "keyInfo": {"desc": "智能门锁", "hasSmartKey": True},
+                "outShow": {"showDesc": "外网呈现", "showFlag": 1},
+                "houseProspectList": [
+                    {
+                        "name": "01间-主卧", "url": "/lease-image/house/ec59fd2505.jpeg",
+                        "primaryFlag": 1, "createTime": "2026-08-14 14:32:08",
+                    },
+                    {
+                        "name": "01间-厨房", "url": "/lease-image/house/0996c663330d.jpeg",
+                        "primaryFlag": 0, "createTime": "2026-08-14 14:32:08",
+                    },
+                ],
+                "houseTypeList": [
+                    {"name": "户型图", "url": "/hdic-frame/cyclops-p14P2G76.jpg"},
+                ],
+                "vrDataDetail": {
+                    "vrUrl": "https://open.realsee.com/ke/abc",
+                    "pictureUrl": "https://vrlab-image4.ljcdn.com/x.jpg",
+                },
+                "hqiEntranceDto": {"hqiScore": "91"},
+            },
+            "dealInfo": {
+                "dealDetails": [
+                    {
+                        "dealPrice": "2600元/月", "dealTime": "2026.08.14",
+                        "desc": "41.84m²｜西南｜26/29｜电梯",
+                        "layout": "https://img.ljcdn.com/hdic-frame/cyclops-9E.jpg!m_fill",
+                        "onRentTime": "2026.06.25",
+                        "prospect": "https://img.ljcdn.com/lease-image/house/9fa.jpg!m_fill",
+                    },
+                ],
+                "dealInfo": {
+                    "trusteeshipDealAvgPrice": "2416",
+                    "trusteeshipDealTotalCount": "8",
+                },
+            },
+            "feeInfoDto": {
+                "feeConfigDataList": [
+                    [
+                        {"desc": "长租", "descV2": "长租", "type": "5"},
+                        {"desc": "月付;", "descV2": "月付\n", "type": "20"},
+                        {"desc": "2000元/月;", "descV2": "2000元/月\n", "type": "25"},
+                    ],
+                ],
+            },
+        },
+    }
+
+
+def test_build_trusteeship_detail_request_uses_pageinfoforpc() -> None:
+    request = _build_trusteeship_detail_request("10612612882101")
+    assert request.route == "trusteeship.get_detail"
+    assert request.method == "GET"
+    assert request.query == {"cellCode": "10612612882101"}
+    assert request.body is None
+
+
+def test_build_trusteeship_deals_request_carries_pagination() -> None:
+    request = _build_trusteeship_deals_request("10612612882101", page=2, page_size=10)
+    assert request.route == "trusteeship.get_deals"
+    assert request.query == {
+        "cellCode": "10612612882101", "pageIndex": 2, "pageSize": 10,
+    }
+
+
+def test_parse_trusteeship_detail_maps_head_prospects_and_deals() -> None:
+    detail = _parse_trusteeship_detail(_tuoguan_detail_body(), "10612612882101")
+
+    assert detail.cell_code == "10612612882101"
+    assert detail.house_del_code == "106126181022"
+    assert detail.resblock_name == "环球汇广场"
+    assert detail.house_type_desc == "1-0-1-1"
+    assert detail.area_text == "42.05㎡" and detail.area_number == 42.05
+    assert detail.guide_price_yuan == 2000
+    assert detail.viewing_house_time == "随时可看"
+    assert detail.tg_end_date == "2029.03.07"
+    assert detail.tags == ("钻石好房", "贝壳省心租·自营")
+    assert detail.manager is not None and detail.manager.user_name == "陈蒋"
+    assert detail.key_desc == "智能门锁" and detail.has_smart_key is True
+    assert detail.out_show_desc == "外网呈现"
+    assert detail.hqi_score == "91"
+
+    assert len(detail.prospects) == 2
+    photo = detail.prospects[0]
+    assert photo.name == "01间-主卧"
+    assert photo.url == "https://img.ljcdn.com/lease-image/house/ec59fd2505.jpeg"
+    assert photo.primary_flag is True
+    assert detail.house_type_images == (
+        "https://img.ljcdn.com/hdic-frame/cyclops-p14P2G76.jpg",
+    )
+    assert detail.vr_url == "https://open.realsee.com/ke/abc"
+
+    assert len(detail.deal_details) == 1
+    assert detail.deal_details[0].deal_price == "2600元/月"
+    assert detail.deal_details[0].prospect_url is not None
+    assert detail.deal_avg_price == "2416"
+    assert detail.fee_groups == ("长租 | 月付 | 2000元/月",)
+
+
+def test_parse_trusteeship_detail_without_optional_sections_is_valid() -> None:
+    body = {
+        "code": 100000,
+        "msg": "ok",
+        "data": {"houseHeadInfo": {"houseTypeDesc": None, "tagList": None}},
+    }
+    detail = _parse_trusteeship_detail(body, "10612612882101")
+    assert detail.prospects == ()
+    assert detail.tags == ()
+    assert detail.manager is None
+    assert detail.house_type_images == ()
+    assert detail.fee_groups == ()
+
+
+def test_parse_trusteeship_detail_raises_on_unknown_id() -> None:
+    with pytest.raises(UpstreamInvalidInputError):
+        _parse_trusteeship_detail(
+            {"code": 100001, "msg": "参数错误", "data": {}}, "999"
+        )
+
+
+def test_parse_trusteeship_deals_maps_rows_and_paging() -> None:
+    body = {
+        "code": 100000,
+        "msg": "加载成功",
+        "data": {
+            "currentPage": 1,
+            "pageSize": 5,
+            "hasMore": True,
+            "totalCount": 8,
+            "result": [
+                {
+                    "dealPrice": "2100元/月", "dealTime": "2026.08.10",
+                    "desc": "41.87m²｜西南｜7/29｜电梯",
+                    "layout": None,
+                    "onRentTime": "2026.07.05",
+                    "prospect": "https://img.ljcdn.com/110000-inspection/pc0_Rns.jpg!m_fill",
+                },
+            ],
+        },
+    }
+    page = _parse_trusteeship_deals(body, page=1, request_id="req-1")
+    assert page.total == 8
+    assert page.has_more is True
+    assert page.request_id == "req-1"
+    deal = page.items[0]
+    assert deal.deal_price == "2100元/月"
+    assert deal.layout_url is None
+    assert deal.prospect_url == (
+        "https://img.ljcdn.com/110000-inspection/pc0_Rns.jpg!m_fill"
+    )
+
+
+def test_get_trusteeship_detail_flows_through_session_boundary() -> None:
+    session = CapturingSession()
+    session.enqueue(
+        "trusteeship.get_detail", 200, _tuoguan_detail_body()
+    )
+    client = KecomCrmClient(session)
+    detail = client.get_trusteeship_detail("10612612882101")
+    assert detail.resblock_name == "环球汇广场"
+    assert session.calls[0].route == "trusteeship.get_detail"
+    assert session.calls[0].query == {"cellCode": "10612612882101"}
 
 
 def test_build_house_info_requests_use_detail_page_routes() -> None:

@@ -26,6 +26,8 @@ from app.domain.models import (
     SaleMapBubble,
     SaleMapBubbleFilters,
     SaleMapSuggestion,
+    TrusteeshipDealPage,
+    TrusteeshipDetail,
 )
 
 
@@ -88,4 +90,12 @@ class UnconfiguredCrmClient:
     def sale_map_bubbles(
         self, filters: SaleMapBubbleFilters
     ) -> tuple[SaleMapBubble, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_trusteeship_detail(self, cell_code: str) -> TrusteeshipDetail:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_trusteeship_deals(
+        self, cell_code: str, *, page: int, page_size: int
+    ) -> TrusteeshipDealPage:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")

@@ -33,6 +33,10 @@ from app.mcp.schemas import (
     SaleMapNearbySearchResponse,
     SaleMapSuggestInput,
     SaleMapSuggestionResponse,
+    TrusteeshipDealPageResponse,
+    TrusteeshipDealsInput,
+    TrusteeshipDetailInput,
+    TrusteeshipDetailResponse,
 )
 
 
@@ -105,6 +109,9 @@ _TOOLS = (
         name="rental_listing_search",
         description=(
             "Search rental listings using structured, permission-scoped filters. "
+            "scope defaults to my_maintained (维护盘) — when the user gave no "
+            "scope restriction, pass scope=\"all\" (不限) explicitly so the "
+            "search is not silently limited to the maintained pool. "
             "For exact community filtering, resolve names with rental_map_suggest "
             "and pass selected resblock item_id values as resblock_ids. "
             "budget_yuan calculates price as [budget/2, budget + clamp(25%, 200, 500)]; "
@@ -184,7 +191,9 @@ _TOOLS = (
             "Find rentals near a named place. Resolves the place, selects communities "
             "whose centroids fall within the requested radius, then searches their listings. "
             "For a stated budget, use [budget/2, budget + clamp(25%, 200, 500)]; "
-            "shared rent omits the lower bound."
+            "shared rent omits the lower bound. At most 100 community ids are "
+            "queried; check community_ids_truncated before treating a wide "
+            "circle as complete."
         ),
         input_schema=_input_schema(RentalMapNearbySearchInput),
         output_schema=_schema(RentalMapNearbySearchResponse),
@@ -218,7 +227,8 @@ _TOOLS = (
         name="sale_listing_search",
         description=(
             "Search 在售 (买卖) listings using structured, permission-scoped "
-            "filters: scope (维护盘/共享盘/…), exact communities via "
+            "filters: scope (default gdiv_mt 维护盘 — pass \"all\" 不限 "
+            "explicitly when the user gave no scope), exact communities via "
             "community_ids (resolve names with sale_community_suggest first), "
             "total price in 万元, area in 平米, rooms, floors, orientations, "
             "house layouts, tags, house age, visitable times, payment mode, "
@@ -318,6 +328,46 @@ _TOOLS = (
         input_schema=_input_schema(SaleMapNearbySearchInput),
         output_schema=_schema(SaleMapNearbySearchResponse),
         module_id="property.sale.map_search",
+    ),
+    # -- 托管 (省心租, trusteeship.link.lianjia.com) -------------------------
+    McpToolDefinition(
+        name="tuoguan_listing_get_detail",
+        description=(
+            "Return one 托管 (省心租·自营, del_type=5) listing's detail-page "
+            "head from the trusteeship workbench (pageInfoForPc): 小区/栋/室 "
+            "names, 户型 (1-0-1-1), 面积, 指导租金 guide_price_yuan, 朝向/楼层, "
+            "可入住时间/看房时间/租期要求, 托管到期日/延长期, tags (钻石好房/"
+            "贝壳省心租·自营/预约券…), 房管人 manager (姓名/门店/电话), "
+            "钥匙形态 key_desc (智能门锁…), 外网呈现, 实勘照片 prospects "
+            "(per-room name + url + upload time + primary_flag 封面), 户型图 "
+            "house_type_images, VR link vr_url, HQI score, 成交参考 "
+            "deal_details + 平均价/总数, and 费用项 fee_groups (服务费比例/"
+            "押金/租期矩阵, ' | ' joined rows). Use it for 托管 rows from "
+            "rental_listing_search — the 普租 detail tools (rental_listing_"
+            "get_detail / _prospect / _house_info) do NOT serve 托管 ids. "
+            "Photo URLs are img.ljcdn.com lease-image bucket originals; the "
+            "page appends an instruction suffix like "
+            "'!m_fit,h_630,w_516,l_bk,f_jpg' for the watermarked public "
+            "variant — append the same suffix yourself to download (see "
+            "docs/rental-image-cdn.md)."
+        ),
+        input_schema=_input_schema(TrusteeshipDetailInput),
+        output_schema=_schema(TrusteeshipDetailResponse),
+        module_id="property.rental.tuoguan",
+    ),
+    McpToolDefinition(
+        name="tuoguan_listing_get_deals",
+        description=(
+            "Return one 托管 listing's 成交参考 history (deal/list): each row "
+            "carries 成交价 deal_price, 成交时间 deal_time, 面积/朝向/楼层 desc, "
+            "实勘图 prospect_url, 户型图 layout_url, and 上租时间 on_rent_time. "
+            "Paginated (page/page_size, defaults 1/5); has_more tells whether "
+            "another page exists. Empty result means no deal record yet — a "
+            "valid answer, not an error."
+        ),
+        input_schema=_input_schema(TrusteeshipDealsInput),
+        output_schema=_schema(TrusteeshipDealPageResponse),
+        module_id="property.rental.tuoguan",
     ),
 )
 

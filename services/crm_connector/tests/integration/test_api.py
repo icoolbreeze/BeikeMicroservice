@@ -636,6 +636,7 @@ def test_nearby_map_search_resolves_location_then_uses_community_ids(tmp_path) -
     assert body["center"]["name"] == "万象城"
     assert body["matched_community_count"] == 1
     assert body["community_ids"] == ["rb-near"]
+    assert body["community_ids_truncated"] is False
     assert body["approximation"] == "community_centroid"
     assert body["result"]["items"][0]["listing_id"] == "RC-map-1"
     assert [call.route for call in session.calls] == [
@@ -674,6 +675,44 @@ def test_nearby_map_search_accepts_a_pre_resolved_center(tmp_path) -> None:
     assert [call.route for call in session.calls] == [
         "rental_map.bubbles", "rental_map.search_circle",
     ]
+
+
+def test_rental_map_nearby_marks_communities_truncated(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "rental_map.bubbles", 200,
+        {"code": 0, "data": {"bubbleList": [
+            {
+                "id": f"rb-{index}",
+                "name": f"测试小区{index}",
+                "latitude": 30.654,
+                "longitude": 104.122,
+            }
+            for index in range(101)
+        ]}},
+    )
+    session.enqueue(
+        "rental_map.search_circle", 200,
+        {"code": 0, "data": {"list": [], "total": 0}},
+    )
+    _app, client = _wired_app(session, tmp_path)
+
+    response = client.post(
+        "/api/v1/listings/rental/map/nearby",
+        json={
+            "location": "测试中心",
+            "center_latitude": 30.654,
+            "center_longitude": 104.122,
+            "radius_meters": 1000,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["matched_community_count"] == 101
+    assert len(body["community_ids"]) == 100
+    assert body["community_ids_truncated"] is True
+    assert len(session.calls[1].query["resblockIds"].split(",")) == 100
 
 
 def test_sale_map_nearby_resolves_location_then_reuses_community_ids(tmp_path) -> None:

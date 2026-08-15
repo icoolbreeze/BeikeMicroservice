@@ -37,6 +37,8 @@ from app.api.schemas import (
     SaleMapNearbySearchRequest,
     SaleMapNearbySearchResponse,
     SaleMapSuggestionResponse,
+    TrusteeshipDealPageResponse,
+    TrusteeshipDetailResponse,
 )
 
 __all__ = [
@@ -71,6 +73,10 @@ __all__ = [
     "SaleMapNearbySearchResponse",
     "SaleMapSuggestInput",
     "SaleMapSuggestionResponse",
+    "TrusteeshipDealPageResponse",
+    "TrusteeshipDealsInput",
+    "TrusteeshipDetailInput",
+    "TrusteeshipDetailResponse",
 ]
 
 
@@ -141,4 +147,25 @@ class SaleMapSuggestInput(BaseModel):
 class SaleMapNearbySearchInput(SaleMapNearbySearchRequest):
     """Search around a named 买卖 location using a community-centroid radius."""
 
+    model_config = ConfigDict(extra="forbid")
+
+
+class TrusteeshipDetailInput(BaseModel):
+    """Arguments accepted by the ``tuoguan_listing_get_detail`` MCP tool.
+
+    ``cell_code`` is the trusteeship business code (省心租 出房编码, e.g.
+    10612612882101). It can be read from a trusteeship detail-page URL or
+    from the trusteeship side of a 托管 listing.
+    """
+
+    cell_code: str = Field(min_length=1, max_length=64)
+    model_config = ConfigDict(extra="forbid")
+
+
+class TrusteeshipDealsInput(BaseModel):
+    """Arguments accepted by the ``tuoguan_listing_get_deals`` MCP tool."""
+
+    cell_code: str = Field(min_length=1, max_length=64)
+    page: int = Field(default=1, ge=1, le=1000)
+    page_size: int = Field(default=5, ge=1, le=20)
     model_config = ConfigDict(extra="forbid")

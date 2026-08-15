@@ -32,6 +32,8 @@ from app.api.schemas import (
     SaleMaintainInfoResponse,
     SaleMapNearbySearchResponse,
     SaleMapSuggestionResponse,
+    TrusteeshipDealPageResponse,
+    TrusteeshipDetailResponse,
 )
 from app.bootstrap import build_service
 from app.domain.errors import ConnectorError
@@ -48,6 +50,8 @@ from app.mcp.schemas import (
     SaleListingSearchInput,
     SaleMapNearbySearchInput,
     SaleMapSuggestInput,
+    TrusteeshipDealsInput,
+    TrusteeshipDetailInput,
 )
 from app.mcp.schema_flatten import flatten_schema
 
@@ -215,6 +219,9 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         name="rental_listing_search",
         description=(
             "Search rental listings using structured, permission-scoped filters. "
+            "scope defaults to my_maintained (维护盘) — when the user gave no "
+            "scope restriction, pass scope=\"all\" (不限) explicitly so the "
+            "search is not silently limited to the maintained pool. "
             "For an exact community, call rental_map_suggest first and pass the "
             "selected resblock item_id in resblock_ids. "
             "budget_yuan calculates price as [budget/2, budget + clamp(25%, 200, 500)]; "
@@ -327,7 +334,9 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         description=(
             "Find rentals near a named place using community centroids within a radius. "
             "For a stated budget, use [budget/2, budget + clamp(25%, 200, 500)]; "
-            "shared rent omits the lower bound."
+            "shared rent omits the lower bound. At most 100 community ids are "
+            "queried; check community_ids_truncated before treating a wide "
+            "circle as complete."
         ),
         annotations=ToolAnnotations(read_only_hint=True),
     )
@@ -384,8 +393,10 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         name="sale_listing_search",
         description=(
             "Search 在售 (买卖) listings using structured, permission-scoped "
-            "filters. Resolve exact communities with sale_community_suggest "
-            "first and pass the community_id values in community_ids."
+            "filters (scope defaults to gdiv_mt 维护盘 — pass \"all\" 不限 "
+            "explicitly when the user gave no scope). Resolve exact communities "
+            "with sale_community_suggest first and pass the community_id values "
+            "in community_ids."
         ),
         annotations=ToolAnnotations(read_only_hint=True),
     )
@@ -497,6 +508,46 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         try:
             result = service.search_sale_map_nearby(input.to_domain())
             return SaleMapNearbySearchResponse.from_domain(result)
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    # -- 托管 (省心租, trusteeship.link.lianjia.com) --------------------------
+
+    @server.tool(
+        name="tuoguan_listing_get_detail",
+        description=(
+            "Return one 托管 (省心租·自营, del_type=5) listing's detail-page "
+            "head: 实勘照片 prospects, 户型图, VR, 费用项, 成交参考, 房管人, "
+            "托管到期/租期/看房时间 — the 普租 detail tools do not serve 托管 ids."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def tuoguan_listing_get_detail(
+        input: TrusteeshipDetailInput,
+    ) -> TrusteeshipDetailResponse:
+        _require_quota(_caller_subject())
+        try:
+            detail = service.get_trusteeship_detail(input.cell_code)
+            return TrusteeshipDetailResponse.from_domain(detail)
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
+        name="tuoguan_listing_get_deals",
+        description=(
+            "Return one 托管 listing's 成交参考 history (deal/list), paginated."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def tuoguan_listing_get_deals(
+        input: TrusteeshipDealsInput,
+    ) -> TrusteeshipDealPageResponse:
+        _require_quota(_caller_subject())
+        try:
+            page = service.get_trusteeship_deals(
+                input.cell_code, page=input.page, page_size=input.page_size
+            )
+            return TrusteeshipDealPageResponse.from_domain(page)
         except ConnectorError as exc:
             raise _tool_error(exc) from exc
 

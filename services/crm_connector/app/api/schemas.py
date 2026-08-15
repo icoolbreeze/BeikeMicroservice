@@ -39,6 +39,11 @@ from app.domain.models import (
     SaleMapNearbySearchFilters,
     SaleMapNearbySearchResult,
     SaleMapSuggestion,
+    TrusteeshipDeal,
+    TrusteeshipDealPage,
+    TrusteeshipDetail,
+    TrusteeshipManagerInfo,
+    TrusteeshipProspectPhoto,
 )
 from app.domain.modules import CrmModule
 
@@ -562,6 +567,148 @@ class ListingProspectResponse(BaseModel):
         )
 
 
+class TrusteeshipProspectPhotoResponse(BaseModel):
+    name: str | None = None
+    url: str | None = None
+    primary_flag: bool = False
+    create_time: str | None = None
+
+    @classmethod
+    def from_domain(
+        cls, photo: TrusteeshipProspectPhoto
+    ) -> "TrusteeshipProspectPhotoResponse":
+        return cls(**photo.__dict__)
+
+
+class TrusteeshipManagerInfoResponse(BaseModel):
+    user_name: str | None = None
+    role_name: str | None = None
+    org_name: str | None = None
+    phone: str | None = None
+
+    @classmethod
+    def from_domain(
+        cls, manager: TrusteeshipManagerInfo
+    ) -> "TrusteeshipManagerInfoResponse":
+        return cls(**manager.__dict__)
+
+
+class TrusteeshipDealResponse(BaseModel):
+    deal_price: str | None = None
+    deal_time: str | None = None
+    desc: str | None = None
+    layout_url: str | None = None
+    prospect_url: str | None = None
+    on_rent_time: str | None = None
+
+    @classmethod
+    def from_domain(cls, deal: TrusteeshipDeal) -> "TrusteeshipDealResponse":
+        return cls(**deal.__dict__)
+
+
+class TrusteeshipDetailResponse(BaseModel):
+    cell_code: str
+    house_del_code: str | None = None
+    resblock_name: str | None = None
+    house_name: str | None = None
+    house_type_desc: str | None = None
+    area_text: str | None = None
+    area_number: float | None = None
+    guide_price_yuan: int | None = None
+    orientation: str | None = None
+    floor_type: str | None = None
+    signal_floor: str | None = None
+    total_floor: int | None = None
+    can_live_time: str | None = None
+    viewing_house_time: str | None = None
+    rent_period_desc: str | None = None
+    rent_period_desc_v2: str | None = None
+    tg_end_date: str | None = None
+    delay_days: int | None = None
+    tags: list[str] = Field(default_factory=list)
+    manager: TrusteeshipManagerInfoResponse | None = None
+    key_desc: str | None = None
+    has_smart_key: bool | None = None
+    out_show_desc: str | None = None
+    prospects: list[TrusteeshipProspectPhotoResponse] = Field(default_factory=list)
+    house_type_images: list[str] = Field(default_factory=list)
+    vr_url: str | None = None
+    vr_picture_url: str | None = None
+    hqi_score: str | None = None
+    deal_details: list[TrusteeshipDealResponse] = Field(default_factory=list)
+    deal_avg_price: str | None = None
+    deal_total_count: str | None = None
+    fee_groups: list[str] = Field(default_factory=list)
+    del_status: int | None = None
+    district_name: str | None = None
+
+    @classmethod
+    def from_domain(cls, detail: TrusteeshipDetail) -> "TrusteeshipDetailResponse":
+        return cls(
+            cell_code=detail.cell_code,
+            house_del_code=detail.house_del_code,
+            resblock_name=detail.resblock_name,
+            house_name=detail.house_name,
+            house_type_desc=detail.house_type_desc,
+            area_text=detail.area_text,
+            area_number=detail.area_number,
+            guide_price_yuan=detail.guide_price_yuan,
+            orientation=detail.orientation,
+            floor_type=detail.floor_type,
+            signal_floor=detail.signal_floor,
+            total_floor=detail.total_floor,
+            can_live_time=detail.can_live_time,
+            viewing_house_time=detail.viewing_house_time,
+            rent_period_desc=detail.rent_period_desc,
+            rent_period_desc_v2=detail.rent_period_desc_v2,
+            tg_end_date=detail.tg_end_date,
+            delay_days=detail.delay_days,
+            tags=list(detail.tags),
+            manager=(
+                TrusteeshipManagerInfoResponse.from_domain(detail.manager)
+                if detail.manager is not None
+                else None
+            ),
+            key_desc=detail.key_desc,
+            has_smart_key=detail.has_smart_key,
+            out_show_desc=detail.out_show_desc,
+            prospects=[
+                TrusteeshipProspectPhotoResponse.from_domain(photo)
+                for photo in detail.prospects
+            ],
+            house_type_images=list(detail.house_type_images),
+            vr_url=detail.vr_url,
+            vr_picture_url=detail.vr_picture_url,
+            hqi_score=detail.hqi_score,
+            deal_details=[
+                TrusteeshipDealResponse.from_domain(deal) for deal in detail.deal_details
+            ],
+            deal_avg_price=detail.deal_avg_price,
+            deal_total_count=detail.deal_total_count,
+            fee_groups=list(detail.fee_groups),
+            del_status=detail.del_status,
+            district_name=detail.district_name,
+        )
+
+
+class TrusteeshipDealPageResponse(BaseModel):
+    items: list[TrusteeshipDealResponse] = Field(default_factory=list)
+    page: int
+    total: int
+    has_more: bool
+    request_id: str
+
+    @classmethod
+    def from_domain(cls, page: TrusteeshipDealPage) -> "TrusteeshipDealPageResponse":
+        return cls(
+            items=[TrusteeshipDealResponse.from_domain(deal) for deal in page.items],
+            page=page.page,
+            total=page.total,
+            has_more=page.has_more,
+            request_id=page.request_id,
+        )
+
+
 class ListingPropertyInfoResponse(BaseModel):
     # 小区信息
     listing_id: str
@@ -822,8 +969,14 @@ class RentalMapNearbySearchResponse(BaseModel):
         description=(
             "Community ids whose centroids fall inside the radius circle. "
             "Pass as resblock_ids to rental_listing_search to continue filtering "
-            "the same circle with the full listing-filter catalog."
+            "the same circle with the full listing-filter catalog. At most 100 "
+            "ids are returned; check community_ids_truncated before treating "
+            "the circle as complete."
         ),
+    )
+    community_ids_truncated: bool = Field(
+        default=False,
+        description="Whether the circle matched more communities than were returned.",
     )
     result: RentalMapPageResponse
     approximation: Literal["community_centroid"] = "community_centroid"
@@ -835,6 +988,7 @@ class RentalMapNearbySearchResponse(BaseModel):
             radius_meters=result.radius_meters,
             matched_community_count=result.matched_community_count,
             community_ids=list(result.community_ids),
+            community_ids_truncated=result.community_ids_truncated,
             result=RentalMapPageResponse.from_domain(result.result),
         )
 

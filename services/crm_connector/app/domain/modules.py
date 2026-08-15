@@ -36,6 +36,13 @@ _MODULES = (
         "页面路由名为房源列表，当前选中页签为全部房源；已接入实时筛选字典与受控条件查询",
     ),
     CrmModule(
+        "property.rental.tuoguan",
+        "托管（省心租）",
+        "property.rental",
+        ModuleStatus.IMPLEMENTED,
+        "trusteeship.link.lianjia.com 省心租工作台：详情头（实勘照片/户型图/VR/费用项/成交参考）与成交记录",
+    ),
+    CrmModule(
         "property.sale",
         "买卖",
         "property",

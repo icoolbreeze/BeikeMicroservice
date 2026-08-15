@@ -19,6 +19,7 @@ class Settings:
     crm_business_origin: str = "https://lease-pz.link.lianjia.com"
     crm_map_origin: str = "https://map.ke.com"
     crm_house_origin: str = "https://house.link.lianjia.com"
+    crm_trusteeship_origin: str = "https://trusteeship.link.lianjia.com"
     crm_default_city_code: str = "510100"
     credential_store_path: str = "./run/credential_store.bin"
     authd_listen_address: str = "127.0.0.1:8021"
@@ -63,6 +64,8 @@ def load_settings() -> Settings:
         or "https://map.ke.com",
         crm_house_origin=os.getenv("CC_CRM_HOUSE_ORIGIN", "").strip()
         or "https://house.link.lianjia.com",
+        crm_trusteeship_origin=os.getenv("CC_CRM_TRUSTEESHIP_ORIGIN", "").strip()
+        or "https://trusteeship.link.lianjia.com",
         crm_default_city_code=os.getenv("CC_CRM_DEFAULT_CITY_CODE", "510100").strip()
         or "510100",
         credential_store_path=store_path

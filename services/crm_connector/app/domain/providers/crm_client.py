@@ -27,6 +27,8 @@ from app.domain.models import (
     SaleMapBubble,
     SaleMapBubbleFilters,
     SaleMapSuggestion,
+    TrusteeshipDealPage,
+    TrusteeshipDetail,
 )
 
 
@@ -101,3 +103,17 @@ class CrmClient(Protocol):
         self, filters: SaleMapBubbleFilters
     ) -> tuple[SaleMapBubble, ...]:
         """Return district or community map bubbles for a viewport rectangle."""
+
+    # -- 托管 (省心租, trusteeship.link.lianjia.com) --------------------------
+
+    def get_trusteeship_detail(self, cell_code: str) -> TrusteeshipDetail:
+        """Return the 托管 detail-page head (pageInfoForPc).
+
+        Covers the 实勘 photo list, 户型图, VR, 费用项, and 成交参考 that
+        the 普租 detailHead domain does not serve for 托管 (del_type=5) ids.
+        """
+
+    def get_trusteeship_deals(
+        self, cell_code: str, *, page: int, page_size: int
+    ) -> TrusteeshipDealPage:
+        """Return one page of the 托管 成交参考 (deal/list)."""

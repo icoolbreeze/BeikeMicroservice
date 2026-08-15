@@ -60,6 +60,12 @@ _BUSINESS_COOKIE_NAMES = (
     # together with saas_token for the 买卖 (house.link) business APIs:
     # without it searchQueryNew returns 403 未登录认证 (probed 2026-08-11).
     "HOUSEJSESSIONID",
+    # 托管 (省心租) session tokens planted by the trusteeship CAS callback
+    # (/login?gotoURL=…&ticket=ST). Required for the trusteeship business
+    # APIs (pageInfoForPc etc.); without them they return 403 用户未登录
+    # (probed 2026-08-15).
+    "lianjia_trusteeship_token",
+    "lianjia_trusteeship_token_secure",
 )
 
 _REFRESH_COOKIE_NAMES = (
@@ -571,6 +577,29 @@ class KeComQrBootstrapProvider:
         if shiro_response.status_code >= 400:
             raise _BootstrapError(
                 f"house.link shiro-cas hop failed status={shiro_response.status_code}"
+            )
+        # Third CAS hop into the 托管 (省心租) domain, probed 2026-08-15:
+        # the service string MUST carry the gotoURL query (mirroring the SPA's
+        # second roundtrip) — the /login?gotoURL=…&ticket=ST callback then
+        # plants lianjia_trusteeship_token(+secure), the cookies the
+        # trusteeship business APIs validate. Without the gotoURL param the
+        # callback only plants the generic lianjia_ssid family and every
+        # pageInfoForPc call answers 403 用户未登录. The hop is additive —
+        # a failure must not block the lease/house session, so it degrades
+        # to a warning.
+        trusteeship_service = (
+            f"{self._settings.crm_trusteeship_origin}/login?gotoURL=%252F"
+        )
+        trusteeship_response = self._client.get(
+            f"{self._settings.crm_login_base}/login",
+            params={"service": trusteeship_service},
+            follow_redirects=True,
+        )
+        self._log_exchange_hop("trusteeship_cas_chain", trusteeship_response)
+        if trusteeship_response.status_code >= 400:
+            logger.warning(
+                "auth.bootstrap.trusteeship_hop_failed status=%s",
+                trusteeship_response.status_code,
             )
         all_cookies: dict[str, str] = {}
         for cookie in self._client.cookies.jar:

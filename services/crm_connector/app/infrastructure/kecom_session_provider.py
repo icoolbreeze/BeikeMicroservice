@@ -49,6 +49,10 @@ _COMPAT_COOKIES = (
     # business APIs (house.link.lianjia.com) — without it the upstream
     # returns 403 未登录认证 (probed 2026-08-11).
     "HOUSEJSESSIONID",
+    # 托管 (省心租) session tokens planted by the trusteeship CAS callback;
+    # required for the trusteeship business APIs (probed 2026-08-15).
+    "lianjia_trusteeship_token",
+    "lianjia_trusteeship_token_secure",
 )
 
 # Account / whoami probe used by the keepalive timer to extend the
@@ -314,6 +318,8 @@ class KecomSessionProvider:
             base_url = self._settings.crm_map_origin
         elif origin == "house":
             base_url = self._settings.crm_house_origin
+        elif origin == "trusteeship":
+            base_url = self._settings.crm_trusteeship_origin
         else:
             base_url = self._settings.crm_business_origin
         url = f"{base_url}{path}"
@@ -348,17 +354,34 @@ class KecomSessionProvider:
             bucid = cookies.get("UCID") or cookies.get("login_ucid")
             if bucid:
                 headers["lianjia_bucid"] = bucid
+        if origin == "trusteeship":
+            # 托管 workbench (省心租) request signature captured live
+            # 2026-08-15: the SPA calls its own domain with the same cookie
+            # family as lease-pz plus a referer pointing at the detail page.
+            headers["referer"] = (
+                f"{self._settings.crm_trusteeship_origin}/house/detail/agent/"
+            )
         if requires_city_header:
             headers[_DEFAULT_CITY_HEADER] = self._settings.crm_default_city_code
         headers["x-request-id"] = request_id
 
         try:
+            request_cookies = _select_cookies(cookies)
+            if origin == "trusteeship":
+                # The 托管 SPA authenticates with the shared ke.com family;
+                # live observation (2026-08-15) shows a fresh security_ticket
+                # (planted by the CAS walk) is what distinguishes a working
+                # 托管 session from a stale one.
+                refresh_cookies = _decode_material(active.refresh_material)
+                security_ticket = refresh_cookies.get("security_ticket")
+                if security_ticket:
+                    request_cookies = {**request_cookies, "security_ticket": security_ticket}
             return self._client.request(
                 method,
                 url,
                 params=params or None,
                 json=body if body is not None else None,
-                cookies=_select_cookies(cookies),
+                cookies=request_cookies,
                 headers=headers,
             )
         except httpx.HTTPError as exc:
@@ -525,12 +548,20 @@ class KecomSessionProvider:
             self._deactivate_locked(session_id, reason)
 
     def _deactivate_locked(self, session_id: str, reason: str) -> None:
+        # Only a deactivation of the CURRENT credential may clear the local
+        # slot or raise the degraded latch. A stale rejection (the response
+        # of a request sent with a credential that was replaced meanwhile by
+        # a fresh QR login or a successful TGC refresh) must not poison an
+        # otherwise healthy session: the degraded latch used to be set
+        # unconditionally here, which latched the whole process into a
+        # "rejected" mode while a valid credential was active (see the
+        # stale-credential race in authorized_fetch).
+        current = self._active or self._store.load_active()
+        is_current = current is not None and current.session_id == session_id
         self._store.invalidate(session_id, reason)  # type: ignore[arg-type]
-        # The local _active slot may already have been replaced by save();
-        # only clear it if it still matches the invalidated id.
-        if self._active is not None and self._active.session_id == session_id:
+        if is_current:
             self._active = None
-        if reason == "upstream_rejected":
+        if reason == "upstream_rejected" and is_current:
             self._degraded_message = "upstream rejected credential; refresh attempted"
 
     def _clear_degraded_locked(self) -> None:
@@ -563,7 +594,9 @@ class KecomSessionProvider:
         msg = body.get("msg")
         if code in (403, "403", 31002, "31002"):
             return True
-        if isinstance(msg, str) and ("未登录" in msg or "请先登录" in msg):
+        if isinstance(msg, str) and (
+            "未登录" in msg or "请先登录" in msg or "请重新登录" in msg
+        ):
             return True
         return False
 
@@ -674,6 +707,19 @@ _ROUTE_TABLE = {
     # 买卖地图找房 (mapSearch workbench, captured live 2026-08-11).
     "sale_map.suggest": ("/search/map/suggest", False, "house"),
     "sale_map.bubbles": ("/search/map/bubbleSearch", False, "house"),
+    # 托管 (省心租, trusteeship.link.lianjia.com). The 托管 workbench is a
+    # separate SPA/API domain; captured live 2026-08-15 from the 房源详情
+    # page (pageInfoForPc carries the 实勘 photo list, deal/list the 成交参考).
+    "trusteeship.get_detail": (
+        "/api/trusteeship/broker/out/detail/pageInfoForPc",
+        False,
+        "trusteeship",
+    ),
+    "trusteeship.get_deals": (
+        "/api/vRoute/house/trusteeship/broker/out/deal/list",
+        False,
+        "trusteeship",
+    ),
 }
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Annotated, TypeVar
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from app.api.schemas import (
     ConnectionStatusResponse,
@@ -33,6 +33,8 @@ from app.api.schemas import (
     SaleMapNearbySearchRequest,
     SaleMapNearbySearchResponse,
     SaleMapSuggestionResponse,
+    TrusteeshipDealPageResponse,
+    TrusteeshipDetailResponse,
 )
 from app.application.qr_login import QrLoginManager
 from app.application.service import ConnectorService
@@ -213,6 +215,40 @@ def get_rental_listing_house_info(
     has no score record yet)."""
     return ListingDetailInfoResponse.from_domain(
         invoke(lambda: svc.get_rental_listing_house_info(listing_id))
+    )
+
+
+@router.get(
+    "/listings/rental/tuoguan/{cell_code}",
+    response_model=TrusteeshipDetailResponse,
+)
+def get_trusteeship_detail(
+    cell_code: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> TrusteeshipDetailResponse:
+    """托管 (省心租) detail-page head via the trusteeship domain.
+
+    Covers 托管 listings (del_type=5) that the 普租 detailHead cannot serve:
+    实勘 photos, 户型图, VR, 费用项, and 成交参考.
+    """
+    return TrusteeshipDetailResponse.from_domain(
+        invoke(lambda: svc.get_trusteeship_detail(cell_code))
+    )
+
+
+@router.get(
+    "/listings/rental/tuoguan/{cell_code}/deals",
+    response_model=TrusteeshipDealPageResponse,
+)
+def get_trusteeship_deals(
+    svc: Annotated[ConnectorService, Depends(service)],
+    cell_code: str,
+    page: int = Query(default=1, ge=1, le=1000),
+    page_size: int = Query(default=5, ge=1, le=20),
+) -> TrusteeshipDealPageResponse:
+    """托管 成交参考 (deal/list) — one page of historical deal records."""
+    return TrusteeshipDealPageResponse.from_domain(
+        invoke(lambda: svc.get_trusteeship_deals(cell_code, page=page, page_size=page_size))
     )
 
 

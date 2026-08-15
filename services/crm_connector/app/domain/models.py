@@ -139,6 +139,107 @@ class ListingProspect:
 
 
 @dataclass(frozen=True)
+class TrusteeshipProspectPhoto:
+    """One photo from the 托管 detail page's 实勘 list (houseProspectList)."""
+
+    name: str | None
+    """Room label (01间-主卧 / 01间-厨房 / 02间-卫生间 …)."""
+    url: str | None
+    """Absolute img.ljcdn.com path (no size suffix). Lease-image bucket —
+    public with an !m_fit,h_630,w_516,l_bk,f_jpg style instruction suffix."""
+    primary_flag: bool
+    """封面标记 (primaryFlag=1 is the cover photo)."""
+    create_time: str | None
+    """Upload time as the upstream display string."""
+
+
+@dataclass(frozen=True)
+class TrusteeshipManagerInfo:
+    """The 房管人 record from houseHeadInfo.managerInfo."""
+
+    user_name: str | None
+    role_name: str | None
+    org_name: str | None
+    phone: str | None
+
+
+@dataclass(frozen=True)
+class TrusteeshipDeal:
+    """One 成交参考 row (deal/list)."""
+
+    deal_price: str | None
+    deal_time: str | None
+    desc: str | None
+    """面积/朝向/楼层/电梯 summary."""
+    layout_url: str | None
+    prospect_url: str | None
+    on_rent_time: str | None
+
+
+@dataclass(frozen=True)
+class TrusteeshipDealPage:
+    items: tuple[TrusteeshipDeal, ...]
+    page: int
+    total: int
+    has_more: bool
+    request_id: str
+
+
+@dataclass(frozen=True)
+class TrusteeshipDetail:
+    """pageInfoForPc — the 托管 (省心租) detail-page head.
+
+    Captured live 2026-08-15 from trusteeship.link.lianjia.com (品质租赁
+    workbench). Covers what the 普租 detailHead cannot: 托管 listings
+    (del_type=5) are only served by this domain.
+    """
+
+    cell_code: str
+    """Trusteeship business code (10612612882101)."""
+    house_del_code: str | None
+    """The 普租 list search's delCode / listing_id (106126181022)."""
+    resblock_name: str | None
+    house_name: str | None
+    house_type_desc: str | None
+    """Layout display text (1-0-1-1)."""
+    area_text: str | None
+    area_number: float | None
+    guide_price_yuan: int | None
+    """指导租金 (2000)."""
+    orientation: str | None
+    floor_type: str | None
+    signal_floor: str | None
+    total_floor: int | None
+    can_live_time: str | None
+    viewing_house_time: str | None
+    rent_period_desc: str | None
+    rent_period_desc_v2: str | None
+    tg_end_date: str | None
+    delay_days: int | None
+    tags: tuple[str, ...]
+    manager: TrusteeshipManagerInfo | None
+    key_desc: str | None
+    """钥匙形态 (智能门锁 …)."""
+    has_smart_key: bool | None
+    out_show_desc: str | None
+    """外网呈现 flag."""
+    prospects: tuple[TrusteeshipProspectPhoto, ...]
+    """实勘照片 (5 张 for the verified sample)."""
+    house_type_images: tuple[str, ...]
+    """户型图 absolute URLs."""
+    vr_url: str | None
+    vr_picture_url: str | None
+    hqi_score: str | None
+    deal_details: tuple[TrusteeshipDeal, ...]
+    deal_avg_price: str | None
+    deal_total_count: str | None
+    fee_groups: tuple[str, ...]
+    """费用项配置 rows: each row joins the fee matrix cells with ' | '."""
+    del_status: int | None
+    district_name: str | None
+
+
+@dataclass(frozen=True)
 class ListingPropertyInfo:
     """detailHdicInfo — the detail page's 小区/楼栋 property attributes.
 
@@ -406,6 +507,7 @@ class RentalMapNearbySearchResult:
     radius_meters: int
     matched_community_count: int
     community_ids: tuple[str, ...]
+    community_ids_truncated: bool
     result: RentalMapPage
 
 
