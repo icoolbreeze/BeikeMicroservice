@@ -33,8 +33,7 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from verify_archive import (ROOT, call_vl_model, load_api_key,
-                            load_nvidia_api_key)  # noqa: E402
+from verify_archive import ROOT, call_vl_model, load_api_key, load_nvidia_api_key  # noqa: E402
 
 try:  # 后台运行时确保 print 实时输出
     sys.stdout.reconfigure(line_buffering=True)
@@ -59,6 +58,8 @@ EXTRACT_PROMPT = (
     "注意：业务件号请从附记中取，不要取「登记编号」「权证号」等其他编号；"
     "无法辨认的字段填 null。"
 )
+
+LOCAL_OCR_PROMPT = "OCR:"
 
 OMNI_PROMPT = (
     "你是不动产登记证件识别专家。请仔细识读这张不动产权证照片，"
@@ -104,17 +105,119 @@ def is_valid_certificate_number(value: str) -> bool:
     return any(p.fullmatch(value or "") for p in _CERTIFICATE_NUMBER_PATTERNS)
 
 
+_BUSY_SEARCH = re.compile(r"\d{6,12}[A-Z]\d{2,10}|权\d+")
+# 证件编码前缀只可能是单个汉字（省简称）或 1-3 位数字（行政区代码）。
+# 前缀不能放宽到 2-3 个汉字：整页转写去空白后，标题行"…不动产权证"会与
+# 号码行相邻，贪婪前缀会吞进"权证"等标题尾字（如"权证川（2021）…"）。
+# 城市段要求精确的"成都市"：本服务只对接蓉e办（成都），实测 Q8+CPU 推理
+# 在城市字上有"成副市/成新市"级误读——宁可识别失败走云端兜底，也不能
+# 把错的证件编码静默传给政务查询。
+_CERT_SEARCH = re.compile(
+    r"监证\d+|"
+    r"(?:[\u4e00-\u9fa5A-Z]|\d{1,3})[（(]\d{4}[）)]成都市不动产权第\s*\d+\s*号"
+)
+
+
+def _ocr_image_data_url(cert_image: Path, target_long_side: int = 2600,
+                        max_upscale: float = 1.5) -> str:
+    """为本地 OCR 构造 data URL：长边统一重采样到目标尺寸，高质量编码。
+
+    实测矩阵（云端 Q8 + CPU，1279x1748 证件原图）：原生/q88 与 1600 缩放都会
+    在小字号处字符级误读（"成都市→成副市"、业务号日期错位）；提高到 q95 或
+    2x 放大后 3/3 稳定正确。llama-server 会把图片归一化到固定视觉 token
+    预算，像素总量对耗时几乎无影响，起决定作用的是压缩质量——q88 的 JPEG
+    伪影会抹掉关键笔画细节，因此这里固定 quality=95。
+    """
+    import base64
+    import io
+
+    from PIL import Image, ImageOps
+
+    with Image.open(cert_image) as source:
+        img = ImageOps.exif_transpose(source).convert("RGB")
+    long_side = max(img.size)
+    if long_side < target_long_side:
+        scale = min(max_upscale, target_long_side / long_side)
+    elif long_side > target_long_side:
+        scale = target_long_side / long_side
+    else:
+        scale = 1
+    if scale != 1:
+        img = img.resize((round(img.width * scale), round(img.height * scale)),
+                         Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=95)
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def call_llama_ocr(base_url: str, model: str, cert_image: Path,
+                   prompt: str, timeout: float) -> dict:
+    """调用本地 llama.cpp OCR 服务，并从转写文本中提取证件字段。
+
+    PaddleOCR-VL 是文档解析模型，适合用 ``OCR:`` 触发整页转写；这里不依赖模型
+    输出 JSON，而是按现有证件字段规则从文本中搜索业务件号和证件编码。
+    """
+    import requests
+
+    data_url = _ocr_image_data_url(cert_image)
+    payload = {
+        "model": model,
+        "temperature": 0,
+        "max_tokens": 1024,
+        "messages": [
+            {
+                "role": "user",
+                # llama.cpp 官方推荐 OCR 模型"图片在前、提示词在后"的顺序，
+                # PaddleOCR-VL 对顺序敏感，颠倒可能导致空转写。
+                "content": [
+                    {"type": "image_url", "image_url": {"url": data_url}},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+    }
+    try:
+        resp = requests.post(
+            f"{base_url.rstrip('/')}/chat/completions",
+            headers={"Content-Type": "application/json"},
+            json=payload,
+            timeout=timeout,
+        )
+        resp.raise_for_status()
+        body = resp.json()
+        text = body["choices"][0]["message"]["content"] or ""
+    except Exception as exc:  # noqa: BLE001 - 统一由上层重试/兜底
+        raise RuntimeError(f"本地 OCR 服务调用失败：{exc}") from exc
+
+    text = re.sub(r"\s+", "", text)
+    busy = _BUSY_SEARCH.findall(text)
+    cert = _CERT_SEARCH.findall(text)
+    ywh = next((clean_field(v) for v in busy if is_valid_business_number(clean_field(v))), "")
+    zsbm = next((clean_field(v) for v in cert if is_valid_certificate_number(clean_field(v))), "")
+    if not ywh or not zsbm:
+        raise ValueError(
+            f"本地 OCR 未能提取有效字段：业务件号={ywh!r} 证件编码={zsbm!r}"
+        )
+    return {"业务件号": ywh, "证件编码": zsbm}
+
+
 def _try_extract(task: dict, cert_image: Path, timeout: float) -> dict:
     """单次调用一个视觉模型提取字段，返回清洗后的 dict。
 
     字段为空或格式不符抛 ValueError；连接异常由 call_vl_model 抛出。
     """
-    data = call_vl_model(
-        task["api_key"], task["model"], cert_image, task["prompt"],
-        enhance_text=True, before_request=task.get("before_request"),
-        channel=task.get("channel", "openrouter"),
-        timeout=max(int(timeout) - 5, 10), max_attempts=1,
-    )
+    if task.get("channel") == "llama":
+        data = call_llama_ocr(
+            task["base_url"], task["model"], cert_image, task["prompt"],
+            timeout=max(timeout, 1.0),
+        )
+    else:
+        data = call_vl_model(
+            task["api_key"], task["model"], cert_image, task["prompt"],
+            enhance_text=True, before_request=task.get("before_request"),
+            channel=task.get("channel", "openrouter"),
+            timeout=max(int(timeout) - 5, 10), max_attempts=1,
+        )
     ywh = clean_field(data.get("业务件号") or "")
     zsbm = clean_field(data.get("证件编码") or "")
     if not is_valid_business_number(ywh) or not is_valid_certificate_number(zsbm):
@@ -166,7 +269,8 @@ def extract_credentials_chained(tasks: list[dict], cert_image: Path,
         for attempt in range(1, max_attempts + 1):
             if attempt > 1:
                 print(f"  [{label}] 上次尝试失败，正在进行第 {attempt} 次重试")
-            box = _attempt_with_deadline(task, timeout)
+            attempt_timeout = task.get("timeout") or timeout
+            box = _attempt_with_deadline(task, attempt_timeout)
             if box.get("cred"):
                 cred = box["cred"]
                 print(f"  [{label}] 提取成功："
@@ -183,7 +287,7 @@ def extract_credentials_chained(tasks: list[dict], cert_image: Path,
                 print(f"  [{label}] 提取失败（第 {attempt}/{max_attempts} 次）：{error}")
             else:
                 print(f"  [{label}] 提取超时（第 {attempt}/{max_attempts} 次，"
-                      f"超过 {timeout}s 未返回），放弃本次尝试")
+                      f"超过 {attempt_timeout}s 未返回），放弃本次尝试")
         if task.get("on_failure") and last_err is not None:
             try:
                 task["on_failure"](last_err)
