@@ -42,6 +42,8 @@ from app.domain.models import (
     TrusteeshipDeal,
     TrusteeshipDealPage,
     TrusteeshipDetail,
+    TrusteeshipListingPage,
+    TrusteeshipListingRow,
     TrusteeshipManagerInfo,
     TrusteeshipProspectPhoto,
 )
@@ -144,6 +146,14 @@ class ModuleResponse(BaseModel):
 class NumericRange(BaseModel):
     min: float | None = Field(default=None, ge=0)
     max: float | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def validate_order(self) -> "NumericRange":
+        # Inverted ranges (min > max) used to reach the upstream verbatim;
+        # every caller expresses a genuine lo..hi interval, so reject early.
+        if self.min is not None and self.max is not None and self.min > self.max:
+            raise ValueError("range min must not exceed max")
+        return self
 
 
 MapConditionToken = Annotated[
@@ -413,7 +423,7 @@ class RentalListingSearchRequest(BaseModel):
             "clamp(25% of budget, 200, 500)]; when rentType=002 (合租), lower price is 0."
         ),
     )
-    page: int = Field(default=1, ge=1)
+    page: int = Field(default=1, ge=1, le=1000)
     page_size: int = Field(default=20, ge=1, le=50)
 
     @model_validator(mode="after")
@@ -427,6 +437,9 @@ class RentalListingSearchRequest(BaseModel):
             )
         if self.budget_yuan is not None and "price" in self.condition_filters:
             raise ValueError("budget_yuan cannot be combined with condition_filters.price")
+        # Mirror the map-side models: 室数 must be 1..5 (5 = 五室及以上).
+        if any(room < 1 or room > 5 for room in self.rooms):
+            raise ValueError("rooms values must be in the range 1..5")
         return self
 
     def to_domain(self) -> RentalListingFilters:
@@ -508,6 +521,18 @@ class RentalListingPageResponse(BaseModel):
             has_more=result.has_more,
             request_id=result.request_id,
         )
+
+
+class RentalListingRedirectResponse(BaseModel):
+    """Trusteeship redirect for a managed (del_type=5) row.
+
+    ``cell_code`` is the trusteeship workbench id the 房源列表 page resolves
+    through getRedirectUrl before opening the 托管 detail page. ``None``
+    means the row is not served by the trusteeship domain (a 普租 row).
+    """
+
+    listing_id: str
+    cell_code: str | None = None
 
 
 class RentalListingFilterOptionResponse(BaseModel):
@@ -636,8 +661,12 @@ class TrusteeshipDetailResponse(BaseModel):
     vr_picture_url: str | None = None
     hqi_score: str | None = None
     deal_details: list[TrusteeshipDealResponse] = Field(default_factory=list)
-    deal_avg_price: str | None = None
-    deal_total_count: str | None = None
+    deal_avg_price: float | None = Field(
+        default=None, description="托管成交参考均价（元/月，数值）。"
+    )
+    deal_total_count: int | None = Field(
+        default=None, description="托管成交参考总条数（数值）。"
+    )
     fee_groups: list[str] = Field(default_factory=list)
     del_status: int | None = None
     district_name: str | None = None
@@ -707,6 +736,68 @@ class TrusteeshipDealPageResponse(BaseModel):
             has_more=page.has_more,
             request_id=page.request_id,
         )
+
+
+class TrusteeshipListingRowResponse(BaseModel):
+    """One 托管 待出租 inventory row; cell_code feeds tuoguan detail tools."""
+
+    cell_code: str
+    community: str | None = None
+    biz_circle: str | None = None
+    building_name: str | None = None
+    house_name: str | None = None
+    layout_text: str | None = None
+    area_sqm: float | None = None
+    floor: int | None = None
+    guide_price_yuan: int | None = None
+    can_look_time: str | None = None
+
+    @classmethod
+    def from_domain(cls, row: TrusteeshipListingRow) -> "TrusteeshipListingRowResponse":
+        return cls(
+            cell_code=row.cell_code,
+            community=row.community,
+            biz_circle=row.biz_circle,
+            building_name=row.building_name,
+            house_name=row.house_name,
+            layout_text=row.layout_text,
+            area_sqm=row.area_sqm,
+            floor=row.floor,
+            guide_price_yuan=row.guide_price_yuan,
+            can_look_time=row.can_look_time,
+        )
+
+
+class TrusteeshipListingPageResponse(BaseModel):
+    items: list[TrusteeshipListingRowResponse] = Field(default_factory=list)
+    page: int
+    page_size: int
+    total: int
+    has_more: bool
+    request_id: str
+
+    @classmethod
+    def from_domain(
+        cls, page: TrusteeshipListingPage
+    ) -> "TrusteeshipListingPageResponse":
+        return cls(
+            items=[TrusteeshipListingRowResponse.from_domain(row) for row in page.items],
+            page=page.page,
+            page_size=page.page_size,
+            total=page.total,
+            has_more=page.has_more,
+            request_id=page.request_id,
+        )
+
+
+class TrusteeshipListingSearchRequest(BaseModel):
+    """Search the 托管 待出租 inventory (waitingrent)."""
+
+    cell_code: str | None = Field(default=None, min_length=1, max_length=64)
+    page: int = Field(default=1, ge=1, le=1000)
+    # The upstream caps pageSize at 300 (probed 2026-08-15); larger values
+    # silently truncate the page.
+    page_size: int = Field(default=30, ge=1, le=300)
 
 
 class ListingPropertyInfoResponse(BaseModel):
@@ -1160,7 +1251,15 @@ class SaleListingSearchRequest(BaseModel):
         description="排序：period1_desc_createtime_desc 新上优先（默认）/ "
         "period1_asc_totalprice 总价升序 / period1_desc_totalprice 总价降序。",
     )
-    page: int = Field(default=1, ge=1, le=1000)
+    page: int = Field(
+        default=1,
+        ge=1,
+        le=1000,
+        description=(
+            "页码。上游 searchQueryNew 固定 30 行/页（实测 pageSize 参数被忽略，"
+            "2026-08-16），因此本工具没有 page_size 参数。"
+        ),
+    )
 
     @model_validator(mode="after")
     def validate_sale_filters(self) -> "SaleListingSearchRequest":

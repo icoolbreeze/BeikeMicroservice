@@ -58,7 +58,7 @@ curl -X POST http://127.0.0.1:8020/api/v1/auth/login/<login_id>/cancel
 | `crm-authd login` | 触发扫码登录引导（弹出二维码窗口），拿到上游凭证后用 Windows DPAPI 写入 `CC_CREDENTIAL_STORE_PATH`，并校验 `CC_BOUND_EMPLOYEE_PRINCIPAL` 是否与扫码主体一致 |
 | `crm-authd status` | 读取本地凭证并打印 `state`（`ready` / `expiring` / `auth_required`）、会话主体、过期时间、`credential_version` |
 | `crm-authd logout` | 调用 `bootstrap.revoke` 失效上游会话并清空本地凭证记录 |
-| `crm-authd serve` | 在 `CC_AUTHD_LISTEN_ADDRESS`（默认 `127.0.0.1:8021`）启动本地认证中心 HTTP 服务，并在同进程内运行 keepalive 后台线程 |
+| `crm-authd serve` | 在 `CC_AUTHD_LISTEN_ADDRESS`（默认 `127.0.0.1:8021`）启动本地认证中心 HTTP 服务；默认不启动周期 keepalive（惰性校验，见下节），`CC_KEEPALIVE_INTERVAL_SECONDS>0` 时恢复周期探测线程 |
 | `crm-mcp` | 在 `stdio` 上运行 MCP server（`app/mcp/server.py` 的 `main()`），按 `CC_UPSTREAM_PROFILE` 接线真实或 stub provider |
 
 `crm-authd serve` 暴露的端点（前缀 `/api/v1/auth`）：
@@ -67,10 +67,22 @@ curl -X POST http://127.0.0.1:8020/api/v1/auth/login/<login_id>/cancel
 | --- | --- | --- |
 | GET | `/api/v1/auth/status` | 当前认证状态、绑定员工、过期时间、最近一次 keepalive |
 | GET | `/api/v1/auth/poll` | 与 `status` 一致，为后续接入 SSE / tray UI 预留 |
-| GET | `/api/v1/auth/keepalive` | 手动触发一次 TGC 无感刷新并返回结果 |
+| GET | `/api/v1/auth/keepalive` | 手动触发一次上游活性探测（探测失败时自动 TGC 无感刷新）并返回结果 |
 | GET | `/api/v1/auth/notify` | 预留给未来 tray UI 向 authd 推送通知（当前镜像 status） |
 
 > 认证材料只存放在 `CC_CREDENTIAL_STORE_PATH`（默认 `./run/credential_store.bin`），用 Windows DPAPI 加密；`crm-authd` 之外的主服务进程通过 `SessionProvider.authorizedFetch()` 间接使用，从不直接接触原始 cookie/token。
+
+## 惰性会话校验与浏览器一致请求头（2026-08-15）
+
+为降低员工账户被上游风控标记为异常的风险，会话策略从"周期探测"改为"惰性校验"，并让出站请求头与真实工作台浏览器保持一致：
+
+- **零闲置流量**：默认（`CC_KEEPALIVE_INTERVAL_SECONDS=0`）没有任何定时器访问上游。`crm-authd serve` 不再启动 KeepaliveTimer；主服务的 session watchdog 每 60 秒只做**本地**状态读取（不发上游请求）。
+- **调用即校验**：每次 `authorizedFetch` 前检查本地过期估算，估算已过期先走一次 TGC 无感刷新（无扫码）；业务响应成功即证明会话存活，并将本地估算滚动续期（+1 小时，仅在剩余不足 30 分钟时写盘，且只作用于仍未被替换的当前凭据）。闲置会话不会被时钟误杀，也不会被探测唤醒。
+- **状态读取纯本地**：`status`（`/api/v1/connection/status`、`crm_connection_status`、authd `/status`）不再触发刷新或探测；本地估算过期时报告 `expiring`，恢复发生在下一次真实调用。只有会话真正失效（调用被上游拒绝且 TGC 刷新失败）才进入 `auth_required`，此时 watchdog 自动弹出扫码窗。
+- **手动探测保留**：`GET /api/v1/auth/keepalive` 仍可按需探测；设置 `CC_KEEPALIVE_INTERVAL_SECONDS>0` 可让 `crm-authd serve` 恢复周期探测。
+- **浏览器一致请求头**：所有上游请求（业务、CAS 引导、keepalive）默认携带工作台同款 `User-Agent`（Windows Chrome）与 `Accept-Language: zh-CN,zh;q=0.9`，不再暴露 `crm-connector/0.1` 这类非浏览器签名。`chrome://version` 页面本身进程外不可读，但所需数据可自行获取：连接器默认**自动读取本机已安装浏览器版本重建 UA**（`app/infrastructure/browser_signature.py`：Chrome 注册表 `BLBeacon` 版本 → `Chrome/{主版本}.0.0.0`，无 Chrome 时回退 Edge 并附 `Edg/` 后缀，再退静态默认值；按 user-agent 缩减政策，浏览器真实发出的正是这种冻结小版本号的形态）。只有当你用便携版或非系统浏览器访问 CRM 时才需要用 `CC_HTTP_USER_AGENT` 强制指定。
+
+长时间闲置后需要"预热"会话时，调用一次任意 MCP 业务工具即可同时完成校验与续期，无需专门的 keepalive。
 
 ### 已验证的端到端链路
 
@@ -111,7 +123,7 @@ python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
 }
 ```
 
-- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_*`（搜索/筛选字典/详情/实勘/房源信息）、`rental_map_*`（联想/附近）、`tuoguan_listing_*`（托管省心租详情/成交参考）、`sale_listing_*`（搜索/筛选字典/小区联想/详情/详情头/维护信息/跟进记录）、`sale_map_*`（买卖地点联想/附近范围查询）；
+- 工具清单（全部只读）：`crm_connection_status`、`crm_whoami`、`rental_listing_*`（搜索/筛选字典/详情/实勘/房源信息）、`rental_map_*`（联想/附近）、`tuoguan_listing_*`（待出租库存搜索/详情/成交参考）、`sale_listing_*`（搜索/筛选字典/小区联想/详情/详情头/维护信息/跟进记录）、`sale_map_*`（买卖地点联想/附近范围查询）；
 - `crm_connection_status` 不限额；其余 MCP 工具按调用者主体（`getpass.getuser()`）受 `CC_MCP_RATE_LIMIT_PER_MIN`（默认 30 次/分钟）滑动窗口限流，超限返回 `RATE_LIMITED`；
 - 未配置凭据时业务工具返回 `CRM_AUTH_REQUIRED`，不会访问上游；
 - 凭据只经 `SessionProvider.authorizedFetch()` 注入，MCP 响应与日志不含任何认证材料。
@@ -140,7 +152,7 @@ api -> application -> domain <- infrastructure
 - `infrastructure/kecom_session_provider.py`：已认证请求代理与 keepalive，注入 `puzu_lease_token` + `saas_token` 等业务 cookie（`KecomSessionProvider`）；
 - `infrastructure/kecom_crm_client.py`：CRM 业务 Adapter，通过 `SessionProvider.authorizedFetch` 调用受控路由（`KecomCrmClient`）；
 - `infrastructure/windows_dpapi_credential_store.py`：Windows DPAPI 加密本地存储；
-- `mcp/tools.py`：18 个 MCP tool 的契约（输入/输出 Schema、只读标注），HTTP `/api/v1/mcp/tools` 返回与 stdio `/tools/list` 一致的扁平 Schema；
+- `mcp/tools.py`：21 个 MCP tool 的契约（输入/输出 Schema、只读标注），HTTP `/api/v1/mcp/tools` 返回与 stdio `/tools/list` 一致的扁平 Schema；
 - `mcp/server.py`：MCP server 组装（`build_mcp_server`）与 `stdio` 入口（`main`），注册连接、租赁和买卖查询工具，所有业务工具使用 `ToolAnnotations(read_only_hint=True)` 并按调用者主体限流；
 - `mcp/schemas.py`：MCP 入参模型（`extra="forbid"` 拒绝未知字段）；
 - `mcp/rate_limit.py`：滑动窗口工具级限流。

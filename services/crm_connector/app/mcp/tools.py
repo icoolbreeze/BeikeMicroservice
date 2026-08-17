@@ -37,6 +37,8 @@ from app.mcp.schemas import (
     TrusteeshipDealsInput,
     TrusteeshipDetailInput,
     TrusteeshipDetailResponse,
+    TrusteeshipListingPageResponse,
+    TrusteeshipListingSearchInput,
 )
 
 
@@ -116,6 +118,11 @@ _TOOLS = (
             "and pass selected resblock item_id values as resblock_ids. "
             "budget_yuan calculates price as [budget/2, budget + clamp(25%, 200, 500)]; "
             "shared rent omits the lower bound. "
+            "Rows mix 普租 (del_type=2) and 托管/省心租 (del_type=5) by default — "
+            "do NOT add a delType filter unless the user explicitly restricts the "
+            "type. 托管 rows are not served by the 普租 detail tools: resolve their "
+            "cell_code via tuoguan_listing_search (search rows do not carry it) and "
+            "use tuoguan_listing_get_detail / tuoguan_listing_get_deals instead. "
             "Image URLs (title_image_url / floor_plan_image_url) are raw "
             "img.ljcdn.com originals — direct fetch may return 403 "
             "(inspection/floor-plan buckets are protected; cover-image bucket "
@@ -190,8 +197,9 @@ _TOOLS = (
         description=(
             "Find rentals near a named place. Resolves the place, selects communities "
             "whose centroids fall within the requested radius, then searches their listings. "
-            "For a stated budget, use [budget/2, budget + clamp(25%, 200, 500)]; "
-            "shared rent omits the lower bound. At most 100 community ids are "
+            "No budget_yuan parameter on this tool: convert a stated budget yourself "
+            "into price_min_yuan/price_max_yuan as [budget/2, budget + clamp(25%, 200, "
+            "500)] (shared rent omits the lower bound). At most 100 community ids are "
             "queried; check community_ids_truncated before treating a wide "
             "circle as complete."
         ),
@@ -237,6 +245,9 @@ _TOOLS = (
             "70..110 = 70-110平, rooms [2,3] = 2-3室. Sort options: "
             "period1_desc_createtime_desc (新上优先, default) / "
             "period1_asc_totalprice / period1_desc_totalprice. "
+            "The upstream returns a fixed 30 rows per page (pageSize is "
+            "ignored — verified 2026-08-16), so there is no page_size "
+            "parameter; page through with page. "
             "Image URLs (surface_image_url / floor_plan_image_url) are raw "
             "img.ljcdn.com originals; direct fetch may 403 — append a size "
             "suffix (.450x.jpg / .750x.jpg / .800x.jpg / .1500x.jpg) to view "
@@ -341,7 +352,8 @@ _TOOLS = (
             "钥匙形态 key_desc (智能门锁…), 外网呈现, 实勘照片 prospects "
             "(per-room name + url + upload time + primary_flag 封面), 户型图 "
             "house_type_images, VR link vr_url, HQI score, 成交参考 "
-            "deal_details + 平均价/总数, and 费用项 fee_groups (服务费比例/"
+            "deal_details + deal_avg_price/deal_total_count (numeric), and "
+            "费用项 fee_groups (服务费比例/"
             "押金/租期矩阵, ' | ' joined rows). Use it for 托管 rows from "
             "rental_listing_search — the 普租 detail tools (rental_listing_"
             "get_detail / _prospect / _house_info) do NOT serve 托管 ids. "
@@ -367,6 +379,27 @@ _TOOLS = (
         ),
         input_schema=_input_schema(TrusteeshipDealsInput),
         output_schema=_schema(TrusteeshipDealPageResponse),
+        module_id="property.rental.tuoguan",
+    ),
+    McpToolDefinition(
+        name="tuoguan_listing_search",
+        description=(
+            "Search the 托管 (省心租) 待出租 inventory (waitingrent tab, city-wide "
+            "13400+ units as of 2026-08-15). Each row carries a working "
+            "cell_code (bizCode, verified against the detail endpoint) plus "
+            "community/biz circle, layout, area, floor, 指导租金 guide_price_yuan, "
+            "看房时间 can_look_time — pass any row's cell_code to "
+            "tuoguan_listing_get_detail for photos/fees/deal history, and "
+            "match rows back to 普租 listing rows via the detail's "
+            "house_del_code. Optional cell_code narrows to one exact unit. "
+            "page_size is server-capped at 300; has_more reflects the "
+            "page*page_size < total rule. NOTE: rows cannot be filtered by the "
+            "lease-pz house_del_code — no verified upstream mapping exists in "
+            "that direction (only detail's cell→house_del_code is available); "
+            "match by community + guide price when cross-referencing."
+        ),
+        input_schema=_input_schema(TrusteeshipListingSearchInput),
+        output_schema=_schema(TrusteeshipListingPageResponse),
         module_id="property.rental.tuoguan",
     ),
 )

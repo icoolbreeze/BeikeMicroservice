@@ -25,6 +25,7 @@ from app.infrastructure.kecom_crm_client import (
     KecomCrmClient,
     _build_detail_prospect_request,
     _build_detail_request,
+    _build_redirect_request,
     _build_hdic_info_request,
     _build_house_label_request,
     _build_hqi_tab_request,
@@ -175,6 +176,37 @@ def test_build_detail_prospect_request_uses_prospect_route() -> None:
     assert request.method == "GET"
     assert request.query == {"delCode": "RC123456"}
     assert request.body is None
+
+
+def test_build_redirect_request_uses_getredirecturl_with_deltype() -> None:
+    request = _build_redirect_request("RC123456")
+    assert request.route == "rental_listing.get_redirect_url"
+    assert request.method == "GET"
+    assert request.query == {"delCode": "RC123456", "delType": "5"}
+    assert request.body is None
+
+
+def test_get_rental_listing_redirect_url_extracts_cell_code() -> None:
+    session = CapturingSession()
+    session.enqueue(
+        "rental_listing.get_redirect_url", 200,
+        {"code": 100000, "msg": "加载成功",
+         "data": "https://trusteeship.link.lianjia.com/house/detail/agent/10610601558901"},
+    )
+    client = KecomCrmClient(session)
+    assert client.get_rental_listing_redirect_url("106106022223") == "10610601558901"
+    assert session.calls[0].route == "rental_listing.get_redirect_url"
+    assert session.calls[0].query == {"delCode": "106106022223", "delType": "5"}
+
+
+def test_get_rental_listing_redirect_url_returns_none_without_data() -> None:
+    session = CapturingSession()
+    session.enqueue(
+        "rental_listing.get_redirect_url", 200,
+        {"code": 100000, "msg": "加载成功", "data": None},
+    )
+    client = KecomCrmClient(session)
+    assert client.get_rental_listing_redirect_url("106106022223") is None
 
 
 def test_parse_prospect_maps_photos_floor_plan_and_flags() -> None:
@@ -364,7 +396,8 @@ def test_parse_trusteeship_detail_maps_head_prospects_and_deals() -> None:
     assert len(detail.deal_details) == 1
     assert detail.deal_details[0].deal_price == "2600元/月"
     assert detail.deal_details[0].prospect_url is not None
-    assert detail.deal_avg_price == "2416"
+    assert detail.deal_avg_price == 2416.0
+    assert detail.deal_total_count == 8
     assert detail.fee_groups == ("长租 | 月付 | 2000元/月",)
 
 
@@ -387,6 +420,25 @@ def test_parse_trusteeship_detail_raises_on_unknown_id() -> None:
         _parse_trusteeship_detail(
             {"code": 100001, "msg": "参数错误", "data": {}}, "999"
         )
+
+
+def test_parse_trusteeship_detail_non_numeric_deal_summary_becomes_none() -> None:
+    body = {
+        "code": 100000,
+        "msg": "ok",
+        "data": {
+            "houseHeadInfo": {},
+            "dealInfo": {
+                "dealInfo": {
+                    "trusteeshipDealAvgPrice": "--",
+                    "trusteeshipDealTotalCount": "N/A",
+                }
+            },
+        },
+    }
+    detail = _parse_trusteeship_detail(body, "10612612882101")
+    assert detail.deal_avg_price is None
+    assert detail.deal_total_count is None
 
 
 def test_parse_trusteeship_deals_maps_rows_and_paging() -> None:

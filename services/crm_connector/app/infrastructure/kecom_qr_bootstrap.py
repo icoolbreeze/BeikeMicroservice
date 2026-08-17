@@ -129,7 +129,14 @@ class KeComQrBootstrapProvider:
         self._client = client or httpx.Client(
             timeout=httpx.Timeout(settings.request_timeout_seconds),
             follow_redirects=False,
-            headers={"user-agent": "crm-connector/0.1"},
+            # The bootstrap walks the same SSO/CAS chain a browser would;
+            # mirror the workbench browser's client signature (same source
+            # of truth as the session provider) so the login-time traffic
+            # stays consistent with the employee's real browser.
+            headers={
+                "user-agent": settings.http_user_agent,
+                "accept-language": settings.http_accept_language,
+            },
         )
         self._qr = qr_renderer or _default_renderer(self._settings)
         self._clock = clock
@@ -427,7 +434,16 @@ class KeComQrBootstrapProvider:
             if hop == "sdk_confirm" and response.status_code == 200:
                 self._dump_exchange_body("sdk_confirm.html", response.text)
             if hop == "lease_landing":
-                self._dump_exchange_body("lease_landing_headers.txt", "\n".join(f"{k}: {v}" for k, v in response.headers.multi_items()))
+                # Header NAMES only for credential-bearing headers: writing
+                # the raw Set-Cookie values here leaked TGC/token-grade
+                # material into a plaintext file next to the credential store.
+                self._dump_exchange_body(
+                    "lease_landing_headers.txt",
+                    "\n".join(
+                        f"{k}: {'<redacted: %s>' % v.split('=', 1)[0] if k.lower() in ('set-cookie', 'cookie', 'authorization') else v}"
+                        for k, v in response.headers.multi_items()
+                    ),
+                )
         except Exception:  # pragma: no cover - never fail the bootstrap path
             logger.warning("auth.bootstrap.exchange_hop_log_failed", exc_info=True)
 

@@ -206,15 +206,29 @@ Playwright 抓包 57 个详情页接口确认，2026-08-09）：
 |---|---|---|
 | `tuoguan_listing_get_detail` | `GET /api/trusteeship/broker/out/detail/pageInfoForPc?cellCode=<id>` | 详情头（见下）+ 实勘照片 + 户型图 + VR + 费用项 + 成交参考 |
 | `tuoguan_listing_get_deals` | `GET /api/vRoute/house/trusteeship/broker/out/deal/list?cellCode=<id>&pageIndex=&pageSize=` | 成交参考分页 |
+| `tuoguan_listing_search` | `POST /api/house/search/waitingrent`（body `pageIndex/pageSize/sort=waitRentTime:desc/searchStatus=1`，可选 `delCode`+`outHouseCode` 按 cell 码精确查行） | 待出租库存搜索（全市 13400+ 套，行内 `bizCode` 即可用 cell_code），pageSize 服务端上限 300 |
+
+### house→cell 正向解析（getRedirectUrl，2026-08-17 接入）
+
+`GET /api/v1/listings/rental/{listing_id}/redirect`（上游
+`/api/houseList/search/getRedirectUrl?delCode=<id>&delType=5`）返回托管跳转
+URL，末段即 `cell_code`。**这是房源列表页点击托管行时的真实前端链路**
+（2026-08-17 凭证注入 Playwright 抓包确认），因此是 house_del_code →
+cell_code 的首选解析路径；响应 `data` 为空时表示该房源不在托管域。
+管道用详情返回的 `house_del_code` 回链校验后才会采用。
 
 ### ID 语义
 
 - `cell_code`（bizCode）= 托管业务编码（如 `10612612882101`），详情页 URL
   `trusteeship.link.lianjia.com/house/detail/agent/<cell_code>` 使用它。
 - `house_del_code` = 列表搜索的 `listing_id`（如 `106126181022`），pageInfoForPc
-  响应头内回带该字段，供调用方对齐列表行与托管详情。
-- 若仅有列表行 `listing_id`，先尝试以 `cellCode=<listing_id>` 调 pageInfoForPc；
-  上游不接受时按 invalid-input 报错，不要自行猜测编码。
+  响应头内回带该字段，供调用方对齐列表行与托管详情（**cell→house 方向已实测**：
+  cell `10611958598901` ↔ house `106119675359`，同一套 阳光365/2100元）。
+- 若仅有列表行 `listing_id`，先试 `GET /api/v1/listings/rental/{listing_id}/redirect`
+  （getRedirectUrl，2026-08-17 接入，即前端点击托管行的真实链路）解析 cell_code；
+  无托管跳转时再用 `tuoguan_listing_search`（按小区+指导租金与列表行比对），
+  或向用户要托管详情页 URL。注意：工作台「房源编码」搜索 `delCode`/`outHouseCode`
+  只认托管自己的 cell 码（2026-08-15 实测），传 lease-pz 12 位码两组列表均返回 0。
 
 ### 详情响应要点（pageInfoForPc → houseHeadInfo）
 
@@ -232,7 +246,8 @@ Playwright 抓包 57 个详情页接口确认，2026-08-09）：
 - 户型图 `houseTypeList[].url`；VR：`vrDataDetail.vrUrl`/`pictureUrl`。
 - 成交参考 `dealInfo.dealDetails[]`：`dealPrice`/`dealTime`/`desc`（面积朝向楼层）/
   `layout`/`prospect`/`onRentTime`；汇总 `dealInfo.dealInfo.trusteeshipDealAvgPrice`
-  /`trusteeshipDealTotalCount`。
+  /`trusteeshipDealTotalCount`（上游为数字字符串 `"2416"`/`"8"`，连接器转为
+  数值 `deal_avg_price`/`deal_total_count`，非数字回退 `null`）。
 - 费用项 `feeInfoDto.feeConfigDataList`：矩阵按行 flatten 为 `"类型值 | 租期值 |
   支付周期 | 月租金 | 服务费…"` 字符串（`fee_groups`）。
 

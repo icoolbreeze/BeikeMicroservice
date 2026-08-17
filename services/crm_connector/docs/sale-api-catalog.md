@@ -46,6 +46,9 @@ riskProtectMainHouse=0 riskStrategy= riskStrategyInfo= season=
 sort=<sort> tabSort=default timeLocal= ucid= vertical=<scope>
 ```
 
+分页：上游**固定 30 行/页**，`pageSize` 参数实测被忽略（2026-08-16 请求
+`pageSize=5` 仍返回 30 行）；连接器因此不暴露 `page_size`，翻页仅用 `currentPage`。
+
 业务筛选参数（仅当用户指定时发送；多值组用逗号拼接，与页面一致）：
 
 | 参数 | 含义 | 取值来源 |

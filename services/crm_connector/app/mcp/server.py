@@ -34,6 +34,7 @@ from app.api.schemas import (
     SaleMapSuggestionResponse,
     TrusteeshipDealPageResponse,
     TrusteeshipDetailResponse,
+    TrusteeshipListingPageResponse,
 )
 from app.bootstrap import build_service
 from app.domain.errors import ConnectorError
@@ -52,6 +53,7 @@ from app.mcp.schemas import (
     SaleMapSuggestInput,
     TrusteeshipDealsInput,
     TrusteeshipDetailInput,
+    TrusteeshipListingSearchInput,
 )
 from app.mcp.schema_flatten import flatten_schema
 
@@ -226,6 +228,11 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
             "selected resblock item_id in resblock_ids. "
             "budget_yuan calculates price as [budget/2, budget + clamp(25%, 200, 500)]; "
             "shared rent omits the lower bound. "
+            "Rows mix 普租 (del_type=2) and 托管/省心租 (del_type=5) by default — "
+            "do NOT add a delType filter unless the user explicitly restricts the "
+            "type. 托管 rows are not served by the 普租 detail tools: resolve their "
+            "cell_code via tuoguan_listing_search (search rows do not carry it) and "
+            "use tuoguan_listing_get_detail / tuoguan_listing_get_deals instead. "
             "Image URLs (title_image_url / floor_plan_image_url) are raw "
             "img.ljcdn.com originals — direct fetch may return 403 "
             "(inspection/floor-plan buckets are protected; cover-image bucket "
@@ -333,8 +340,9 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         name="rental_map_nearby_search",
         description=(
             "Find rentals near a named place using community centroids within a radius. "
-            "For a stated budget, use [budget/2, budget + clamp(25%, 200, 500)]; "
-            "shared rent omits the lower bound. At most 100 community ids are "
+            "No budget_yuan parameter on this tool: convert a stated budget yourself "
+            "into price_min_yuan/price_max_yuan as [budget/2, budget + clamp(25%, 200, "
+            "500)] (shared rent omits the lower bound). At most 100 community ids are "
             "queried; check community_ids_truncated before treating a wide "
             "circle as complete."
         ),
@@ -396,7 +404,9 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
             "filters (scope defaults to gdiv_mt 维护盘 — pass \"all\" 不限 "
             "explicitly when the user gave no scope). Resolve exact communities "
             "with sale_community_suggest first and pass the community_id values "
-            "in community_ids."
+            "in community_ids. The upstream returns a fixed 30 rows per page "
+            "(pageSize is ignored — verified 2026-08-16), so there is no "
+            "page_size parameter; page through with page."
         ),
         annotations=ToolAnnotations(read_only_hint=True),
     )
@@ -517,7 +527,8 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
         name="tuoguan_listing_get_detail",
         description=(
             "Return one 托管 (省心租·自营, del_type=5) listing's detail-page "
-            "head: 实勘照片 prospects, 户型图, VR, 费用项, 成交参考, 房管人, "
+            "head: 实勘照片 prospects, 户型图, VR, 费用项, 成交参考 (deal_details "
+            "plus numeric deal_avg_price 元/月 and deal_total_count), 房管人, "
             "托管到期/租期/看房时间 — the 普租 detail tools do not serve 托管 ids."
         ),
         annotations=ToolAnnotations(read_only_hint=True),
@@ -548,6 +559,31 @@ def build_mcp_server(service, settings: Settings) -> MCPServer:
                 input.cell_code, page=input.page, page_size=input.page_size
             )
             return TrusteeshipDealPageResponse.from_domain(page)
+        except ConnectorError as exc:
+            raise _tool_error(exc) from exc
+
+    @server.tool(
+        name="tuoguan_listing_search",
+        description=(
+            "Search the 托管 (省心租) 待出租 inventory (city-wide waitingrent). "
+            "Rows carry a working cell_code for tuoguan_listing_get_detail, "
+            "plus community, layout, area, floor, 指导租金, and 看房时间. "
+            "Optional cell_code narrows to one exact unit; page_size is "
+            "server-capped at 300."
+        ),
+        annotations=ToolAnnotations(read_only_hint=True),
+    )
+    def tuoguan_listing_search(
+        input: TrusteeshipListingSearchInput,
+    ) -> TrusteeshipListingPageResponse:
+        _require_quota(_caller_subject())
+        try:
+            page = service.search_trusteeship_listings(
+                page=input.page,
+                page_size=input.page_size,
+                cell_code=input.cell_code,
+            )
+            return TrusteeshipListingPageResponse.from_domain(page)
         except ConnectorError as exc:
             raise _tool_error(exc) from exc
 

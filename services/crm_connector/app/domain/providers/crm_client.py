@@ -29,6 +29,7 @@ from app.domain.models import (
     SaleMapSuggestion,
     TrusteeshipDealPage,
     TrusteeshipDetail,
+    TrusteeshipListingPage,
 )
 
 
@@ -59,6 +60,13 @@ class CrmClient(Protocol):
 
         Labels, 小区/楼栋 attributes, and HQI score. ``hqi`` may be None
         for houses without a score record.
+        """
+
+    def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:
+        """Return the trusteeship ``cell_code`` for a managed (del_type=5) row.
+
+        Uses the same getRedirectUrl endpoint the 房源列表 page uses when an
+        employee clicks a managed row; ``None`` when there is no redirect.
         """
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
@@ -117,3 +125,13 @@ class CrmClient(Protocol):
         self, cell_code: str, *, page: int, page_size: int
     ) -> TrusteeshipDealPage:
         """Return one page of the 托管 成交参考 (deal/list)."""
+
+    def search_trusteeship_listings(
+        self, *, page: int, page_size: int, cell_code: str | None
+    ) -> TrusteeshipListingPage:
+        """Return one page of the 托管 待出租 inventory (waitingrent).
+
+        Rows carry the trusteeship ``cell_code`` (bizCode) directly usable
+        with ``get_trusteeship_detail``; ``cell_code`` narrows to an exact
+        unit when provided.
+        """

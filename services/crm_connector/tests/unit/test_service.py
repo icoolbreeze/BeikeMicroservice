@@ -197,3 +197,34 @@ def test_ready_service_reports_unconfigured_upstream() -> None:
         assert exc.code == "CRM_UPSTREAM_NOT_CONFIGURED"
     else:
         raise AssertionError("unconfigured upstream must not issue a network request")
+
+
+# -- request-model validation regressions (audit 2026-08-15) -----------------
+
+
+def test_numeric_range_rejects_inverted_bounds() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from app.api.schemas import NumericRange
+
+    with pytest.raises(ValidationError):
+        NumericRange(min=2500, max=1000)
+    NumericRange(min=1000, max=2500)
+    NumericRange(min=1000)
+    NumericRange(max=2500)
+
+
+def test_rental_search_rejects_bad_rooms_and_oversized_page() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from app.api.schemas import RentalListingSearchRequest
+
+    with pytest.raises(ValidationError):
+        RentalListingSearchRequest(rooms=[0])
+    with pytest.raises(ValidationError):
+        RentalListingSearchRequest(rooms=[6])
+    with pytest.raises(ValidationError):
+        RentalListingSearchRequest(page=1001)
+    RentalListingSearchRequest(rooms=[1, 5], page=1000)

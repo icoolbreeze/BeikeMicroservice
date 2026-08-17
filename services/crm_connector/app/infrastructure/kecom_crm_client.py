@@ -51,6 +51,8 @@ from app.domain.models import (
     TrusteeshipDeal,
     TrusteeshipDealPage,
     TrusteeshipDetail,
+    TrusteeshipListingPage,
+    TrusteeshipListingRow,
     TrusteeshipManagerInfo,
     TrusteeshipProspectPhoto,
 )
@@ -84,9 +86,11 @@ _SCOPE_TO_RELATION_RANGE = {
 def _route_query(filters: RentalListingFilters) -> dict[str, str | int]:
     """Map RentalListingFilters to the upstream search query string.
 
-    Only documented params are emitted; unknown filters are dropped rather
-    than smuggled to the upstream. ``community_keyword`` becomes the
-    upstream ``communityKeyword`` (case-sensitive on the CRM side).
+    Only documented params are emitted. ``condition_filters`` keys are
+    allow-listed upstream of here (``_LISTING_CONDITION_KEYS`` in the API
+    schemas) and are forwarded verbatim once accepted — this function does
+    not re-filter them. ``community_keyword`` becomes the upstream
+    ``communityKeyword`` (case-sensitive on the CRM side).
     """
     params: dict[str, str | int] = {
         "pageIndex": filters.page,
@@ -151,6 +155,21 @@ def _build_detail_request(listing_id: str) -> AuthorizedRequest:
         route="rental_listing.get_detail",
         method="GET",
         query={"delCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_redirect_request(listing_id: str) -> AuthorizedRequest:
+    # The 房源列表 page resolves a managed (del_type=5) row's destination by
+    # calling /api/houseList/search/getRedirectUrl?delCode=<id>&delType=5; the
+    # response ``data`` is the trusteeship detail URL whose last segment is
+    # the ``cell_code``. Mirrors the employee's real click path (verified via
+    # injected-credential Playwright capture).
+    return AuthorizedRequest(
+        route="rental_listing.get_redirect_url",
+        method="GET",
+        query={"delCode": listing_id, "delType": "5"},
         body=None,
         request_id=str(uuid.uuid4()),
     )
@@ -248,6 +267,32 @@ def _build_trusteeship_deals_request(
         method="GET",
         query={"cellCode": cell_code, "pageIndex": page, "pageSize": page_size},
         body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_trusteeship_list_request(
+    *, page: int, page_size: int, cell_code: str | None
+) -> AuthorizedRequest:
+    # Captured live 2026-08-15 from the 托管工作台 待出租 tab:
+    # POST /api/house/search/waitingrent {"pageIndex":1,"pageSize":20,
+    # "sort":"waitRentTime:desc","searchStatus":1}. The 房源编码 box adds
+    # delCode+outHouseCode carrying a trusteeship cell code (bizCode) —
+    # verified to return exactly that unit. pageSize is server-capped at 300.
+    body: dict[str, str | int] = {
+        "pageIndex": page,
+        "pageSize": page_size,
+        "sort": "waitRentTime:desc",
+        "searchStatus": 1,
+    }
+    if cell_code:
+        body["delCode"] = cell_code
+        body["outHouseCode"] = cell_code
+    return AuthorizedRequest(
+        route="trusteeship.search_listings",
+        method="POST",
+        query=None,
+        body=body,
         request_id=str(uuid.uuid4()),
     )
 
@@ -822,6 +867,50 @@ def _parse_trusteeship_deals(
     )
 
 
+def _parse_trusteeship_listing_row(row: Mapping[str, Any]) -> TrusteeshipListingRow:
+    bedroom = _as_int(row.get("bedroomAmount"))
+    bathroom = _as_int(row.get("bathroomAmount"))
+    layout_text = None
+    if bedroom is not None or bathroom is not None:
+        layout_text = f"{bedroom or 0}室{bathroom or 0}卫"
+    return TrusteeshipListingRow(
+        cell_code=str(row.get("bizCode") or ""),
+        community=_opt_str(row.get("resblockName")),
+        biz_circle=_opt_str(row.get("bizCircleName")),
+        building_name=_opt_str(row.get("buildingName")),
+        house_name=_opt_str(row.get("houseName")),
+        layout_text=layout_text,
+        area_sqm=_as_float(row.get("cellArea")),
+        floor=_as_int(row.get("floorNum")),
+        guide_price_yuan=_as_int(row.get("guidePrice")),
+        can_look_time=_opt_str(row.get("canLookTime")) or _opt_str(row.get("canLookTimDesc")),
+    )
+
+
+def _parse_trusteeship_listings(
+    body: Mapping[str, Any], *, page: int, page_size: int, request_id: str
+) -> TrusteeshipListingPage:
+    data = _trusteeship_envelope(body)
+    raw_list = data.get("list") or []
+    if not isinstance(raw_list, list):
+        raise UpstreamChangedError("trusteeship waitingrent 'list' is not an array")
+    items = tuple(
+        _parse_trusteeship_listing_row(row)
+        for row in raw_list
+        if isinstance(row, Mapping) and row.get("bizCode")
+    )
+    total = _as_int(data.get("total")) or len(items)
+    has_more = bool(data.get("more")) or page * page_size < total
+    return TrusteeshipListingPage(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        has_more=has_more,
+        request_id=request_id,
+    )
+
+
 def _parse_trusteeship_fee_groups(fee_info: Any) -> tuple[str, ...]:
     """Flatten feeInfoDto.feeConfigDataList into render-ready lines.
 
@@ -941,8 +1030,9 @@ def _parse_trusteeship_detail(
             )
         inner = deal_info.get("dealInfo")
         if isinstance(inner, Mapping):
-            deal_avg_price = _opt_str(inner.get("trusteeshipDealAvgPrice"))
-            deal_total_count = _opt_str(inner.get("trusteeshipDealTotalCount"))
+            # upstream serves both as numeric strings ("2416"/"8")
+            deal_avg_price = _as_numeric_float(inner.get("trusteeshipDealAvgPrice"))
+            deal_total_count = _as_int(inner.get("trusteeshipDealTotalCount"))
 
     return TrusteeshipDetail(
         cell_code=cell_code,
@@ -1986,6 +2076,29 @@ class KecomCrmClient:
         _raise_for_business_code(body)
         return _parse_detail_head(body)
 
+    def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:
+        """Return the trusteeship ``cell_code`` for a managed (del_type=5) row.
+
+        Uses the same getRedirectUrl endpoint the 房源列表 page calls when an
+        employee clicks a managed row: the response ``data`` is the
+        trusteeship detail URL and its last path segment is the cell_code.
+        Returns None when the upstream has no redirect (e.g. a 普租 row) or
+        the URL carries no usable tail.
+        """
+        request = _build_redirect_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"rental_listing.get_redirect_url returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _raise_for_business_code(body)
+        url = body.get("data")
+        if not isinstance(url, str) or not url.strip():
+            return None
+        tail = url.rstrip("/").split("/")[-1]
+        return tail or None
+
     def get_rental_listing_prospect(self, listing_id: str) -> ListingProspect:
         """Return the detail-page 实勘 record (photos, floor plan, VR flags).
 
@@ -2128,6 +2241,22 @@ class KecomCrmClient:
         body = _coerce_mapping(response.body)
         return _parse_trusteeship_deals(
             body, page=page, request_id=request.request_id
+        )
+
+    def search_trusteeship_listings(
+        self, *, page: int, page_size: int, cell_code: str | None = None
+    ) -> TrusteeshipListingPage:
+        request = _build_trusteeship_list_request(
+            page=page, page_size=page_size, cell_code=cell_code
+        )
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"trusteeship.search_listings returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        return _parse_trusteeship_listings(
+            body, page=page, page_size=page_size, request_id=request.request_id
         )
 
     # -- 买卖 (sale, house.link) --------------------------------------------

@@ -18,12 +18,9 @@ from app.api.schemas import (
     RentalListingPageResponse,
     RentalListingResponse,
     RentalListingSearchRequest,
-    RentalMapBubbleRequest,
-    RentalMapBubbleResponse,
     RentalMapNearbySearchRequest,
     RentalMapNearbySearchResponse,
     RentalMapPageResponse,
-    RentalMapSearchRequest,
     RentalMapSuggestionRequest,
     RentalMapSuggestionResponse,
     SaleCommunitySuggestionResponse,
@@ -39,6 +36,7 @@ from app.api.schemas import (
     SaleMapSuggestionResponse,
     TrusteeshipDealPageResponse,
     TrusteeshipDetailResponse,
+    TrusteeshipListingPageResponse,
 )
 
 __all__ = [
@@ -51,12 +49,9 @@ __all__ = [
     "RentalListingPageResponse",
     "RentalListingResponse",
     "RentalListingSearchInput",
-    "RentalMapBubbleInput",
-    "RentalMapBubbleResponse",
     "RentalMapNearbySearchInput",
     "RentalMapNearbySearchResponse",
     "RentalMapPageResponse",
-    "RentalMapSearchInput",
     "RentalMapSuggestionInput",
     "RentalMapSuggestionResponse",
     "SaleCommunitySuggestionResponse",
@@ -77,6 +72,8 @@ __all__ = [
     "TrusteeshipDealsInput",
     "TrusteeshipDetailInput",
     "TrusteeshipDetailResponse",
+    "TrusteeshipListingPageResponse",
+    "TrusteeshipListingSearchInput",
 ]
 
 
@@ -90,18 +87,6 @@ class RentalListingDetailInput(BaseModel):
     """Arguments accepted by the ``rental_listing_get_detail`` MCP tool."""
 
     listing_id: str = Field(min_length=1, max_length=64)
-    model_config = ConfigDict(extra="forbid")
-
-
-class RentalMapSearchInput(RentalMapSearchRequest):
-    """Low-level viewport or known-community map search."""
-
-    model_config = ConfigDict(extra="forbid")
-
-
-class RentalMapBubbleInput(RentalMapBubbleRequest):
-    """Return map bubbles for a known geographic viewport."""
-
     model_config = ConfigDict(extra="forbid")
 
 
@@ -168,4 +153,13 @@ class TrusteeshipDealsInput(BaseModel):
     cell_code: str = Field(min_length=1, max_length=64)
     page: int = Field(default=1, ge=1, le=1000)
     page_size: int = Field(default=5, ge=1, le=20)
+    model_config = ConfigDict(extra="forbid")
+
+
+class TrusteeshipListingSearchInput(BaseModel):
+    """Arguments accepted by the ``tuoguan_listing_search`` MCP tool."""
+
+    cell_code: str | None = Field(default=None, min_length=1, max_length=64)
+    page: int = Field(default=1, ge=1, le=1000)
+    page_size: int = Field(default=30, ge=1, le=300)
     model_config = ConfigDict(extra="forbid")

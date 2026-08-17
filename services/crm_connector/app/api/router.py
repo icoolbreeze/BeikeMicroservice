@@ -16,6 +16,7 @@ from app.api.schemas import (
     QrLoginStatusResponse,
     RentalListingResponse,
     RentalListingPageResponse,
+    RentalListingRedirectResponse,
     RentalListingFilterOptionResponse,
     RentalListingSearchRequest,
     RentalMapNearbySearchRequest,
@@ -35,6 +36,8 @@ from app.api.schemas import (
     SaleMapSuggestionResponse,
     TrusteeshipDealPageResponse,
     TrusteeshipDetailResponse,
+    TrusteeshipListingPageResponse,
+    TrusteeshipListingSearchRequest,
 )
 from app.application.qr_login import QrLoginManager
 from app.application.service import ConnectorService
@@ -218,6 +221,24 @@ def get_rental_listing_house_info(
     )
 
 
+@router.get("/listings/rental/{listing_id}/redirect", response_model=RentalListingRedirectResponse)
+def get_rental_listing_redirect(
+    listing_id: str,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> RentalListingRedirectResponse:
+    """Resolve a listing row's trusteeship ``cell_code``.
+
+    Mirrors the 房源列表 page's click behavior: managed (del_type=5) rows
+    resolve through getRedirectUrl to the trusteeship detail page, whose
+    last URL segment is the cell_code used by the tuoguan detail tools.
+    ``cell_code`` is None for rows the trusteeship domain does not serve.
+    """
+    return RentalListingRedirectResponse(
+        listing_id=listing_id,
+        cell_code=invoke(lambda: svc.get_rental_listing_redirect_url(listing_id)),
+    )
+
+
 @router.get(
     "/listings/rental/tuoguan/{cell_code}",
     response_model=TrusteeshipDetailResponse,
@@ -249,6 +270,25 @@ def get_trusteeship_deals(
     """托管 成交参考 (deal/list) — one page of historical deal records."""
     return TrusteeshipDealPageResponse.from_domain(
         invoke(lambda: svc.get_trusteeship_deals(cell_code, page=page, page_size=page_size))
+    )
+
+
+@router.post(
+    "/listings/rental/tuoguan/search", response_model=TrusteeshipListingPageResponse
+)
+def search_trusteeship_listings(
+    payload: TrusteeshipListingSearchRequest,
+    svc: Annotated[ConnectorService, Depends(service)],
+) -> TrusteeshipListingPageResponse:
+    """托管 待出租 inventory (waitingrent) — rows carry working cell_code values."""
+    return TrusteeshipListingPageResponse.from_domain(
+        invoke(
+            lambda: svc.search_trusteeship_listings(
+                page=payload.page,
+                page_size=payload.page_size,
+                cell_code=payload.cell_code,
+            )
+        )
     )
 
 

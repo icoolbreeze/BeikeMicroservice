@@ -1,20 +1,23 @@
-"""Service-mode session watchdog: keepalive + automatic QR re-login.
+"""Service-mode session watchdog: local-state monitor + automatic QR re-login.
 
-The ``crm-authd serve`` process owns a ``KeepaliveTimer``, but the uvicorn
-FastAPI app does not: while it runs, credentials can silently go stale (the
-sliding ``lianjia_ssid`` window expires, or another browser scan supersedes
-the session upstream) with nobody probing or re-triggering a login. This
-watchdog closes that gap for the service process:
+Lazy-validation design: nothing probes the upstream on a timer anymore.
+Session liveness is proven by real business calls (each success rolls the
+local expiry estimate forward inside the session provider) and recovered
+by the silent TGC renewal on the next request. This watchdog therefore
+only reads local provider state:
 
-- Every check interval it calls ``run_keepalive`` on the session provider,
-  which probes the identity endpoint, extends the ssid window, and refreshes
-  via the TGC when the probe fails. Service mode polls more aggressively
-  than ``crm-authd serve`` (60 s vs 1500 s) so a revoked session surfaces
-  quickly.
-- When the provider reports ``auth_required`` and no QR attempt is pending,
-  it starts a QR login so the native scan window reappears without human
+- Every check interval it reads ``status()`` — a purely local read that
+  never touches the upstream, so an idle service emits zero upstream
+  traffic.
+- When the provider reports ``auth_required`` (a real call failed and the
+  TGC renewal could not recover it) and no QR attempt is pending, it
+  starts a QR login so the native scan window reappears without human
   intervention. A conflict (already ready, or an attempt already pending)
   is expected and ignored.
+
+Active periodic probing remains available as an opt-in: set
+``CC_KEEPALIVE_INTERVAL_SECONDS > 0`` for the ``crm-authd serve``
+KeepaliveTimer, or call ``GET /api/v1/auth/keepalive`` on demand.
 """
 
 from __future__ import annotations
@@ -38,7 +41,11 @@ class QrLoginManagerProtocol(Protocol):
 
 
 class SessionWatchdog:
-    """Background thread keeping the service session alive and logged in."""
+    """Background thread re-triggering QR login when the session dies.
+
+    Monitors local provider state only; it never probes the upstream
+    itself (lazy validation keeps idle time request-free).
+    """
 
     def __init__(
         self,
@@ -71,13 +78,12 @@ class SessionWatchdog:
                 logger.warning("session_watchdog.tick_failed class=%s", exc.__class__.__name__)
 
     def _tick(self) -> None:
-        # Probe + extend the ssid window; a failed probe leads to a TGC
-        # refresh inside run_keepalive, and to auth_required when that fails.
-        self._session_provider.run_keepalive()
+        # Local read only: status() does not probe the upstream. auth_required
+        # here means a real call already failed and the silent TGC renewal
+        # could not recover it, so a human rescan is genuinely needed.
         status = self._session_provider.status()
-        # Heartbeat: the service previously ran with zero keepalive
-        # visibility, which is exactly how a stale session went unnoticed.
-        # One INFO line per tick keeps the probe observable in the logs.
+        # Heartbeat: one INFO line per tick keeps the monitor observable in
+        # the logs without generating any upstream traffic.
         logger.info("session_watchdog.tick state=%s", status.state.value)
         if self._qr_manager is None:
             return

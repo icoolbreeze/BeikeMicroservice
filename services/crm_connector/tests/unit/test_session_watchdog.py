@@ -8,25 +8,26 @@ from app.domain.models import ConnectionState, ProviderStatus
 
 
 class FakeProvider:
-    """Provider whose keepalive and status are observable from tests."""
+    """Provider whose status is observable from tests. The keepalive counter
+    stays as a regression guard: the lazy watchdog must never call it."""
 
     def __init__(
         self,
         *,
         state: ConnectionState = ConnectionState.READY,
-        keepalive_error: Exception | None = None,
+        status_error: Exception | None = None,
     ) -> None:
         self._state = state
+        self._status_error = status_error
         self.keepalive_calls = 0
-        self._keepalive_error = keepalive_error
 
     def status(self) -> ProviderStatus:
+        if self._status_error is not None:
+            raise self._status_error
         return ProviderStatus(self._state, "fake status")
 
     def run_keepalive(self) -> None:
         self.keepalive_calls += 1
-        if self._keepalive_error is not None:
-            raise self._keepalive_error
 
     def make_auth_required(self) -> None:
         self._state = ConnectionState.AUTH_REQUIRED
@@ -81,11 +82,13 @@ def _watchdog(
     return watchdog, provider, qr_manager
 
 
-def test_tick_runs_keepalive_every_time() -> None:
+def test_tick_never_probes_the_upstream() -> None:
+    # Lazy validation: the watchdog only reads local state; probing is a
+    # keepalive-timer / explicit-endpoint concern.
     watchdog, provider, qr_manager = _watchdog()
     watchdog._tick()
     watchdog._tick()
-    assert provider.keepalive_calls == 2
+    assert provider.keepalive_calls == 0
     assert qr_manager.start_calls == 0  # session is ready, nothing to re-login
 
 
@@ -133,24 +136,22 @@ def test_tick_ignores_qr_start_conflict() -> None:
     provider.make_auth_required()
     watchdog._tick()  # must not raise
     assert qr_manager.start_calls == 1
-    assert provider.keepalive_calls == 1
 
 
-def test_tick_without_qr_manager_only_keepalives() -> None:
+def test_tick_without_qr_manager_is_safe() -> None:
     watchdog = SessionWatchdog(FakeProvider(state=ConnectionState.AUTH_REQUIRED))
     watchdog._stop = FakeStopEvent()  # type: ignore[attr-defined]
     watchdog._tick()  # must not raise with qr_manager=None
-    assert watchdog._session_provider.keepalive_calls == 1  # type: ignore[attr-defined]
+    assert watchdog._session_provider.keepalive_calls == 0  # type: ignore[attr-defined]
 
 
-def test_run_survives_keepalive_errors() -> None:
-    # A crashed keepalive (network blip, upstream 500) must not kill the
-    # loop: the next tick probes again.
+def test_run_survives_status_errors() -> None:
+    # A crashed status read (e.g. store I/O failure) must not kill the
+    # loop: the next tick reads again.
     watchdog, provider, qr_manager = _watchdog(
-        provider=FakeProvider(keepalive_error=RuntimeError("upstream exploded"))
+        provider=FakeProvider(status_error=RuntimeError("store exploded"))
     )
     watchdog._run()  # must not raise
-    assert provider.keepalive_calls == 1
     assert qr_manager.start_calls == 0
 
 

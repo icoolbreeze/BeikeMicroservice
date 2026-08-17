@@ -97,17 +97,19 @@ def cmd_serve(settings: Settings) -> int:
     bootstrap = KeComQrBootstrapProvider(settings)
     session = KecomSessionProvider(settings, store, bootstrap)
 
-    # Schedule a keepalive timer in the same process. We use a simple thread
-    # here because CRM Connector is intentionally single-VM / single-process;
-    # upgrading to APScheduler is planned for plan §7.3 but out of scope for
-    # the bootstrap phase.
-    timer = KeepaliveTimer(session, settings.refresh_keepalive_interval_seconds)
-    timer.start()
+    # Lazy validation by default: no timer probes the upstream while idle.
+    # An explicit CC_KEEPALIVE_INTERVAL_SECONDS > 0 opts back into the
+    # classic periodic keepalive thread.
+    timer: KeepaliveTimer | None = None
+    if settings.refresh_keepalive_interval_seconds > 0:
+        timer = KeepaliveTimer(session, settings.refresh_keepalive_interval_seconds)
+        timer.start()
 
     app = build_app(settings, session)
     host, _, port = settings.authd_listen_address.rpartition(":")
     uvicorn.run(app, host=host or "127.0.0.1", port=int(port) if port else 8021, log_level="info")
-    timer.stop()
+    if timer is not None:
+        timer.stop()
     return 0
 
 

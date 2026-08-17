@@ -42,6 +42,7 @@ from app.domain.models import (
     SaleMapSuggestion,
     TrusteeshipDealPage,
     TrusteeshipDetail,
+    TrusteeshipListingPage,
 )
 from app.domain.modules import CrmModule, crm_modules
 from app.domain.providers.crm_client import CrmClient
@@ -99,6 +100,10 @@ class ConnectorService:
         self._require_ready()
         return self._crm_client.get_rental_listing_house_info(listing_id)
 
+    def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:
+        self._require_ready()
+        return self._crm_client.get_rental_listing_redirect_url(listing_id)
+
     def get_trusteeship_detail(self, cell_code: str) -> TrusteeshipDetail:
         self._require_ready()
         return self._crm_client.get_trusteeship_detail(cell_code)
@@ -109,6 +114,14 @@ class ConnectorService:
         self._require_ready()
         return self._crm_client.get_trusteeship_deals(
             cell_code, page=page, page_size=page_size
+        )
+
+    def search_trusteeship_listings(
+        self, *, page: int = 1, page_size: int = 30, cell_code: str | None = None
+    ) -> TrusteeshipListingPage:
+        self._require_ready()
+        return self._crm_client.search_trusteeship_listings(
+            page=page, page_size=page_size, cell_code=cell_code
         )
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:

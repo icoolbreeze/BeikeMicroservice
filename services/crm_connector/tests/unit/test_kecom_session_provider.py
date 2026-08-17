@@ -115,30 +115,36 @@ def _ok_envelope() -> dict[str, object]:
 # -- local expiry estimate lapsed: silent TGC renewal first ----------------
 
 
-def test_status_expired_refreshes_via_tgc_and_reports_ready() -> None:
+def test_status_expired_is_local_only_and_reports_expiring() -> None:
+    # Lazy validation: status() must not touch the upstream (no TGC walk,
+    # no probe) when the local estimate lapses; the renewal belongs to the
+    # next authorized_fetch, so idle status polling stays request-free.
     store = FakeStore(_credential(expires_at=NOW - timedelta(minutes=1)))
     bootstrap = FakeBootstrap(_fresh_result())
     provider = _provider(store, bootstrap, handler=lambda req: httpx.Response(500))
 
     status = provider.status()
 
-    assert status.state is ConnectionState.READY
-    assert len(bootstrap.refresh_calls) == 1
-    assert store.saved[-1].session_id != "ssid-1"
-    assert ("ssid-1", "replaced") in store.invalidated
+    assert status.state is ConnectionState.EXPIRING
+    assert bootstrap.refresh_calls == []
+    assert store.load_active() is not None
+    assert store.saved == []
 
 
-def test_status_expired_refresh_failure_deactivates() -> None:
+def test_status_expired_refresh_failure_does_not_deactivate() -> None:
+    # Even when the TGC material is dead, status() stays a local read:
+    # deactivation is decided by the request path, so a status poll at
+    # idle must never kill a credential the next call could recover.
     store = FakeStore(_credential(expires_at=NOW - timedelta(minutes=1)))
     bootstrap = FakeBootstrap(None)
     provider = _provider(store, bootstrap, handler=lambda req: httpx.Response(500))
 
     status = provider.status()
 
-    assert status.state is ConnectionState.AUTH_REQUIRED
-    assert "rescan" in status.message
-    assert store.load_active() is None
-    assert ("ssid-1", "expired") in store.invalidated
+    assert status.state is ConnectionState.EXPIRING
+    assert bootstrap.refresh_calls == []
+    assert store.load_active() is not None
+    assert store.invalidated == []
 
 
 def test_authorized_fetch_expired_refreshes_before_sending() -> None:
@@ -197,6 +203,59 @@ def test_authorized_fetch_expired_refresh_failure_raises_auth_required() -> None
 
 
 # -- keepalive probe success rolls the local estimate forward --------------
+
+
+def test_authorized_fetch_success_rolls_expiry_forward() -> None:
+    # Lazy keepalive: a successful business response replaces the periodic
+    # probe — it proves the session is alive upstream and rolls the local
+    # estimate forward without a dedicated keepalive call.
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=10)))
+    bootstrap = FakeBootstrap(None)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/api/houseList/search/pc/list")
+        return httpx.Response(
+            200,
+            json={"code": 100000, "msg": "加载成功", "data": {"list": [], "totalCount": 0}},
+        )
+
+    provider = _provider(store, bootstrap, handler)
+
+    response = provider.authorized_fetch(
+        AuthorizedRequest(
+            route="rental_listing.search",
+            method="GET",
+            query={"pageIndex": 1, "pageSize": 10},
+            body=None,
+            request_id="req-1",
+        )
+    )
+
+    assert response.status_code == 200
+    assert bootstrap.refresh_calls == []
+    assert store.saved[-1].expires_at == NOW + timedelta(hours=1)
+
+
+def test_default_client_headers_mirror_workbench_browser() -> None:
+    # Outbound headers must match the workbench browser signature instead
+    # of announcing an automation client to the upstream risk control.
+    settings = Settings()
+    provider = KecomSessionProvider(
+        settings, FakeStore(None), FakeBootstrap(None), clock=lambda: NOW
+    )
+    try:
+        assert (
+            provider._client.headers["user-agent"]  # type: ignore[attr-defined]
+            == settings.http_user_agent
+        )
+        assert "Mozilla/5.0" in settings.http_user_agent
+        assert "Chrome/" in settings.http_user_agent
+        assert (
+            provider._client.headers["accept-language"]  # type: ignore[attr-defined]
+            == settings.http_accept_language
+        )
+    finally:
+        provider.close()
 
 
 def test_keepalive_success_rolls_expiry_forward() -> None:
@@ -337,3 +396,127 @@ def test_keepalive_refresh_exception_deactivates_for_qr_login() -> None:
 
     assert status.state is ConnectionState.AUTH_REQUIRED
     assert store.load_active() is None
+
+
+# -- principal survives silent TGC renewal (whoami regression) ---------------
+
+
+def test_refresh_preserves_employee_principal_from_material() -> None:
+    """The renewed business session re-plants UCID; the saved credential must
+    carry it so crm_whoami / bound-principal checks keep working."""
+    store = FakeStore(_credential(expires_at=NOW - timedelta(minutes=1)))
+    bootstrap = FakeBootstrap(_fresh_result())
+    provider = _provider(store, bootstrap, handler=lambda req: httpx.Response(200, json=_ok_envelope()))
+
+    response = provider.authorized_fetch(
+        AuthorizedRequest(
+            route="rental_listing.search",
+            method="GET",
+            query={},
+            body=None,
+            request_id="req-1",
+        )
+    )
+
+    assert response.status_code == 200
+    saved = store.saved[-1]
+    assert saved.employee_principal == "1000000031696069"
+
+
+def test_refresh_keeps_previous_principal_without_material_ucid() -> None:
+    """Material without a UCID cookie falls back to the replaced credential's
+    principal instead of hardcoding the empty string."""
+    result = BootstrapResult(
+        credential_material=json.dumps({"puzu_lease_token": "t"}).encode("utf-8"),
+        expires_at=NOW + timedelta(hours=1),
+        credential_version=1,
+        refresh_material=b'{"TGC": "TGT-fake"}',
+    )
+    store = FakeStore(_credential(expires_at=NOW - timedelta(minutes=1)))
+    bootstrap = FakeBootstrap(result)
+    provider = _provider(store, bootstrap, handler=lambda req: httpx.Response(200, json=_ok_envelope()))
+
+    provider.authorized_fetch(
+        AuthorizedRequest(
+            route="rental_listing.search",
+            method="GET",
+            query={},
+            body=None,
+            request_id="req-1",
+        )
+    )
+
+    assert store.saved[-1].employee_principal == "1000000031696069"
+
+
+def test_bound_principal_falls_back_to_material_ucid() -> None:
+    """Credentials installed by older renewals recorded an empty principal;
+    the UCID cookie inside the material is the same identity."""
+    stale = ActiveCredential(
+        session_id="ssid-1",
+        employee_principal="",
+        credential_material=_material(),
+        expires_at=NOW + timedelta(minutes=50),
+        credential_version=1,
+        refresh_material=b'{"TGC": "TGT-fake"}',
+    )
+    store = FakeStore(stale)
+    provider = _provider(store, FakeBootstrap(None), handler=lambda req: httpx.Response(500))
+
+    principal = provider.bound_principal()
+
+    assert principal is not None
+    assert principal.employee_principal == "1000000031696069"
+
+
+# -- 200 + non-JSON body surfaces as contract drift --------------------------
+
+
+def test_authorized_fetch_non_json_body_raises_upstream_changed() -> None:
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
+    provider = _provider(
+        store,
+        FakeBootstrap(None),
+        handler=lambda req: httpx.Response(200, text="<html>login page</html>"),
+    )
+
+    from app.domain.errors import UpstreamChangedError
+
+    try:
+        provider.authorized_fetch(
+            AuthorizedRequest(request_id="t", route="identity.me", method="GET", query={}, body=None)
+        )
+    except UpstreamChangedError as exc:
+        assert "non-JSON" in str(exc)
+    else:
+        raise AssertionError("expected UpstreamChangedError")
+
+
+# -- autorefresh no longer invalidates the old credential upfront ------------
+
+
+def test_autorefresh_success_invalidates_old_as_replaced_not_rejected() -> None:
+    """A 401 followed by a successful renewal must leave the old credential
+    invalidated as ``replaced``; the pre-refresh deactivation used to mark it
+    ``upstream_rejected`` (and discarded it when the refresh hit a network
+    error)."""
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
+    bootstrap = FakeBootstrap(_fresh_result())
+    calls = {"n": 0}
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return httpx.Response(200, json={"code": 403, "msg": "用户未登录"})
+        return httpx.Response(200, json=_ok_envelope())
+
+    provider = _provider(store, bootstrap, handler=handler)
+
+    provider.authorized_fetch(
+        AuthorizedRequest(request_id="t", route="identity.me", method="GET", query={}, body=None)
+    )
+
+    rejected = [reason for sid, reason in store.invalidated if sid == "ssid-1" and reason == "upstream_rejected"]
+    replaced = [reason for sid, reason in store.invalidated if sid == "ssid-1" and reason == "replaced"]
+    assert not rejected
+    assert replaced

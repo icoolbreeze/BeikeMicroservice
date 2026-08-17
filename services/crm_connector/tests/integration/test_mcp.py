@@ -112,6 +112,7 @@ async def test_tool_discovery_exposes_map_tools_with_read_only_hint(tmp_path) ->
             "sale_map_suggest",
             "tuoguan_listing_get_deals",
             "tuoguan_listing_get_detail",
+            "tuoguan_listing_search",
         ]
         assert all(
             tool.annotations is not None and tool.annotations.read_only_hint
@@ -389,6 +390,70 @@ async def test_tuoguan_get_deals_tool_paginates(tmp_path) -> None:
 
 
 @pytest.mark.anyio(backend="asyncio")
+async def test_tuoguan_listing_search_returns_working_cell_codes(tmp_path) -> None:
+    # Fixture mirrors the live waitingrent capture (2026-08-15): rows carry
+    # bizCode (cell_code), resblockName, guidePrice, cellArea, floorNum.
+    session = StubSession()
+    session.enqueue(
+        "trusteeship.search_listings", 200,
+        {
+            "code": 100000, "msg": "加载成功",
+            "data": {
+                "total": 13418, "more": False,
+                "list": [{
+                    "bizCode": 10611958598901, "resblockName": "阳光365",
+                    "bizCircleName": "盐市口", "buildingName": "1号楼",
+                    "houseName": "1735", "bedroomAmount": 1, "bathroomAmount": 1,
+                    "cellArea": 42.81, "floorNum": 17, "guidePrice": 2100,
+                    "canLookTime": "2026-07-16 17:25:57",
+                }],
+            },
+        },
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "tuoguan_listing_search",
+            {"input": {"page": 1, "page_size": 20}},
+        )
+        assert result.is_error is False
+        page = _text(result)
+        assert page["total"] == 13418
+        assert page["has_more"] is True  # 1*20 < 13418
+        row = page["items"][0]
+        assert row["cell_code"] == "10611958598901"
+        assert row["community"] == "阳光365"
+        assert row["layout_text"] == "1室1卫"
+        assert row["guide_price_yuan"] == 2100
+        call = session.calls[0]
+        assert call.route == "trusteeship.search_listings"
+        assert call.body["searchStatus"] == 1
+        assert call.body["pageSize"] == 20
+        assert "delCode" not in call.body
+
+
+@pytest.mark.anyio(backend="asyncio")
+async def test_tuoguan_listing_search_cell_code_lookup_sends_both_params(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue(
+        "trusteeship.search_listings", 200,
+        {"code": 100000, "msg": "加载成功", "data": {"total": 1, "more": False, "list": []}},
+    )
+    server = _wired_server(session, tmp_path)
+
+    async with Client(server) as client:
+        result = await client.call_tool(
+            "tuoguan_listing_search",
+            {"input": {"cell_code": "10611958598901"}},
+        )
+        assert result.is_error is False
+        call = session.calls[0]
+        assert call.body["delCode"] == "10611958598901"
+        assert call.body["outHouseCode"] == "10611958598901"
+
+
+@pytest.mark.anyio(backend="asyncio")
 async def test_get_house_info_tool_aggregates_detail_info(tmp_path) -> None:
     session = StubSession()
     session.enqueue("rental_listing.get_hdic_info", 200, {
@@ -587,6 +652,7 @@ async def test_stdio_transport_serves_tools_from_real_entry_point(tmp_path) -> N
                 "sale_map_suggest",
                 "tuoguan_listing_get_deals",
                 "tuoguan_listing_get_detail",
+            "tuoguan_listing_search",
             ]
             result = await session.call_tool("crm_connection_status", {})
             assert result.is_error is False

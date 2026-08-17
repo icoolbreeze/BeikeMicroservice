@@ -186,6 +186,37 @@ class TrusteeshipDealPage:
 
 
 @dataclass(frozen=True)
+class TrusteeshipListingRow:
+    """One 待出租 (waiting-rent) inventory row (house/search/waitingrent).
+
+    ``cell_code`` is the row's ``bizCode`` — verified live to be accepted by
+    the pageInfoForPc detail endpoint, so these rows are a self-sufficient
+    source of trusteeship ids.
+    """
+
+    cell_code: str
+    community: str | None
+    biz_circle: str | None
+    building_name: str | None
+    house_name: str | None
+    layout_text: str | None
+    area_sqm: float | None
+    floor: int | None
+    guide_price_yuan: int | None
+    can_look_time: str | None
+
+
+@dataclass(frozen=True)
+class TrusteeshipListingPage:
+    items: tuple[TrusteeshipListingRow, ...]
+    page: int
+    page_size: int
+    total: int
+    has_more: bool
+    request_id: str
+
+
+@dataclass(frozen=True)
 class TrusteeshipDetail:
     """pageInfoForPc — the 托管 (省心租) detail-page head.
 
@@ -231,8 +262,10 @@ class TrusteeshipDetail:
     vr_picture_url: str | None
     hqi_score: str | None
     deal_details: tuple[TrusteeshipDeal, ...]
-    deal_avg_price: str | None
-    deal_total_count: str | None
+    deal_avg_price: float | None
+    """托管成交参考均价 (trusteeshipDealAvgPrice, 元/月, numeric)."""
+    deal_total_count: int | None
+    """托管成交参考总条数 (trusteeshipDealTotalCount, numeric)."""
     fee_groups: tuple[str, ...]
     """费用项配置 rows: each row joins the fee matrix cells with ' | '."""
     del_status: int | None

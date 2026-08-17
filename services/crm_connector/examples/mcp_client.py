@@ -43,15 +43,31 @@ def _print_json(payload: Any) -> None:
 async def _call_json(
     session: ClientSession, name: str, arguments: dict[str, Any]
 ) -> Any | None:
-    """Call a tool; return parsed JSON, or None after printing the error."""
+    """Call a tool; return parsed JSON, or None after printing the error.
+
+    Prefers the structured content (MCP 2.0): list-returning tools serialize
+    as one TextContent block per item, so reading only ``content[0]`` would
+    silently drop every suggestion after the first.
+    """
     result = await session.call_tool(name, arguments)
-    content = result.content[0]
     if result.is_error:
+        content = result.content[0]
         message = content.text if isinstance(content, TextContent) else "unknown error"
         sys.stderr.write(f"tool {name} failed: {message}\n")
         return None
-    assert isinstance(content, TextContent)
-    return json.loads(content.text)
+    structured = getattr(result, "structured_content", None)
+    if isinstance(structured, dict):
+        # The library wraps non-object outputs (arrays, scalars) under a
+        # single "result" key; object models are passed through as-is.
+        if set(structured) == {"result"}:
+            return structured["result"]
+        return structured
+    texts = [c.text for c in result.content if isinstance(c, TextContent)]
+    joined = "\n".join(texts)
+    try:
+        return json.loads(joined)
+    except json.JSONDecodeError:
+        return [json.loads(t) for t in texts]
 
 
 async def _run(args: argparse.Namespace) -> bool:
@@ -72,9 +88,13 @@ async def _run(args: argparse.Namespace) -> bool:
                     ("crm_connection_status", {}),
                     ("crm_whoami", {}),
                     (
+                        # scope="all": no restriction was stated, and rental
+                        # searches return mixed 普租 (del_type=2) + 托管
+                        # (del_type=5) rows by default — do not filter by type.
                         "rental_listing_search",
                         {
                             "input": {
+                                "scope": "all",
                                 "community_keyword": args.keyword,
                                 "page": args.page,
                                 "page_size": args.page_size,
@@ -88,15 +108,68 @@ async def _run(args: argparse.Namespace) -> bool:
                     _print_json(payload)
                 assert payload is not None  # loop above never returns with payload None
                 search = payload["items"]
-                if search:
-                    listing = await _call_json(
+                if not search:
+                    return True
+                first = search[0]
+                if first.get("del_type") == 5:
+                    # 托管 row: listing_id is the 普租 delCode and is NOT served
+                    # by the 普租 detail tools. Resolve the trusteeship
+                    # cell_code from the waiting-rent inventory (matched by
+                    # community) and use the trusteeship detail tool.
+                    community = first.get("community")
+                    cell_code = None
+                    inventory: dict[str, Any] | None = None
+                    for page in (1, 2):
+                        inventory = await _call_json(
+                            session,
+                            "tuoguan_listing_search",
+                            {"input": {"page": page, "page_size": 100}},
+                        )
+                        if inventory is None:
+                            return False
+                        match = next(
+                            (
+                                row
+                                for row in inventory.get("items", [])
+                                if row.get("community") == community
+                            ),
+                            None,
+                        )
+                        if match is not None:
+                            cell_code = match.get("cell_code")
+                            break
+                    if cell_code is None:
+                        # The 13k-row city inventory is not community-indexed;
+                        # when the row's community is outside the first pages,
+                        # demonstrate the trusteeship chain with an inventory
+                        # row instead of failing.
+                        rows = (inventory or {}).get("items", [])
+                        if not rows:
+                            sys.stderr.write(
+                                "trusteeship inventory empty; skipping detail\n"
+                            )
+                            return True
+                        cell_code = rows[0].get("cell_code")
+                        sys.stderr.write(
+                            f"no trusteeship cell_code found for {community!r} "
+                            f"in the first inventory pages; demoing with "
+                            f"inventory row {rows[0].get('community')!r} "
+                            f"(cell_code {cell_code})\n"
+                        )
+                    detail = await _call_json(
+                        session,
+                        "tuoguan_listing_get_detail",
+                        {"input": {"cell_code": cell_code}},
+                    )
+                else:
+                    detail = await _call_json(
                         session,
                         "rental_listing_get_detail",
-                        {"input": {"listing_id": search[0]["listing_id"]}},
+                        {"input": {"listing_id": first["listing_id"]}},
                     )
-                    if listing is None:
-                        return False
-                    _print_json(listing)
+                if detail is None:
+                    return False
+                _print_json(detail)
                 return True
 
             if args.command == "status":

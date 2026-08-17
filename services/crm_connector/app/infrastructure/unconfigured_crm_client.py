@@ -28,6 +28,7 @@ from app.domain.models import (
     SaleMapSuggestion,
     TrusteeshipDealPage,
     TrusteeshipDetail,
+    TrusteeshipListingPage,
 )
 
 
@@ -50,6 +51,9 @@ class UnconfiguredCrmClient:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
 
     def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
 
     def search_rental_map(self, filters: RentalMapSearchFilters) -> RentalMapPage:
@@ -98,4 +102,9 @@ class UnconfiguredCrmClient:
     def get_trusteeship_deals(
         self, cell_code: str, *, page: int, page_size: int
     ) -> TrusteeshipDealPage:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def search_trusteeship_listings(
+        self, *, page: int, page_size: int, cell_code: str | None = None
+    ) -> TrusteeshipListingPage:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")

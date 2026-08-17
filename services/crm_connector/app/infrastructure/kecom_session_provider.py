@@ -12,7 +12,11 @@ from typing import Callable
 
 import httpx
 
-from app.domain.errors import AuthenticationRequiredError, NetworkRequiredError
+from app.domain.errors import (
+    AuthenticationRequiredError,
+    NetworkRequiredError,
+    UpstreamChangedError,
+)
 from app.domain.models import ConnectionState, Principal, ProviderStatus
 from app.domain.providers.credential_bootstrap_provider import (
     BootstrapResult,
@@ -81,6 +85,12 @@ class KecomSessionProvider:
     of ``authorized_fetch`` see a single, opaque "send a controlled request
     on my behalf" interface. The provider never exposes raw cookies,
     tokens or the bootstrap material.
+
+    Session validation is lazy: no timer probes the upstream. A successful
+    business call proves liveness and rolls the local expiry estimate
+    forward; a lapsed estimate triggers the silent TGC renewal inside the
+    next call. Outbound headers mirror the workbench browser so automated
+    traffic stays consistent with the employee's real session.
     """
 
     def __init__(
@@ -99,7 +109,15 @@ class KecomSessionProvider:
         self._client = client or httpx.Client(
             timeout=httpx.Timeout(settings.request_timeout_seconds),
             follow_redirects=False,
-            headers={"user-agent": "crm-connector/0.1"},
+            # Mirror the workbench browser's client signature on every
+            # outbound request; a non-browser UA / accept-language pair is
+            # the most conspicuous automated-access signal for the upstream
+            # risk control. Override via CC_HTTP_USER_AGENT to track the
+            # actual browser version in use.
+            headers={
+                "user-agent": settings.http_user_agent,
+                "accept-language": settings.http_accept_language,
+            },
         )
         self._clock = clock or _utc_now
 
@@ -131,19 +149,17 @@ class KecomSessionProvider:
                 )
 
             if self._is_expired(active):
-                # The local estimate lapsed — attempt a silent TGC renewal
-                # before giving up; rescan is only the fallback.
-                refreshed = self._refresh_on_local_expiry(active)
-                if refreshed is not None:
-                    return ProviderStatus(
-                        ConnectionState.READY,
-                        "CRM authorization refreshed via TGC after local expiry",
-                        expires_at=refreshed.expires_at,
-                    )
-                self._deactivate_locked(active.session_id, "expired")
+                # Lazy validation: status() is a local read and never
+                # touches the upstream. A lapsed local estimate is still
+                # recoverable via the silent TGC renewal that runs inside
+                # the next authorized_fetch, so report EXPIRING instead of
+                # probing or forcing a rescan here. Deactivation stays a
+                # decision of the actual request path.
                 return ProviderStatus(
-                    ConnectionState.AUTH_REQUIRED,
-                    "CRM authorization expired; refresh failed, rescan required",
+                    ConnectionState.EXPIRING,
+                    "local expiry estimate lapsed; silent TGC renewal runs "
+                    "on the next request",
+                    expires_at=active.expires_at,
                 )
 
             state, message = self._derive_state_locked(active)
@@ -175,21 +191,46 @@ class KecomSessionProvider:
                 "CRM authorization was rejected by the upstream after request"
             )
 
-        return UpstreamResponse(status_code=response.status_code, body=response.json())
+        # Lazy keepalive: a successful (non-auth-failure) business response
+        # proves the session is alive upstream and extends the sliding
+        # lianjia_ssid window — exactly what the periodic keepalive probe
+        # used to do. Roll the local estimate forward so a used session is
+        # never expired by the clock while an idle one stays untouched.
+        self._roll_expiry_forward(refreshed if refreshed is not None else active)
+
+        try:
+            body = response.json()
+        except (json.JSONDecodeError, ValueError) as exc:
+            # A 200 with an HTML body is the upstream answering with a login
+            # or error page instead of the business envelope; surface the
+            # contract drift instead of a raw JSONDecodeError.
+            raise UpstreamChangedError(
+                f"{request.route} returned a non-JSON body "
+                f"(status {response.status_code})"
+            ) from exc
+        return UpstreamResponse(status_code=response.status_code, body=body)
 
     def bound_principal(self) -> Principal | None:
         """Return the employee principal this session was bootstrapped with.
 
         The upstream accountRightInfo envelope does not echo the principal,
         so the identity recorded at scan time (the ``UCID`` cookie) is the
-        authoritative local source.
+        authoritative local source. Credentials installed by older silent
+        TGC renewals may carry an empty recorded principal (the renewal used
+        to drop it); the UCID cookie inside the credential material is the
+        same identity, so fall back to it before giving up.
         """
         with self._lock:
             active = self._active or self._store.load_active()
             self._active = active
-        if active is None or not active.employee_principal:
+        if active is None:
             return None
-        return Principal(employee_principal=active.employee_principal)
+        principal = active.employee_principal or _decode_material(
+            active.credential_material
+        ).get("UCID", "")
+        if not principal:
+            return None
+        return Principal(employee_principal=principal)
 
     def close(self) -> None:
         if self._client_owner:
@@ -407,15 +448,22 @@ class KecomSessionProvider:
             return refreshed if refreshed and refreshed.session_id != active.session_id else None
 
         try:
-            self._deactivate_locked(active.session_id, "upstream_rejected")
             try:
-                refreshed = self._make_credential(self._bootstrap.refresh(active))
+                refreshed = self._make_credential(
+                    self._bootstrap.refresh(active), previous=active
+                )
             except Exception as exc:  # noqa: BLE001 - bootstrap is an adapter boundary
                 logger.warning(
                     "authorized_fetch.refresh_failed class=%s", exc.__class__.__name__
                 )
                 refreshed = None
             if refreshed is None:
+                # Only reject the old credential once the renewal itself has
+                # failed. Deactivating before the refresh attempt discarded a
+                # possibly-still-valid credential whenever the refresh hit a
+                # transient network error (authorized_fetch's post-refresh
+                # rejection path deactivates too, so the end state matches).
+                self._deactivate_locked(active.session_id, "upstream_rejected")
                 return None
             self._store.save(refreshed)
             self._active = refreshed
@@ -426,15 +474,29 @@ class KecomSessionProvider:
             self._refresh_lock.release()
 
     @staticmethod
-    def _make_credential(result: BootstrapResult | None) -> ActiveCredential | None:
+    def _make_credential(
+        result: BootstrapResult | None,
+        previous: ActiveCredential | None = None,
+    ) -> ActiveCredential | None:
         if result is None:
             return None
+        # The renewal re-plants the UCID business cookie, so the principal
+        # survives the refresh. Hardcoding "" here used to permanently break
+        # crm_whoami / bound-principal verification after the first silent
+        # TGC renewal (accountRightInfo carries no principal to recover it
+        # from upstream); keep the replaced credential's principal as the
+        # fallback for material shapes without a UCID.
+        principal = (
+            _decode_material(result.credential_material).get("UCID", "")
+            or (previous.employee_principal if previous is not None else "")
+            or ""
+        )
         # active.session_id will be supplied by install_fresh_credential /
         # KecomSessionProvider when persisting; here we only need a unique
         # placeholder so the CredentialStore records a new row.
         return ActiveCredential(
             session_id=str(uuid.uuid4()),
-            employee_principal="",
+            employee_principal=principal,
             credential_material=result.credential_material,
             expires_at=result.expires_at,
             credential_version=result.credential_version,
@@ -464,7 +526,9 @@ class KecomSessionProvider:
                 # concurrent refresh); treat that as the renewal.
                 return current
             try:
-                refreshed = self._make_credential(self._bootstrap.refresh(active))
+                refreshed = self._make_credential(
+                    self._bootstrap.refresh(active), previous=active
+                )
             except Exception as exc:  # noqa: BLE001 - bootstrap is an adapter boundary
                 logger.warning(
                     "expiry.refresh_failed class=%s", exc.__class__.__name__
@@ -483,20 +547,29 @@ class KecomSessionProvider:
         """Extend the conservative expiry estimate after a live probe.
 
         Only persists when the estimate is close to lapsing so the store is
-        not rewritten on every keepalive tick.
+        not rewritten on every request. Called from both the locked
+        keepalive path and the (lock-free) authorized_fetch success path,
+        so it takes the (re-entrant) state lock itself, and only touches
+        the slot when the credential is still current — a concurrent QR
+        login or TGC refresh must not be overwritten by an older object
+        rolling forward (same staleness rule as _deactivate_locked).
         """
-        if active.expires_at is None:
-            return active
-        remaining = active.expires_at - self._clock()
-        if remaining.total_seconds() > _EXPIRY_ROLL_FORWARD_SECONDS:
-            return active
-        extended = replace(
-            active,
-            expires_at=self._clock() + timedelta(seconds=_EXPIRY_EXTENSION_SECONDS),
-        )
-        self._store.save(extended)
-        self._active = extended
-        return extended
+        with self._lock:
+            current = self._active or self._store.load_active()
+            if current is None or current.session_id != active.session_id:
+                return active
+            if active.expires_at is None:
+                return active
+            remaining = active.expires_at - self._clock()
+            if remaining.total_seconds() > _EXPIRY_ROLL_FORWARD_SECONDS:
+                return active
+            extended = replace(
+                active,
+                expires_at=self._clock() + timedelta(seconds=_EXPIRY_EXTENSION_SECONDS),
+            )
+            self._store.save(extended)
+            self._active = extended
+            return extended
 
     # -- internals: state derivation --------------------------------------
 
@@ -632,6 +705,11 @@ def _utc_now() -> datetime:
 _ROUTE_TABLE = {
     "identity.me": (_KEEPALIVE_PATH, True, "business"),
     "rental_listing.search": ("/api/houseList/search/pc/list", True, "business"),
+    "rental_listing.get_redirect_url": (
+        "/api/houseList/search/getRedirectUrl",
+        True,
+        "business",
+    ),
     "rental_listing.filter_options": (
         "/api/houseList/search/pc/searchOption",
         True,
@@ -698,7 +776,6 @@ _ROUTE_TABLE = {
     # city header is needed.
     "sale_listing.search": ("/search/searchQueryNew", False, "house"),
     "sale_listing.filter_options": ("/search/getSearchFilters", False, "house"),
-    "sale_listing.condition": ("/search/getSearchCondition", False, "house"),
     "sale_listing.suggest": ("/search/sugCommunityInfo", False, "house"),
     "sale_listing.get_detail": ("/housedel/views", False, "house"),
     "sale_listing.get_ext_info": ("/housedel/housedelExtInfo", False, "house"),
@@ -718,6 +795,14 @@ _ROUTE_TABLE = {
     "trusteeship.get_deals": (
         "/api/vRoute/house/trusteeship/broker/out/deal/list",
         False,
+        "trusteeship",
+    ),
+    # 待出租 inventory search; the workbench's 待出租 tab posts here with
+    # searchStatus=1 (captured live 2026-08-15). The 房源编码 box adds
+    # delCode+outHouseCode holding a trusteeship cell code (bizCode).
+    "trusteeship.search_listings": (
+        "/api/house/search/waitingrent",
+        True,
         "trusteeship",
     ),
 }
