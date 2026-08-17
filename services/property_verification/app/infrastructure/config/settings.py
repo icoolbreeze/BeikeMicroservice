@@ -35,6 +35,11 @@ class Settings:
     vl_model_fallback: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
     # 第二兜底（可选）：留空则不启用
     vl_model_fallback2: str = "stepfun-ai/step-3.7-flash"
+    # 本地 llama.cpp OCR 服务（PaddleOCR-VL GGUF）。
+    # 留空则不启用；启用后由 llama-server 提供 OpenAI 兼容 /v1/chat/completions。
+    local_ocr_url: str = ""
+    local_ocr_model: str = "local-paddleocr"
+    local_ocr_timeout: float = 120.0
     # 每个模型失败（连接异常或未识别出有效字段）后的重试次数
     vl_retries: int = 2
     # 单次模型调用的超时（秒）
@@ -113,6 +118,9 @@ def load_settings() -> Settings:
             "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"),
         vl_model_fallback2=_env(
             "PV_VL_MODEL_FALLBACK2", "stepfun-ai/step-3.7-flash"),
+        local_ocr_url=_env("PV_LOCAL_OCR_URL"),
+        local_ocr_model=_env("PV_LOCAL_OCR_MODEL", "local-paddleocr"),
+        local_ocr_timeout=float(_env("PV_LOCAL_OCR_TIMEOUT", "120") or 120),
         vl_retries=int(_env("PV_VL_RETRIES", "2") or 2),
         vl_timeout=float(_env("PV_VL_TIMEOUT", "30") or 30),
         model_health_interval_minutes=int(

@@ -124,6 +124,7 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
                 "未配置任何视觉模型 API Key（OPENROUTER_API_KEY / NVIDIA_API_KEY）")
 
         prompts = {
+            "llama": hv.LOCAL_OCR_PROMPT,
             "openrouter": hv.EXTRACT_PROMPT,
             "nvidia": hv.OMNI_PROMPT,
             "nvidia2": hv.EXTRACT_PROMPT,
@@ -131,11 +132,17 @@ def run_verification(job_id: str, cert_path: Path, settings: Settings,
         tasks: list[dict] = []
         for entry in entries:
             key = entry["key"]
+            is_llama = entry["channel"] == "llama"
             tasks.append({
                 **entry,
                 "prompt": prompts.get(key, hv.EXTRACT_PROMPT),
-                "before_request": (before_nvidia if entry["channel"] == "nvidia"
-                                   else before_openrouter),
+                # 本地 OCR 走 CPU/GPU 推理，单次耗时通常高于云端 VL 模型，
+                # 按 PV_LOCAL_OCR_TIMEOUT 单独给超时，其余沿用 PV_VL_TIMEOUT。
+                "timeout": (settings.local_ocr_timeout if is_llama
+                            else settings.vl_timeout),
+                "before_request": (None if is_llama else
+                                   (before_nvidia if entry["channel"] == "nvidia"
+                                    else before_openrouter)),
             })
             if health is not None:
                 tasks[-1]["on_success"] = (

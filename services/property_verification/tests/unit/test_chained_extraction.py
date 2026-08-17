@@ -123,6 +123,149 @@ def test_primary_hangs_timeout_then_falls_back(monkeypatch, tmp_path):
     assert counters["model-备用识别服务(NVIDIA)"] == 1
 
 
+def test_call_llama_ocr_extracts_fields(monkeypatch, tmp_path):
+    seen = {}
+
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {
+                "content": (
+                    "11（2022）成都市不动产权第0164798号\n"
+                    "业务号：2022062001F90498"
+                )
+            }}]}
+
+    seen_resample = {}
+
+    def fake_post(url, **kwargs):
+        seen["url"] = url
+        seen["payload"] = kwargs["json"]
+        return _Resp()
+
+    monkeypatch.setattr(
+        hv, "_ocr_image_data_url",
+        lambda path: (seen_resample.setdefault("called", True),
+                      "data:image/jpeg;base64,xx")[1])
+
+    monkeypatch.setattr("requests.post", fake_post)
+    parsed = hv.call_llama_ocr("http://127.0.0.1:8081/v1", "local",
+                               tmp_path / "c.jpg", "OCR:", timeout=30)
+    assert parsed["业务件号"] == "2022062001F90498"
+    assert parsed["证件编码"] == "11（2022）成都市不动产权第0164798号"
+    assert seen["url"] == "http://127.0.0.1:8081/v1/chat/completions"
+    assert seen["payload"]["model"] == "local"
+    assert seen["payload"]["max_tokens"] == 1024
+    # 实测原图/1600 缩放会引起字符级误读（成副市/业务号错位），
+    # 必须走重采样到 2600 长边的专用预处理
+    assert seen_resample.get("called") is True
+    # llama.cpp 官方要求 OCR 模型图片在前、提示词在后
+    content = seen["payload"]["messages"][0]["content"]
+    assert content[0]["type"] == "image_url"
+    assert content[1] == {"type": "text", "text": "OCR:"}
+
+
+def test_ocr_image_data_url_resamples_to_target(tmp_path):
+    """小图放大（≤1.5x）、大图缩小，长边统一逼近 2600。"""
+    from PIL import Image
+
+    small = tmp_path / "small.jpg"
+    Image.new("RGB", (1279, 1748), "white").save(small, "JPEG")
+    url = hv._ocr_image_data_url(small)
+    import base64
+    import io
+
+    from PIL import Image as PILImage
+    img = PILImage.open(io.BytesIO(base64.b64decode(url.split(",", 1)[1])))
+    assert max(img.size) == 2600  # 1748 * 1.487 < 1.5x 上限
+
+    big = tmp_path / "big.jpg"
+    Image.new("RGB", (3000, 4000), "white").save(big, "JPEG")
+    img2 = PILImage.open(io.BytesIO(base64.b64decode(
+        hv._ocr_image_data_url(big).split(",", 1)[1])))
+    assert max(img2.size) == 2600
+
+
+def test_call_llama_ocr_full_page_transcript(monkeypatch, tmp_path):
+    """整页转写（标题行与号码行相邻 + 空格混杂）时不得把标题尾字吞进证件编码。"""
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": (
+                "中华人民共和国不动产权证\n"
+                "川 (2021) 成都市不动产权第 0088 776 号\n"
+                "监证 0012345\n"
+                "业务号 20210315P0123\n"
+                "义务人 张三"
+            )}}]}
+
+    monkeypatch.setattr(hv, "_ocr_image_data_url",
+                        lambda *a, **k: "data:image/jpeg;base64,xx")
+    monkeypatch.setattr("requests.post", lambda *a, **k: _Resp())
+    parsed = hv.call_llama_ocr("http://127.0.0.1:8081/v1", "local",
+                               tmp_path / "c.jpg", "OCR:", timeout=30)
+    assert parsed["业务件号"] == "20210315P0123"
+    assert parsed["证件编码"] == "川（2021）成都市不动产权第0088776号"
+
+
+def test_call_llama_ocr_city_misread_raises(monkeypatch, tmp_path):
+    """城市字误读（成副市/成新市）必须判为失败，交由链式兜底走云端 VL。"""
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": (
+                "11（2022）成副市不动产权第0164798号\n"
+                "业务号：2022062001F90498"
+            )}}]}
+
+    monkeypatch.setattr(hv, "_ocr_image_data_url",
+                        lambda *a, **k: "data:image/jpeg;base64,xx")
+    monkeypatch.setattr("requests.post", lambda *a, **k: _Resp())
+    with pytest.raises(ValueError, match="未能提取有效字段"):
+        hv.call_llama_ocr("http://127.0.0.1:8081/v1", "local",
+                          tmp_path / "c.jpg", "OCR:", timeout=30)
+
+
+def test_call_llama_ocr_uses_task_timeout(monkeypatch, tmp_path):
+    """llama 任务的独立超时（PV_LOCAL_OCR_TIMEOUT）应传入调用与硬性 deadline。"""
+    captured = {}
+
+    def fake_call(base_url, model, cert_image, prompt, timeout):
+        captured["timeout"] = timeout
+        return {"业务件号": "2022062001F90498", "证件编码": "监证123"}
+
+    monkeypatch.setattr(hv, "call_llama_ocr", fake_call)
+    task = {"label": "本地 OCR 服务(PaddleOCR-VL)", "channel": "llama",
+            "base_url": "http://127.0.0.1:8081/v1", "model": "local",
+            "prompt": "OCR:", "timeout": 120.0}
+    result = hv.extract_credentials_chained(
+        [task], tmp_path / "c.jpg", retries=0, timeout=30)
+    assert result["status"] == "ok"
+    assert captured["timeout"] == 120.0
+
+
+def test_call_llama_ocr_missing_field_raises(monkeypatch, tmp_path):
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": "完全没有字段"}}]}
+
+    monkeypatch.setattr(hv, "_ocr_image_data_url",
+                        lambda *a, **k: "data:image/jpeg;base64,xx")
+    monkeypatch.setattr("requests.post", lambda *a, **k: _Resp())
+    with pytest.raises(ValueError, match="未能提取有效字段"):
+        hv.call_llama_ocr("http://127.0.0.1:8081/v1", "local",
+                          tmp_path / "c.jpg", "OCR:", timeout=30)
+
+
 def test_build_result_aligned():
     headers = ["业务件号", "产权证号", "区域", "是否抵押", "是否查封"]
     cells = ["2022062001F90498", "川（2022）成都市不动产权第0164798号",

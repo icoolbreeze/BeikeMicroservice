@@ -6,7 +6,8 @@ import time
 from app.infrastructure.config.settings import Settings
 from app.infrastructure.model_health import (ModelHealthRegistry,
                                              build_model_entries,
-                                             probe_entry, probe_model)
+                                             probe_entry, probe_local_ocr,
+                                             probe_model)
 from app.infrastructure.verification_runner import _filter_available
 
 
@@ -44,6 +45,15 @@ def test_build_model_entries_without_nvidia():
     settings = Settings(openrouter_api_key="or-key")
     entries = build_model_entries(settings)
     assert [e["key"] for e in entries] == ["openrouter"]
+
+
+def test_build_model_entries_with_local_ocr_first():
+    settings = Settings(openrouter_api_key="or-key", nvidia_api_key="nv-key",
+                        local_ocr_url="http://127.0.0.1:8081/v1")
+    entries = build_model_entries(settings)
+    assert [e["key"] for e in entries] == ["llama", "openrouter", "nvidia", "nvidia2"]
+    assert entries[0]["base_url"] == "http://127.0.0.1:8081/v1"
+    assert entries[0]["channel"] == "llama"
 
 
 def test_build_model_entries_fallback2_disabled():
@@ -101,6 +111,70 @@ def test_probe_model_network_error(monkeypatch):
         "app.infrastructure.model_health.requests.post", _boom)
     ok, reason = probe_model("key", "m", "nvidia")
     assert ok is False and "OSError" in reason
+
+
+def test_probe_local_ocr_ok(monkeypatch):
+    class _Resp:
+        status_code = 200
+        text = "{\"status\":\"ok\"}"
+
+    monkeypatch.setattr(
+        "app.infrastructure.model_health.requests.get",
+        lambda *a, **k: _Resp())
+    ok, reason = probe_local_ocr("http://127.0.0.1:8081/v1")
+    assert ok is True and reason == ""
+
+
+def test_probe_local_ocr_strips_v1_for_health(monkeypatch):
+    """llama-server 的 /health 挂在根路径，base_url 的 /v1 前缀需去掉。"""
+    seen = {}
+
+    class _Resp:
+        status_code = 200
+        text = "ok"
+
+    def fake_get(url, **kwargs):
+        seen["url"] = url
+        return _Resp()
+
+    monkeypatch.setattr(
+        "app.infrastructure.model_health.requests.get", fake_get)
+    ok, _ = probe_local_ocr("http://127.0.0.1:8081/v1")
+    assert ok is True
+    assert seen["url"] == "http://127.0.0.1:8081/health"
+
+
+def test_probe_local_ocr_root_404_falls_back_to_v1(monkeypatch):
+    """根路径探活 404 时，兜底尝试 base_url 直拼的 /v1/health。"""
+    seen = []
+
+    class _Resp:
+        def __init__(self, code):
+            self.status_code = code
+            self.text = str(code)
+
+    def fake_get(url, **kwargs):
+        seen.append(url)
+        return _Resp(200 if "/v1/health" in url else 404)
+
+    monkeypatch.setattr(
+        "app.infrastructure.model_health.requests.get", fake_get)
+    ok, _ = probe_local_ocr("http://127.0.0.1:8081/v1")
+    assert ok is True
+    assert seen == ["http://127.0.0.1:8081/health",
+                    "http://127.0.0.1:8081/v1/health"]
+
+
+def test_probe_local_ocr_error(monkeypatch):
+    class _Resp:
+        status_code = 500
+        text = "bad"
+
+    monkeypatch.setattr(
+        "app.infrastructure.model_health.requests.get",
+        lambda *a, **k: _Resp())
+    ok, reason = probe_local_ocr("http://127.0.0.1:8081/v1")
+    assert ok is False and "HTTP 500" in reason
 
 
 def test_probe_entry_hard_deadline(monkeypatch):

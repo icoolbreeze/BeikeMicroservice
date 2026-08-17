@@ -18,6 +18,7 @@ from app.infrastructure.config.settings import Settings
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+LOCAL_OCR_HEALTH_PATH = "/health"
 PROBE_TIMEOUT_SECONDS = 15
 
 
@@ -54,6 +55,15 @@ def build_model_entries(settings: Settings) -> list[dict]:
     返回：[{key, label, api_key, model, channel}]，key 全局唯一。
     """
     entries: list[dict] = []
+    if settings.local_ocr_url:
+        entries.append({
+            "key": "llama",
+            "label": "本地 OCR 服务(PaddleOCR-VL)",
+            "api_key": "",
+            "model": settings.local_ocr_model,
+            "channel": "llama",
+            "base_url": settings.local_ocr_url.rstrip("/"),
+        })
     if settings.openrouter_api_key:
         entries.append({
             "key": "openrouter", "label": "主识别服务(OpenRouter)",
@@ -95,13 +105,47 @@ def probe_model(api_key: str, model: str, channel: str,
     return False, f"HTTP {resp.status_code}: {resp.text[:120]}"
 
 
+def _health_urls(base_url: str) -> list[str]:
+    """构造 llama.cpp 健康探活候选地址。
+
+    llama-server 的 ``/health`` 挂在根路径（``http://host:port/health``），
+    而 OpenAI 兼容聊天接口在 ``/v1/chat/completions``；``base_url`` 按约定
+    形如 ``http://host:port/v1``，因此需要去掉 /v1 再拼 /health。同时保留
+    原始拼接作为兜底，兼容把根路径直接配在 base_url 上的部署。
+    """
+    base = base_url.rstrip("/")
+    candidates = [f"{base}{LOCAL_OCR_HEALTH_PATH}"]
+    if base.endswith("/v1"):
+        candidates.insert(0, f"{base[:-3]}{LOCAL_OCR_HEALTH_PATH}")
+    return candidates
+
+
+def probe_local_ocr(base_url: str,
+                    timeout: float = PROBE_TIMEOUT_SECONDS) -> tuple[bool, str]:
+    """探测本地 llama.cpp OCR 服务的健康端点；任一候选地址 200 即可用。"""
+    last_reason = ""
+    for url in _health_urls(base_url):
+        try:
+            resp = requests.get(url, timeout=timeout)
+        except Exception as exc:  # noqa: BLE001 - 网络异常统一视为不可用
+            last_reason = f"{type(exc).__name__}: {str(exc)[:120]}"
+            continue
+        if resp.status_code == 200:
+            return True, ""
+        last_reason = f"HTTP {resp.status_code}: {resp.text[:120]}"
+    return False, last_reason
+
+
 def probe_entry(entry: dict, timeout: float = PROBE_TIMEOUT_SECONDS) -> tuple[bool, str]:
     """对模型条目探活；请求网络层挂死时在硬性时限内返回不可用。"""
     box: dict = {}
 
     def _run() -> None:
-        box["result"] = probe_model(entry["api_key"], entry["model"],
-                                    entry["channel"], timeout)
+        if entry.get("channel") == "llama":
+            box["result"] = probe_local_ocr(entry["base_url"], timeout)
+        else:
+            box["result"] = probe_model(entry["api_key"], entry["model"],
+                                        entry["channel"], timeout)
 
     thread = threading.Thread(target=_run, daemon=True)
     thread.start()
