@@ -50,7 +50,9 @@ class UnconfiguredCrmClient:
     def get_rental_listing_prospect(self, listing_id: str) -> ListingProspect:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
 
-    def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+    def get_rental_listing_house_info(
+        self, listing_id: str, *, include_follows: bool = True
+    ) -> ListingDetailInfo:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
 
     def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:

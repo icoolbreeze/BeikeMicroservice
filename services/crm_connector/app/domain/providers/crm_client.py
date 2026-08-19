@@ -55,11 +55,14 @@ class CrmClient(Protocol):
         surveyed yet.
         """
 
-    def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+    def get_rental_listing_house_info(
+        self, listing_id: str, *, include_follows: bool = True
+    ) -> ListingDetailInfo:
         """Return the aggregated detail-page information beyond detailHead.
 
         Labels, 小区/楼栋 attributes, and HQI score. ``hqi`` may be None
-        for houses without a score record.
+        for houses without a score record. Set ``include_follows=False`` for
+        customer-facing flows so the sensitive follow-up route is never called.
         """
 
     def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:

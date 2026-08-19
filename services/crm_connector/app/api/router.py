@@ -212,12 +212,17 @@ def get_rental_listing_prospect(
 def get_rental_listing_house_info(
     listing_id: str,
     svc: Annotated[ConnectorService, Depends(service)],
+    include_follows: bool = Query(default=True),
 ) -> ListingDetailInfoResponse:
     """Detail-page information beyond detailHead: labels, 小区/楼栋
     attributes, and the HQI quality score (``hqi`` is null when the house
     has no score record yet)."""
     return ListingDetailInfoResponse.from_domain(
-        invoke(lambda: svc.get_rental_listing_house_info(listing_id))
+        invoke(
+            lambda: svc.get_rental_listing_house_info(
+                listing_id, include_follows=include_follows
+            )
+        )
     )
 
 

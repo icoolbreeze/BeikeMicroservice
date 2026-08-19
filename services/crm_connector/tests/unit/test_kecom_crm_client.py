@@ -824,6 +824,33 @@ def test_get_rental_listing_house_info_allows_missing_hqi_and_empty_follows() ->
     assert info.follows == ()
 
 
+def test_get_rental_listing_house_info_can_skip_sensitive_follow_route() -> None:
+    session = CapturingSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000, "data": {"resblockName": "成发紫东阳光"},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["电梯房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000, "data": {},
+    })
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000, "data": {"delCode": "RC-42", "importantModules": []},
+    })
+    client = KecomCrmClient(session)
+
+    info = client.get_rental_listing_house_info("RC-42", include_follows=False)
+
+    assert info.follows == ()
+    assert [call.route for call in session.calls] == [
+        "rental_listing.get_hdic_info",
+        "rental_listing.get_house_label",
+        "rental_listing.get_hqi_tab",
+        "rental_listing.get_maintain_info",
+    ]
+
+
 def test_get_rental_listing_prospect_through_session_boundary() -> None:
     session = CapturingSession()
     session.enqueue(
@@ -962,6 +989,7 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
         "bedroomAmount": 3, "hallAmount": 1, "bathroomAmount": 1,
         "area": 89.5, "price": 4500, "orientation": ["南"],
         "delType": 2,
+        "title": "合租·万象城一期 次卧",
         "titleImage": "https://img.ljcdn.com//110000-inspection/pc0_abc.jpg",
         "floorPlanImage": "https://img.ljcdn.com//hdic-frame/std_1.png",
     }
@@ -975,6 +1003,7 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
     assert listing.visible_scope == "my_maintained"
     # delType distinguishes 普租 (2) from 托管 (5); detailHead only serves 普租.
     assert listing.del_type == 2
+    assert listing.rent_mode_label == "合租"
     # 图片字段原样透传（不带尺寸后缀——后缀由调用方按需拼接，见
     # docs/rental-image-cdn.md）。
     assert listing.title_image_url == "https://img.ljcdn.com//110000-inspection/pc0_abc.jpg"
@@ -986,6 +1015,21 @@ def test_parse_listing_exposes_trusteeship_del_type() -> None:
     assert listing.del_type == 5
 
 
+def test_parse_listing_rent_mode_prefers_structured_value_then_title() -> None:
+    assert _parse_listing(
+        {"rentType": "001", "title": "合租·标题冲突"}, scope="all"
+    ).rent_mode_label == "整租"
+    assert _parse_listing(
+        {"title": "合租·东风路居民点"}, scope="all"
+    ).rent_mode_label == "合租"
+    assert _parse_listing(
+        {"mapTitle": "整租·新华园"}, scope="all"
+    ).rent_mode_label == "整租"
+    assert _parse_listing(
+        {"title": "普通标题无前缀"}, scope="all"
+    ).rent_mode_label is None
+
+
 def test_parse_listing_handles_missing_fields_without_crashing() -> None:
     listing = _parse_listing({}, scope="my_maintained")
     assert listing.listing_id == ""
@@ -995,6 +1039,7 @@ def test_parse_listing_handles_missing_fields_without_crashing() -> None:
     assert listing.monthly_rent_yuan is None
     assert listing.orientation is None
     assert listing.del_type is None
+    assert listing.rent_mode_label is None
     assert listing.title_image_url is None
     assert listing.floor_plan_image_url is None
 

@@ -96,9 +96,13 @@ class ConnectorService:
         self._require_ready()
         return self._crm_client.get_rental_listing_prospect(listing_id)
 
-    def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+    def get_rental_listing_house_info(
+        self, listing_id: str, *, include_follows: bool = True
+    ) -> ListingDetailInfo:
         self._require_ready()
-        return self._crm_client.get_rental_listing_house_info(listing_id)
+        return self._crm_client.get_rental_listing_house_info(
+            listing_id, include_follows=include_follows
+        )
 
     def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:
         self._require_ready()

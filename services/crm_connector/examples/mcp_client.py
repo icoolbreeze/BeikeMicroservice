@@ -36,6 +36,19 @@ from mcp.types import TextContent
 SERVICE_DIR = Path(__file__).resolve().parents[1]
 
 
+def _configure_stdio_utf8() -> None:
+    """Make the Windows example client safe for Chinese JSON output.
+
+    PowerShell-hosted Python can otherwise inherit a legacy cp1252 stream even
+    though the MCP child process itself is explicitly configured for UTF-8.
+    """
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="backslashreplace")
+
+
 def _print_json(payload: Any) -> None:
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
@@ -341,6 +354,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    _configure_stdio_utf8()
     ok = asyncio.run(_run(_parser().parse_args()))
     if not ok:
         raise SystemExit(1)

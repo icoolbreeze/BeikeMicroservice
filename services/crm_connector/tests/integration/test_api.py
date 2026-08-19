@@ -113,7 +113,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
                 "result": [
                     {"delCode": "RC-1", "resblockName": "万象城一期",
                      "bedroomAmount": 2, "hallAmount": 1, "area": 80.0, "price": 3500,
-                     "orientation": ["南"]},
+                     "orientation": ["南"], "title": "合租·万象城一期"},
                     {"delCode": "RC-2", "resblockName": "万象城二期",
                      "bedroomAmount": 3, "hallAmount": 2, "area": 110.0, "price": 5800,
                      "orientation": ["南北"]},
@@ -138,6 +138,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
         "layout": "2室1厅", "area_sqm": 80.0, "monthly_rent_yuan": 3500.0,
         "orientation": "南", "visible_scope": "my_maintained",
         "del_type": None,
+        "rent_mode_label": "合租",
         # detail-only fields are absent on search rows
         "maintain_org": None, "source": None, "floor_desc": None,
         "total_floors": None, "listed_days": None, "house_grade": None,
@@ -426,6 +427,31 @@ def test_get_house_info_missing_hqi_returns_null_without_error(tmp_path) -> None
     assert info["maintain"]["modules"] == []
     assert info["maintain"]["remark"] is None
     assert info["follows"] == []
+
+
+def test_customer_house_info_does_not_request_sensitive_follows(tmp_path) -> None:
+    session = StubSession()
+    session.enqueue("rental_listing.get_hdic_info", 200, {
+        "code": 100000, "data": {"resblockName": "成发紫东阳光"},
+    })
+    session.enqueue("rental_listing.get_house_label", 200, {
+        "code": 100000, "data": ["电梯房"],
+    })
+    session.enqueue("rental_listing.get_hqi_tab", 200, {
+        "code": 100000, "data": {},
+    })
+    session.enqueue("rental_listing.get_maintain_info", 200, {
+        "code": 100000, "data": {"delCode": "RC-42", "importantModules": []},
+    })
+    app, client = _wired_app(session, tmp_path)
+
+    response = client.get(
+        "/api/v1/listings/rental/RC-42/house-info?include_follows=false"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["follows"] == []
+    assert "rental_listing.get_follow" not in [call.route for call in session.calls]
 
 
 def test_get_prospect_empty_photos_is_valid_not_surveyed_answer(tmp_path) -> None:

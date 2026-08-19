@@ -478,6 +478,7 @@ class RentalListingResponse(BaseModel):
     orientation: str | None = None
     visible_scope: str
     del_type: int | None = None
+    rent_mode_label: str | None = None
     # Detail-only fields; None for search-page rows (see §房源详情).
     maintain_org: str | None = None
     source: str | None = None

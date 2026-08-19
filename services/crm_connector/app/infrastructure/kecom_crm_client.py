@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Mapping
@@ -1102,12 +1103,45 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         visible_scope=scope,
         # 2 = 普租, 5 = 托管. Only 普租 ids resolve via detailHead.
         del_type=_as_int(row.get("delType")),
+        rent_mode_label=_parse_rent_mode_label(row),
         # Raw CDN originals; direct fetch is 403 for everyone — callers append
         # a size suffix (.450x/.750x/.800x/.1500x.jpg) for a public variant
         # (docs/rental-image-cdn.md). Passed through unsuffixed on purpose.
         title_image_url=_opt_str(row.get("titleImage")),
         floor_plan_image_url=_opt_str(row.get("floorPlanImage")),
     )
+
+
+def _parse_rent_mode_label(row: Mapping[str, Any]) -> str | None:
+    """Return the per-listing 租赁方式 without confusing it with delType.
+
+    Live CRM rows render the mode at the start of ``title`` (for example
+    ``整租·小区名称``). Some upstream variants also expose a structured
+    rentType value, so prefer that when present and keep the title as a
+    compatibility fallback.
+    """
+    aliases = {
+        "001": "整租",
+        "whole_rent": "整租",
+        "整租": "整租",
+        "002": "合租",
+        "shared_rent": "合租",
+        "合租": "合租",
+    }
+    for key in (
+        "rentModeLabel", "rentTypeLabel", "rentTypeName", "rentTypeDesc",
+        "rentType", "rent_type",
+    ):
+        value = row.get(key)
+        if value is None:
+            continue
+        normalized = aliases.get(str(value).strip().lower())
+        if normalized:
+            return normalized
+
+    title = _opt_str(row.get("mapTitle")) or _opt_str(row.get("title")) or ""
+    match = re.match(r"^\s*(整租|合租)(?:\s*[·•・|｜]|\s)", title)
+    return match.group(1) if match else None
 
 
 def _as_float(value: Any) -> float | None:
@@ -2115,12 +2149,16 @@ class KecomCrmClient:
         _raise_for_business_code(body)
         return _parse_prospect(body, listing_id)
 
-    def get_rental_listing_house_info(self, listing_id: str) -> ListingDetailInfo:
+    def get_rental_listing_house_info(
+        self, listing_id: str, *, include_follows: bool = True
+    ) -> ListingDetailInfo:
         """Return the aggregated detail-page information beyond detailHead.
 
-        Five upstream records: getHouseLabel (labels), detailHdicInfo
+        Four or five upstream records: getHouseLabel (labels), detailHdicInfo
         (小区/楼栋 attributes), detailHqiTab (HQI score), getMaintainInfo
-        (维护信息), detailFollow (跟进记录). HQI may be None for houses
+        (维护信息), and optionally detailFollow (跟进记录). Customer-facing
+        flows pass ``include_follows=False`` so the sensitive route is never
+        requested. HQI may be None for houses
         without a score record and follows may be empty when no follow-up
         exists; the hdicInfo call must succeed for a valid 普租 id, otherwise
         the unknown-id error surfaces from it.
@@ -2165,15 +2203,17 @@ class KecomCrmClient:
         _raise_for_business_code(body)
         maintain = _parse_maintain_info(body, listing_id)
 
-        request = _build_follow_request(listing_id)
-        response = self._session.authorized_fetch(request)
-        if response.status_code != 200:
-            raise UpstreamChangedError(
-                f"{request.route} returned status {response.status_code}"
-            )
-        body = _coerce_mapping(response.body)
-        _raise_for_business_code(body)
-        follows = _parse_follow_records(body)
+        follows = ()
+        if include_follows:
+            request = _build_follow_request(listing_id)
+            response = self._session.authorized_fetch(request)
+            if response.status_code != 200:
+                raise UpstreamChangedError(
+                    f"{request.route} returned status {response.status_code}"
+                )
+            body = _coerce_mapping(response.body)
+            _raise_for_business_code(body)
+            follows = _parse_follow_records(body)
 
         return ListingDetailInfo(
             listing_id=listing_id,

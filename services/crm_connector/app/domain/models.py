@@ -79,6 +79,9 @@ class RentalListing:
     # Upstream delType: 2 = 普租, 5 = 托管.  Only 普租 houses have a
     # detailHead record; callers should not attempt detail for 托管 ids.
     del_type: int | None = None
+    # Per-listing rental mode parsed from the CRM row title/structured field.
+    # This is distinct from del_type (普租/托管).
+    rent_mode_label: str | None = None       # 整租 / 合租
     # Raw img.ljcdn.com originals returned by the search rows. Fetching the
     # original directly returns 403 for everyone; callers must append a size
     # suffix (.450x.jpg / .750x.jpg / .800x.jpg / .1500x.jpg) to fetch a
