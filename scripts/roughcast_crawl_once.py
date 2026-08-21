@@ -17,6 +17,11 @@
 
     python scripts/roughcast_crawl_once.py
 
+看观察期攒到哪儿了(只读,零上游请求,可随时跑):
+
+    python scripts/roughcast_crawl_once.py --status
+    python scripts/roughcast_crawl_once.py --status 20    # 看近 20 轮
+
 `SM_CRM_CONNECTOR_BASE_URL` 可指向本地假 connector 做联调;默认打
 `http://127.0.0.1:8020`,也就是用户自己在跑的那个实例。
 """
@@ -25,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -33,13 +39,19 @@ STORE_MEDIA = ROOT / "services" / "store_media"
 sys.path.insert(0, str(STORE_MEDIA))
 
 from app.application.roughcast_crawler import (  # noqa: E402
+    RoughcastCrawlConfig,
     build_crawler,
     crawl_config_from_settings,
+)
+from app.application.roughcast_status import (  # noqa: E402
+    DEFAULT_RUN_LIMIT,
+    build_status_report,
+    render_status,
 )
 from app.infrastructure.database import Database  # noqa: E402
 from app.infrastructure.roughcast_repository import RoughcastRepository  # noqa: E402
 from app.infrastructure.roughcast_throttle import RoughcastThrottle  # noqa: E402
-from app.infrastructure.settings import load_settings  # noqa: E402
+from app.infrastructure.settings import Settings, load_settings  # noqa: E402
 
 
 def main() -> int:
@@ -47,6 +59,12 @@ def main() -> int:
     parser.add_argument(
         "--dry-run", action="store_true",
         help="只打印装配参数与当日已花次数,不发任何上游请求",
+    )
+    parser.add_argument(
+        "--status", nargs="?", type=int, const=DEFAULT_RUN_LIMIT, default=None,
+        metavar="N",
+        help=f"只读:打印近 N 轮(默认 {DEFAULT_RUN_LIMIT})的 run 摘要、上游 total 波动、"
+             "日流量与熔断记录,并对照第 1 期出口条件。不发任何上游请求",
     )
     args = parser.parse_args()
 
@@ -57,9 +75,13 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
 
     settings = load_settings()
+    config = crawl_config_from_settings(settings)
+
+    if args.status is not None:
+        return print_status(settings, config, limit=args.status)
+
     database = Database(settings.database_path)
     database.initialize()
-    config = crawl_config_from_settings(settings)
 
     throttle = RoughcastThrottle(
         RoughcastRepository(database),
@@ -95,6 +117,23 @@ def main() -> int:
     print(f"原因       : {outcome.reason}")
     print("未发布:listing_current / listing_snapshot 均未改动。")
     return 1
+
+
+def print_status(settings: Settings, config: RoughcastCrawlConfig, *, limit: int) -> int:
+    """观察期盘点。**只 SELECT**:不建表、不写库,所以不会搅乱 crawl_log 的账。"""
+    if not settings.database_path.exists():
+        print(f"数据库不存在:{settings.database_path}")
+        print("（SM_STORAGE_DIR 指向别处了?或者还没跑过任何一轮。）")
+        return 1
+    repository = RoughcastRepository(Database(settings.database_path))
+    try:
+        report = build_status_report(repository, config, limit=limit)
+    except sqlite3.OperationalError as exc:
+        print(f"读不到采集库表:{exc}")
+        print("先跑一次 `--dry-run` 建表(零上游请求),或启动 store_media 服务。")
+        return 1
+    print(render_status(report, config, database_path=settings.database_path))
+    return 0
 
 
 if __name__ == "__main__":

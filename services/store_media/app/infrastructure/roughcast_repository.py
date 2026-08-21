@@ -381,10 +381,96 @@ class RoughcastRepository:
                 "SELECT * FROM roughcast_communities WHERE id = ?", (community_id,)
             ).fetchone()
 
+    # ------------------------------------------------------- 观察期只读盘点
+    # 下面几个方法只服务 `roughcast_status`(第 1 期出口条件的日常盘点),
+    # 一个字节都不写。
+
+    def recent_runs(self, *, limit: int, queue: str | None = None) -> list[sqlite3.Row]:
+        with self.database.connect() as db:
+            if queue is None:
+                return db.execute(
+                    "SELECT * FROM roughcast_crawl_runs "
+                    "ORDER BY started_at DESC, id DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+            return db.execute(
+                "SELECT * FROM roughcast_crawl_runs WHERE queue = ? "
+                "ORDER BY started_at DESC, id DESC LIMIT ?",
+                (queue, limit),
+            ).fetchall()
+
+    def staged_target_counts(self, run_ids: Sequence[int]) -> dict[int, int]:
+        """每轮 stage 里的毛坯行数。COMPLETE 轮的这个数就是它发布了多少套。
+
+        `CrawlOutcome.published` 只活在进程内存里,事后盘点只能这样数回来。
+        """
+        return self._counts_by_run(
+            "SELECT run_id AS rid, COUNT(*) AS n FROM roughcast_crawl_stage "
+            "WHERE run_id IN ({placeholders}) AND fitment_status = ? GROUP BY run_id",
+            run_ids,
+            (TARGET_FITMENT,),
+        )
+
+    def snapshot_insert_counts(self, run_ids: Sequence[int]) -> dict[int, int]:
+        """每轮新写入的变更点行数(4.5)。
+
+        非 COMPLETE 的 run 在这里**必须**是 0——快照只在 `complete_run()` 的事务里写。
+        不为 0 就是 4.2 说的那类「最难通过抽查发现」的越界发布。
+        """
+        return self._counts_by_run(
+            "SELECT captured_run_id AS rid, COUNT(*) AS n FROM roughcast_listing_snapshot "
+            "WHERE captured_run_id IN ({placeholders}) GROUP BY captured_run_id",
+            run_ids,
+        )
+
+    def _counts_by_run(self, sql: str, run_ids: Sequence[int],
+                       extra: tuple[object, ...] = ()) -> dict[int, int]:
+        if not run_ids:
+            return {}
+        placeholders = ", ".join("?" for _ in run_ids)
+        with self.database.connect() as db:
+            rows = db.execute(
+                sql.format(placeholders=placeholders), (*run_ids, *extra)
+            ).fetchall()
+        return {int(row["rid"]): int(row["n"]) for row in rows}
+
+    def requests_since(self, since: datetime) -> list[sqlite3.Row]:
+        """时间升序的原始 `crawl_log` 行。节奏与窗口的合规性只能从这里看出来。"""
+        with self.database.connect() as db:
+            return db.execute(
+                "SELECT * FROM roughcast_crawl_log WHERE requested_at >= ? "
+                "ORDER BY requested_at, id",
+                (since.isoformat(),),
+            ).fetchall()
+
+    def runs_since(self, since: datetime) -> list[sqlite3.Row]:
+        """按固定时间窗取 run。出口条件问的是「连续 3 天」,答案不该随 `--status N` 变。"""
+        with self.database.connect() as db:
+            return db.execute(
+                "SELECT * FROM roughcast_crawl_runs WHERE started_at >= ? "
+                "ORDER BY started_at, id",
+                (since.isoformat(),),
+            ).fetchall()
+
+    def status_totals(self) -> dict[str, int]:
+        with self.database.connect() as db:
+            return {
+                "active": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_current "
+                                     "WHERE is_active = 1"),
+                "inactive": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_current "
+                                       "WHERE is_active = 0"),
+                "snapshots": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_snapshot"),
+                "communities": _scalar(db, "SELECT COUNT(*) FROM roughcast_communities"),
+            }
+
 
 def _row_payload(row: RoughcastRow) -> dict[str, object]:
     return {"listing_id": row.listing_id,
             **{name: getattr(row, name) for name in BUSINESS_FIELDS}}
+
+
+def _scalar(db: sqlite3.Connection, sql: str) -> int:
+    return int(db.execute(sql).fetchone()[0])
 
 
 def _stage_counts(db: sqlite3.Connection, run_id: int) -> dict[str, int]:

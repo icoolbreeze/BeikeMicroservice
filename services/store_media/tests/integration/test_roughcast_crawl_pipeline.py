@@ -28,12 +28,14 @@ PAGE_SIZE = 2
 
 
 def raw_listing(listing_id: str, *, rent: float = 4300.0, fitment: str | None = "002",
-                resblock: str = "RB001", community: str = "甲小区") -> dict:
+                resblock: str = "RB001", community: str = "甲小区",
+                bizcircle: str | None = "华侨城") -> dict:
     """connector `/api/v1/listings/rental/search` 的行形状。"""
     return {
         "listing_id": listing_id,
         "resblock_name": community,
         "resblock_id": resblock,
+        "biz_circle": bizcircle,
         "layout": "2室1厅1卫",
         "bedroom_amount": 2,
         "hall_amount": 1,
@@ -197,7 +199,7 @@ def test_first_round_end_to_end(tmp_path, connector) -> None:
     assert row["rooms"] == 2 and row["halls"] == 1 and row["baths"] == 1
     assert row["rent_mode"] == "整租"
     assert row["fitment_status"] == "002"
-    assert row["bizcircle"] is None                  # 第 1 期恒 None,待 connector 改动 E
+    assert row["bizcircle"] == "华侨城"             # 改动 E 已落地,不再恒 None
     assert row["create_time"] == "2026-06-01T00:00:00+00:00"
     with database.connect() as db:
         logged = db.execute(
@@ -283,6 +285,40 @@ def test_private_upstream_fields_never_reach_the_database(tmp_path, connector) -
     assert "13800000000" not in dumped
     assert "owner_phone" not in dumped
     assert "upload_user" not in dumped
+
+
+def test_bizcircle_is_stored_but_stays_out_of_the_change_hash(tmp_path, connector) -> None:
+    """改动 E:商圈入库,但不参与变更判定。
+
+    两件事一起钉住:
+    1. `''` 与字段缺失都收敛成 NULL。商圈名没有「空串与未知语义不同」的问题
+       ——这一点与 fitment_status 相反(见 domain/roughcast.py 的字段注释)。
+    2. bizcircle 不在 HASH_FIELDS 里。否则 E 落地后的第一轮会把每一行都判成
+       变更点、快照表凭空翻一倍,而唯一症状只是「快照表长得有点快」。
+    """
+    connector.rounds = [
+        [raw_listing("L1"), raw_listing("L2", bizcircle="")],
+        [raw_listing("L1", bizcircle="大面"), raw_listing("L2", bizcircle=None)],
+    ]
+    clock = FakeClock()
+    database = Database(tmp_path / "store_media.sqlite3")
+    database.initialize()
+    repository = RoughcastRepository(database, clock=clock)
+
+    first = build_crawler(database, connector, clock).run_once()
+    assert first.snapshots_inserted == 2
+    assert repository.get_current("L1")["bizcircle"] == "华侨城"
+    assert repository.get_current("L2")["bizcircle"] is None      # '' 收敛成 NULL
+
+    clock.advance(days=1)
+    connector.round_index = 1
+    second = build_crawler(database, connector, clock).run_once()
+
+    assert second.status == COMPLETE
+    # 商圈变了、业务列跟着更新,但它不进哈希,所以一行快照都不该新增。
+    assert second.snapshots_inserted == 0
+    assert repository.get_current("L1")["bizcircle"] == "大面"
+    assert len(repository.snapshots_for("L1")) == 1
 
 
 def test_auth_required_from_connector_aborts_the_run(tmp_path, connector) -> None:

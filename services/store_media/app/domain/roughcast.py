@@ -18,7 +18,7 @@ class RoughcastRow:
     community_name: str
     community_id: str | None = None
     resblock_id: str | None = None
-    bizcircle: str | None = None          # 第 1 期恒 None，见 roughcast_schema
+    bizcircle: str | None = None          # bizCircleName，空串按未知收敛成 None
     layout: str | None = None
     rooms: int | None = None
     halls: int | None = None

@@ -57,7 +57,15 @@ python -m uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8010
 ```powershell
 python ..\..\scripts\roughcast_crawl_once.py --dry-run   # 只打印装配参数，零上游请求
 python ..\..\scripts\roughcast_crawl_once.py             # 真跑一轮，约 66–76 次请求 / 40–90 分钟
+python ..\..\scripts\roughcast_crawl_once.py --status     # 只读盘点，零上游请求，可随时跑
 ```
+
+`--status`（可带轮数，如 `--status 20`，默认 10）把第 1 期出口条件要盯的东西一次读出来：
+近 N 轮的 run 摘要（含 `毛坯` / `新快照`，用来看 4.5 的变更点写入是否真的在省快照）、
+上游 `total` 的样本与极差（§七.7 的波动观察）、按本地日汇总的实际流量（请求数、相邻请求
+间隔的 min/中位/max、长停顿次数、破间隔与窗口外次数）、熔断记录，以及三条出口条件的攒进度。
+它**只 SELECT**——不建表、不写 `crawl_log`，所以跑多少遍都不影响当日预算。
+出口条件与日流量固定按近 7 个本地日算，不受 `N` 影响。
 
 一轮 = 一个 `roughcast_crawl_runs` 行，终态只有 `COMPLETE` / `ABORTED` / `FAILED`，
 且**只有 `COMPLETE` 会发布**（刷新 `roughcast_listing_current`、写变更点快照、判下架），

@@ -23,8 +23,11 @@ make new-service NAME=my_service
 ```bash
 python scripts/roughcast_crawl_once.py --dry-run   # 只打印装配参数，零上游请求
 python scripts/roughcast_crawl_once.py             # 真跑一轮，约 66–76 次上游请求
+python scripts/roughcast_crawl_once.py --status    # 只读盘点观察期进度，零上游请求
 ```
 
-**会打真实 CRM 上游**，一轮 40–90 分钟。参数与纪律见
+**会打真实 CRM 上游**，一轮 40–90 分钟。`--status`（可带轮数，默认 10）只 SELECT：
+近 N 轮 run 摘要、上游 `total` 波动、按本地日的实际流量与熔断记录，并对照第 1 期的三条出口条件。
+参数与纪律见
 [`services/store_media/README.md`](../services/store_media/README.md#清水房采集第-1-期默认关闭)
 与 [`services/store_media/docs/roughcast-quality-ranking.md`](../services/store_media/docs/roughcast-quality-ranking.md)。

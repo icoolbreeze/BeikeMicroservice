@@ -143,8 +143,9 @@ def _row_from_response(raw: dict[str, Any]) -> RoughcastRow | None:
         listing_id=listing_id.strip(),
         community_name=community_name,
         resblock_id=_text(raw.get("resblock_id")),
-        # bizcircle 恒 None:connector 尚未映射 bizCircleName,见 roughcast_schema。
-        bizcircle=None,
+        # connector 改动 E 已落地,直接取原值。空串按未知处理(与 fitment_status
+        # 不同:商圈没有「''与 None 语义不同」的问题,见 domain/roughcast.py)。
+        bizcircle=_text(raw.get("biz_circle")),
         layout=_text(raw.get("layout")),
         rooms=_integer(raw.get("bedroom_amount")),
         halls=_integer(raw.get("hall_amount")),

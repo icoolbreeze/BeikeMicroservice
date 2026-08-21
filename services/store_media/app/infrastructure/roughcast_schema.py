@@ -11,9 +11,10 @@ from __future__ import annotations
 # 与 current / snapshot 同构的业务字段。抽成常量是因为 4.1 要求 snapshot
 # 「与 current 同构」，两处手抄一份迟早漂移。
 #
-# bizcircle 第 1 期恒 NULL：原始行里有 bizCircleName，但 connector 的
-# RentalListing 还没映射它（待办的 connector 改动 E）。队列 A 每天重扫全量，
-# 改动 E 落地的次日该列自动填满，不必为补历史另买一轮请求。
+# bizcircle 由 connector 的 bizCircleName 映射而来（改动 E，2026-08-20 落地）。
+# 队列 A 每天重扫全量且 current 表按全业务列 upsert，所以该列在 E 落地后的
+# 第一轮就对全部活跃房源填满，不必为补历史另买一轮请求。它不在 HASH_FIELDS
+# 里，因此加它不会让快照表把每一行都判成变更点。
 _BUSINESS_COLUMNS = """
     community_name      TEXT NOT NULL,
     community_id        TEXT,
