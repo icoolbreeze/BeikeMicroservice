@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f4f0">
+    <title>清水房浏览</title>
+    <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+    <link rel="stylesheet" href="/roughcast.css">
+    <script src="/roughcast.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="清水房浏览">
+          <span class="brand-mark" aria-hidden="true">租</span>
+          <span class="brand-copy">
+            <strong>清水房</strong>
+            <small>内部房源浏览</small>
+          </span>
+        </div>
+      </header>
+
+      <div class="pull-refresh" id="pullRefresh" aria-live="polite" aria-hidden="true">
+        <span class="pull-refresh-spinner" aria-hidden="true"></span>
+        <span id="pullRefreshText">下拉刷新</span>
+      </div>
+
+      <main>
+        <section class="feedback" id="feedback" role="status" aria-live="polite" hidden>
+          <span class="feedback-icon" aria-hidden="true"></span>
+          <div class="feedback-copy">
+            <strong id="feedbackTitle"></strong>
+            <p id="feedbackDetail"></p>
+          </div>
+          <button class="feedback-refresh" id="feedbackRefreshButton" type="button" hidden>重试</button>
+        </section>
+
+        <section class="listing-grid" id="listingGrid" aria-label="毛坯租赁房源列表" aria-live="polite" aria-busy="true"></section>
+        <div class="load-more" id="loadMore" aria-live="polite" hidden>
+          <span class="load-more-spinner" aria-hidden="true"></span>
+          <span id="loadMoreText">正在加载更多房源</span>
+          <button id="loadMoreRetry" type="button" hidden>重试</button>
+        </div>
+        <div class="load-more-sentinel" id="loadMoreSentinel" aria-hidden="true"></div>
+      </main>
+
+      <footer class="sync-footer" aria-live="polite">
+        <span class="sync-dot" aria-hidden="true"></span>
+        <span id="updatedAt">尚未更新</span>
+      </footer>
+    </div>
+
+    <div class="gallery-modal" id="galleryModal" role="dialog" aria-modal="true" aria-labelledby="galleryTitle" hidden>
+      <div class="gallery-backdrop" data-gallery-close></div>
+      <section class="gallery-panel">
+        <header class="gallery-header">
+          <div>
+            <p>房源实勘</p>
+            <h2 id="galleryTitle">实勘图片</h2>
+          </div>
+          <button class="gallery-control gallery-close" id="galleryClose" type="button" aria-label="关闭实勘图片">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>
+          </button>
+        </header>
+        <div class="gallery-status" id="galleryStatus" role="status" aria-live="polite">正在获取实勘图片</div>
+        <div class="gallery-viewport" id="galleryViewport" tabindex="0" aria-label="实勘图片，可左右滑动" hidden>
+          <div class="gallery-track" id="galleryTrack"></div>
+        </div>
+        <footer class="gallery-footer" id="galleryFooter" hidden>
+          <button class="gallery-control" id="galleryPrevious" type="button" aria-label="上一张图片">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>
+          </button>
+          <span id="galleryCounter">1 / 1</span>
+          <button class="gallery-control" id="galleryNext" type="button" aria-label="下一张图片">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.5 5.5L16 12l-6.5 6.5"/></svg>
+          </button>
+        </footer>
+      </section>
+    </div>
+  </body>
+</html>

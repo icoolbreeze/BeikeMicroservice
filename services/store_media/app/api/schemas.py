@@ -164,3 +164,34 @@ class FeaturedFeedResponse(BaseModel):
     sale_total: int | None = None
     rent_total: int | None = None
     updated_at: str = ""
+
+
+class RoughcastRentalListingSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    listing_id: str | None = None
+    community: str
+    layout: str
+    area_sqm: float | None = None
+    monthly_rent_yuan: float | None = None
+    orientation: str
+    floor: str
+    image: str | None = None
+
+
+class RoughcastRentalFeedResponse(BaseModel):
+    items: list[RoughcastRentalListingSchema]
+    updated_at: str = ""
+    page: int
+    has_more: bool
+
+
+class RoughcastProspectPhotoSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    url: str
+    label: str
+
+
+class RoughcastProspectGalleryResponse(BaseModel):
+    photos: list[RoughcastProspectPhotoSchema]

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Iterator
 
 from app.domain.models import MediaItem, MediaType, Role, Store, User
+from app.infrastructure.roughcast_schema import ROUGHCAST_SCHEMA_SQL
 
 
 def _now() -> str:
@@ -78,6 +79,7 @@ class Database:
                     ON media_items(store_id, is_published, sort_order, created_at);
                 """
             )
+            db.executescript(ROUGHCAST_SCHEMA_SQL)
 
     def user_count(self) -> int:
         with self.connect() as db:

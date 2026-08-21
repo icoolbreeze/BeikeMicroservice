@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from starlette.concurrency import run_in_threadpool
@@ -11,6 +11,8 @@ from app.api.schemas import (
     CreateStoreRequest, CreateUserRequest, FeaturedFeedResponse,
     FeaturedListingSchema, LoginRequest, LoginResponse, MediaResponse,
     NewsFeedResponse, NewsItemResponse, PlaylistItem, PlaylistResponse,
+    RoughcastProspectGalleryResponse, RoughcastProspectPhotoSchema,
+    RoughcastRentalFeedResponse, RoughcastRentalListingSchema,
     StoreResponse, UpdateMediaRequest, UpdatePlaylistRequest, UpdateUserRequest,
     UserResponse, WeatherResponse,
 )
@@ -212,4 +214,39 @@ def display_featured(request: Request) -> FeaturedFeedResponse:
         sale_total=feed.sale_total,
         rent_total=feed.rent_total,
         updated_at=feed.updated_at,
+    )
+
+
+@router.get("/display/roughcast-rentals", response_model=RoughcastRentalFeedResponse)
+def display_roughcast_rentals(
+    request: Request,
+    page: int = Query(default=1, ge=1, le=1000),
+) -> RoughcastRentalFeedResponse:
+    feed = request.app.state.roughcast_rental_fetcher.latest(page=page)
+    if feed is None:
+        raise HTTPException(status_code=503, detail="房源数据暂不可用")
+    return RoughcastRentalFeedResponse(
+        items=[RoughcastRentalListingSchema.model_validate(item) for item in feed.items],
+        updated_at=feed.updated_at,
+        page=feed.page,
+        has_more=feed.has_more,
+    )
+
+
+@router.get(
+    "/display/roughcast-rentals/{listing_id}/prospect",
+    response_model=RoughcastProspectGalleryResponse,
+)
+def display_roughcast_prospect(
+    listing_id: str,
+    request: Request,
+) -> RoughcastProspectGalleryResponse:
+    fetcher = request.app.state.roughcast_rental_fetcher
+    if not fetcher.knows_listing(listing_id):
+        raise HTTPException(status_code=404, detail="房源不在当前浏览结果中")
+    gallery = fetcher.prospect(listing_id)
+    if gallery is None:
+        raise HTTPException(status_code=503, detail="实勘图片暂不可用")
+    return RoughcastProspectGalleryResponse(
+        photos=[RoughcastProspectPhotoSchema.model_validate(photo) for photo in gallery.photos],
     )
