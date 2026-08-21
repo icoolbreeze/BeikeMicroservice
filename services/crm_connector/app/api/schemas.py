@@ -509,6 +509,7 @@ class RentalListingResponse(BaseModel):
     bathroom_amount: int | None = None
     resblock_id: str | None = None
     resblock_name: str | None = None
+    biz_circle: str | None = None
     fitment_status: str | None = None
     fitment_status_desc: str | None = None
     create_time: datetime | None = None

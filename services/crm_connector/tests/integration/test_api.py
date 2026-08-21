@@ -113,6 +113,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
                 "result": [
                     {"delCode": "RC-1", "resblockName": "万象城一期",
                      "resblockId": 3011054720095,
+                     "bizCircleName": "华侨城",
                      "bedroomAmount": 2, "hallAmount": 1, "bathroomAmount": 1,
                      "area": 80.0, "price": 3500,
                      "fitmentStatus": "002", "fitmentStatusDesc": "毛坯",
@@ -158,6 +159,7 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
         # 的话，「已映射但没出 API」这种漏法会静默通过。
         "bedroom_amount": 2, "hall_amount": 1, "bathroom_amount": 1,
         "resblock_id": "3011054720095", "resblock_name": "万象城一期",
+        "biz_circle": "华侨城",
         "fitment_status": "002", "fitment_status_desc": "毛坯",
         "create_time": "2025-06-15T15:06:40Z",
     }

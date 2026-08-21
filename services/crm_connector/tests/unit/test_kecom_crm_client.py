@@ -127,10 +127,14 @@ def test_route_query_emits_fixed_params_and_maps_filters() -> None:
     assert query["sceneCode"] == "puzu_mix_list_pc"
     assert query["clientOsType"] == 3
     assert query["communityKeyword"] == "万象城"
-    assert query["priceMin"] == 2000
-    assert query["priceMax"] == 5000
-    assert query["areaMin"] == 70
-    assert query["areaMax"] == 110
+    # Upstream's `rental_listing.filter_options` exposes price/area as colon-
+    # separated band values; `priceMin`/`priceMax` etc. are silently ignored
+    # (probe 2026-08-21, run/probe_deep_paging.py). Open bounds use 0 and -1
+    # sentinels, matching the catalog's "3000元以下" / "10000元以上" bands.
+    assert query["price"] == "2000:5000"
+    assert query["area"] == "70:110"
+    assert "priceMin" not in query and "priceMax" not in query
+    assert "areaMin" not in query and "areaMax" not in query
     assert query["bedroomAmount"] == "2,3"
     assert query["orientation"] == "南,南北"
     # No listing_id/maintainer -> keys absent, never None.
@@ -1026,6 +1030,7 @@ def test_parse_listing_maps_roughcast_ranking_fields() -> None:
             "delCode": "RC-9",
             "resblockName": "兴盛世家D区",
             "resblockId": 3011054720095,  # upstream sends an int
+            "bizCircleName": "华侨城",
             "bedroomAmount": 2,
             "hallAmount": 2,
             "bathroomAmount": 1,
@@ -1041,11 +1046,25 @@ def test_parse_listing_maps_roughcast_ranking_fields() -> None:
     # RentalListingFilters.resblock_ids without int/str drift.
     assert listing.resblock_id == "3011054720095"
     assert listing.resblock_name == "兴盛世家D区"
+    assert listing.biz_circle == "华侨城"
     assert listing.fitment_status == "002"
     assert listing.fitment_status_desc == "毛坯"
     assert listing.create_time == datetime(2025, 6, 15, 15, 6, 40, tzinfo=UTC)
     # kitchenAmount has no consumer, so it must not appear on the model at all.
     assert not hasattr(listing, "kitchen_amount")
+
+
+def test_parse_listing_reads_biz_circle_from_same_key_as_sale_rows() -> None:
+    # 改动 E。销售行一直映射着 bizCircleName，租赁行漏了,于是 store_media 只能
+    # 硬写 None。两个解析器读同一个上游字段却给出不同结果是双重口径,这条把它钉住。
+    from app.infrastructure.kecom_crm_client import _parse_sale_listing
+
+    row = {"bizCircleName": "华侨城"}
+    assert _parse_listing(row, scope="all").biz_circle == "华侨城"
+    assert _parse_sale_listing(row).biz_circle == "华侨城"
+    # 字段缺失时两边都收敛到 None,而不是 KeyError 或空串。
+    assert _parse_listing({}, scope="all").biz_circle is None
+    assert _parse_sale_listing({}).biz_circle is None
 
 
 def test_parse_listing_keeps_unknown_fitment_distinguishable_from_decorated() -> None:

@@ -110,17 +110,19 @@ def _route_query(filters: RentalListingFilters) -> dict[str, str | int]:
     if filters.listing_id:
         params["delCode"] = filters.listing_id
     if filters.monthly_rent_yuan is not None:
+        # Upstream `rental_listing.filter_options` exposes the price key with
+        # colon-separated band values ("0:3000", "10000:-1"). Emitting
+        # `priceMin` / `priceMax` as separate params is silently ignored —
+        # 5-request probe on 2026-08-21 (run/probe_deep_paging.py) returned
+        # totalCount=3268 for both an unbounded query and a priceMax=1500
+        # query, with overlapping ids up to price=5800 in the "≤1500" band.
         lo, hi = filters.monthly_rent_yuan
-        if lo is not None:
-            params["priceMin"] = int(lo)
-        if hi is not None:
-            params["priceMax"] = int(hi)
+        params["price"] = f"{_range_bound(lo)}:{_range_bound(hi, open_high=True)}"
     if filters.area_sqm is not None:
+        # Same shape as `price`: "lo:hi" with 0 / -1 for open bounds, per the
+        # area filter catalog ("0:50", "200:-1", "自定义范围" type=range).
         lo, hi = filters.area_sqm
-        if lo is not None:
-            params["areaMin"] = int(lo)
-        if hi is not None:
-            params["areaMax"] = int(hi)
+        params["area"] = f"{_range_bound(lo)}:{_range_bound(hi, open_high=True)}"
     if filters.rooms:
         params["bedroomAmount"] = ",".join(str(r) for r in filters.rooms)
     if filters.orientations:
@@ -1119,6 +1121,8 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         # resblockId is a JSON int upstream; _opt_str keeps it an opaque string.
         resblock_id=_opt_str(row.get("resblockId")),
         resblock_name=community or None,
+        # Same field name the sale parser reads; the rental row carries it too.
+        biz_circle=_opt_str(row.get("bizCircleName")),
         # Kept raw: '' and None are distinct from 简装/精装 and must stay so.
         fitment_status=_opt_str(row.get("fitmentStatus")),
         fitment_status_desc=_opt_str(row.get("fitmentStatusDesc")),

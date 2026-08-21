@@ -122,6 +122,10 @@ class RentalListing:
     # community's reference set in one request instead of resolving via suggest.
     resblock_id: str | None = None           # resblockId 小区 ID
     resblock_name: str | None = None         # resblockName 小区名（community 的原值）
+    # 商圈. The sale rows have mapped this same upstream field all along
+    # (_parse_sale_listing); the rental rows carry it too but were never wired
+    # up. Input to 2.4.2 门槛 2（同商圈）in the roughcast ranking pipeline.
+    biz_circle: str | None = None            # bizCircleName 所属商圈
     # Fitment grade: '002' 毛坯 / '001' 简装 / '003' 精装. May be None or ''
     # for rows where the CRM record is incomplete (~5.7% measured). The raw
     # value is kept rather than a boolean because "未知" must stay
