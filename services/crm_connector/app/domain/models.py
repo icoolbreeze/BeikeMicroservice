@@ -89,11 +89,10 @@ class RentalListing:
     # the raw URL is the stable contract.
     title_image_url: str | None = None          # titleImage 封面图原图
     floor_plan_image_url: str | None = None     # floorPlanImage 户型图原图
-    # --- detail-only fields, populated by rental_listing_get_detail ---
-    # (search rows leave them None; see docs/rental-api-catalog.md §房源详情)
+    # --- detail fields; floor data is also populated by rental search rows ---
     maintain_org: str | None = None          # orgName 维护门店
     source: str | None = None                # delResourceSub 房源来源
-    floor_desc: str | None = None            # floorDesc 楼层描述
+    floor_desc: str | None = None            # floorLevel / floorDesc 楼层描述
     total_floors: int | None = None          # totalFloor 总楼层
     listed_days: int | None = None           # alreadyCreateDays 已录入天数
     house_grade: str | None = None           # houseGrade 房源评级
@@ -106,6 +105,34 @@ class RentalListing:
     has_key: bool | None = None              # haveKey 是否取到钥匙
     del_status_text: str | None = None       # delStatusString 有效状态
     house_id: str | None = None              # houseId 内部房源 ID
+    # --- 清水房排名所需的行级字段（2026-08-20 抓包确认存在于搜索行）---
+    # Structured layout counts. ``layout`` above is the display string built
+    # from these; the ranking pipeline needs the numbers to compare 房型.
+    # Upstream may send 0 for 厅/卫 — 0 is NOT reliably "zero rooms", it also
+    # appears where the CRM record was left unfilled, so consumers must not
+    # treat a 0 triple as an exact-match key (see roughcast-quality-ranking.md).
+    # kitchenAmount is deliberately not mapped: nothing consumes it.
+    bedroom_amount: int | None = None        # bedroomAmount 室
+    hall_amount: int | None = None           # hallAmount 厅
+    bathroom_amount: int | None = None       # bathroomAmount 卫
+    # Community identity. resblockId arrives as a JSON int; it is an opaque
+    # identifier, so it is carried as a string. Feeding it back into
+    # RentalListingFilters.resblock_ids filters to exactly this community
+    # (verified 2026-08-20), which is what lets the ranking crawler fetch a
+    # community's reference set in one request instead of resolving via suggest.
+    resblock_id: str | None = None           # resblockId 小区 ID
+    resblock_name: str | None = None         # resblockName 小区名（community 的原值）
+    # Fitment grade: '002' 毛坯 / '001' 简装 / '003' 精装. May be None or ''
+    # for rows where the CRM record is incomplete (~5.7% measured). The raw
+    # value is kept rather than a boolean because "未知" must stay
+    # distinguishable from 简装/精装 — a bool would collapse both into false.
+    fitment_status: str | None = None        # fitmentStatus 装修状态码
+    fitment_status_desc: str | None = None   # fitmentStatusDesc 装修状态中文
+    # Upstream createTime (epoch ms) — the CRM record's creation instant.
+    # ``listed_days`` above comes from detailHead's alreadyCreateDays and is
+    # NOT present in search rows; store the absolute instant here and derive
+    # elapsed days at query time so stored values never go stale.
+    create_time: datetime | None = None      # createTime 录入时间
 
 
 @dataclass(frozen=True)
@@ -113,6 +140,7 @@ class RentalListingPage:
     items: tuple[RentalListing, ...]
     page: int
     page_size: int
+    total: int                               # totalCount 命中总数（用于估算总页数）
     has_more: bool
     request_id: str
 

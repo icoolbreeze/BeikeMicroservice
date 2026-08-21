@@ -1082,20 +1082,21 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         orientation = ",".join(str(o) for o in orientation_list)
     else:
         orientation = None
-    bedroom = row.get("bedroomAmount")
-    hall = row.get("hallAmount")
-    bathroom = row.get("bathroomAmount")
+    bedroom = _as_int(row.get("bedroomAmount"))
+    hall = _as_int(row.get("hallAmount"))
+    bathroom = _as_int(row.get("bathroomAmount"))
     layout_parts = []
-    if isinstance(bedroom, (int, float)):
-        layout_parts.append(f"{int(bedroom)}室")
-    if isinstance(hall, (int, float)):
-        layout_parts.append(f"{int(hall)}厅")
-    if isinstance(bathroom, (int, float)):
-        layout_parts.append(f"{int(bathroom)}卫")
+    if bedroom is not None:
+        layout_parts.append(f"{bedroom}室")
+    if hall is not None:
+        layout_parts.append(f"{hall}厅")
+    if bathroom is not None:
+        layout_parts.append(f"{bathroom}卫")
     layout = "".join(layout_parts) or None
+    community = str(row.get("resblockName") or "")
     return RentalListing(
         listing_id=str(row.get("delCode") or ""),
-        community=str(row.get("resblockName") or ""),
+        community=community,
         layout=layout,
         area_sqm=_as_float(row.get("area")),
         monthly_rent_yuan=_as_float(row.get("price")),
@@ -1104,12 +1105,33 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         # 2 = 普租, 5 = 托管. Only 普租 ids resolve via detailHead.
         del_type=_as_int(row.get("delType")),
         rent_mode_label=_parse_rent_mode_label(row),
+        floor_desc=_parse_list_floor_desc(row),
+        total_floors=_as_int(row.get("totalFloor")),
         # Raw CDN originals; direct fetch is 403 for everyone — callers append
         # a size suffix (.450x/.750x/.800x/.1500x.jpg) for a public variant
         # (docs/rental-image-cdn.md). Passed through unsuffixed on purpose.
         title_image_url=_opt_str(row.get("titleImage")),
         floor_plan_image_url=_opt_str(row.get("floorPlanImage")),
+        # --- 清水房排名字段（见 domain/models.py 的字段注释）---
+        bedroom_amount=bedroom,
+        hall_amount=hall,
+        bathroom_amount=bathroom,
+        # resblockId is a JSON int upstream; _opt_str keeps it an opaque string.
+        resblock_id=_opt_str(row.get("resblockId")),
+        resblock_name=community or None,
+        # Kept raw: '' and None are distinct from 简装/精装 and must stay so.
+        fitment_status=_opt_str(row.get("fitmentStatus")),
+        fitment_status_desc=_opt_str(row.get("fitmentStatusDesc")),
+        create_time=_ts_to_datetime(row.get("createTime")),
     )
+
+
+def _parse_list_floor_desc(row: Mapping[str, Any]) -> str | None:
+    """Normalize the rental search row's coarse floor level for display."""
+    value = _opt_str(row.get("floorLevel")) or _opt_str(row.get("floorDesc"))
+    if value in {"高", "中", "低"}:
+        return f"{value}楼层"
+    return value
 
 
 def _parse_rent_mode_label(row: Mapping[str, Any]) -> str | None:
@@ -1254,6 +1276,7 @@ def _parse_page(
         items=items,
         page=page,
         page_size=page_size,
+        total=total_count,
         has_more=has_more,
         request_id=request_id,
     )

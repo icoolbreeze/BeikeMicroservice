@@ -76,14 +76,15 @@ CRM
 不再复用房源列表搜索）。detailHead 的字段名与列表不同：`housePrice`/`houseArea`/
 `livingroomAmount`/`oriented`，映射为 `monthly_rent_yuan`/`area_sqm`/`layout`/`orientation`。
 
-详情返回在列表字段之外附加 detailHead 独有的维护与经营字段（2026-08-09 实测补全，
-搜索列表行这些字段均为 `null`）：
+详情返回在列表字段之外附加 detailHead 独有的维护与经营字段（2026-08-09 实测补全）。
+其中楼层字段也由搜索列表行直接提供：`floorLevel` 映射为 `floor_desc`，
+`totalFloor` 映射为 `total_floors`；其余字段在搜索列表行中为 `null`：
 
 | 响应字段 | 上游字段 | 含义 |
 |---|---|---|
 | `maintain_org` | `orgName` | 维护门店 |
 | `source` | `delResourceSub` | 房源来源（如"呼叫中心"） |
-| `floor_desc` / `total_floors` | `floorDesc` / `totalFloor` | 楼层描述 / 总楼层 |
+| `floor_desc` / `total_floors` | 列表 `floorLevel` / `totalFloor`；详情 `floorDesc` / `totalFloor` | 楼层描述 / 总楼层 |
 | `listed_days` | `alreadyCreateDays` | 已录入天数 |
 | `house_grade` | `houseGrade` | 房源评级 |
 | `follow_total` / `follow_last_7d` | `followTotal` / `followNum7Days` | 累计 / 近7天跟进次数 |

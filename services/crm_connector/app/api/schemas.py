@@ -479,7 +479,7 @@ class RentalListingResponse(BaseModel):
     visible_scope: str
     del_type: int | None = None
     rent_mode_label: str | None = None
-    # Detail-only fields; None for search-page rows (see §房源详情).
+    # Detail fields. Search rows also expose floor_desc and total_floors.
     maintain_org: str | None = None
     source: str | None = None
     floor_desc: str | None = None
@@ -500,6 +500,18 @@ class RentalListingResponse(BaseModel):
     # a public variant (docs/rental-image-cdn.md). None for detail responses.
     title_image_url: str | None = None
     floor_plan_image_url: str | None = None
+    # 清水房排名所需的行级字段（search rows only; None on detail responses).
+    # Semantics, including why fitment_status is carried raw and why a 0
+    # 厅/卫 must not be used as an exact-match key, are documented on
+    # domain.models.RentalListing — do not restate them here.
+    bedroom_amount: int | None = None
+    hall_amount: int | None = None
+    bathroom_amount: int | None = None
+    resblock_id: str | None = None
+    resblock_name: str | None = None
+    fitment_status: str | None = None
+    fitment_status_desc: str | None = None
+    create_time: datetime | None = None
 
     @classmethod
     def from_domain(cls, listing: RentalListing) -> "RentalListingResponse":
@@ -510,6 +522,7 @@ class RentalListingPageResponse(BaseModel):
     items: list[RentalListingResponse]
     page: int
     page_size: int
+    total: int
     has_more: bool
     request_id: str
 
@@ -519,6 +532,7 @@ class RentalListingPageResponse(BaseModel):
             items=[RentalListingResponse.from_domain(item) for item in result.items],
             page=result.page,
             page_size=result.page_size,
+            total=result.total,
             has_more=result.has_more,
             request_id=result.request_id,
         )

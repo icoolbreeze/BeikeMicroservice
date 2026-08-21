@@ -40,6 +40,7 @@ class FakeCrmClient:
             ),
             page=filters.page,
             page_size=filters.page_size,
+            total=1,
             has_more=False,
             request_id="request-1",
         )

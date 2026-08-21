@@ -112,8 +112,13 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
             "data": {
                 "result": [
                     {"delCode": "RC-1", "resblockName": "万象城一期",
-                     "bedroomAmount": 2, "hallAmount": 1, "area": 80.0, "price": 3500,
-                     "orientation": ["南"], "title": "合租·万象城一期"},
+                     "resblockId": 3011054720095,
+                     "bedroomAmount": 2, "hallAmount": 1, "bathroomAmount": 1,
+                     "area": 80.0, "price": 3500,
+                     "fitmentStatus": "002", "fitmentStatusDesc": "毛坯",
+                     "createTime": 1750000000000,
+                     "orientation": ["南"], "title": "合租·万象城一期",
+                     "floorLevel": "中", "totalFloor": 32},
                     {"delCode": "RC-2", "resblockName": "万象城二期",
                      "bedroomAmount": 3, "hallAmount": 2, "area": 110.0, "price": 5800,
                      "orientation": ["南北"]},
@@ -132,21 +137,29 @@ def test_search_wanxiangcheng_flows_through_full_app_pipeline(tmp_path) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["page"] == 1 and body["page_size"] == 20 and body["has_more"] is False
+    assert body["total"] == 2  # upstream totalCount surfaces on the response
     assert [item["community"] for item in body["items"]] == ["万象城一期", "万象城二期"]
     assert body["items"][0] == {
         "listing_id": "RC-1", "community": "万象城一期",
-        "layout": "2室1厅", "area_sqm": 80.0, "monthly_rent_yuan": 3500.0,
+        "layout": "2室1厅1卫", "area_sqm": 80.0, "monthly_rent_yuan": 3500.0,
         "orientation": "南", "visible_scope": "my_maintained",
         "del_type": None,
         "rent_mode_label": "合租",
-        # detail-only fields are absent on search rows
-        "maintain_org": None, "source": None, "floor_desc": None,
-        "total_floors": None, "listed_days": None, "house_grade": None,
+        # Floor fields are available directly on search rows.
+        "maintain_org": None, "source": None, "floor_desc": "中楼层",
+        "total_floors": 32, "listed_days": None, "house_grade": None,
         "follow_total": None, "follow_last_7d": None,
         "showing_total": None, "showing_last_7d": None,
         "external_url_ke": None, "external_url_lianjia": None,
         "has_key": None, "del_status_text": None, "house_id": None,
         "title_image_url": None, "floor_plan_image_url": None,
+        # 清水房排名字段必须真的跨过 HTTP 边界。RentalListingResponse.from_domain
+        # 用 cls(**listing.__dict__)，而 pydantic 默认丢弃多余键——只测领域模型
+        # 的话，「已映射但没出 API」这种漏法会静默通过。
+        "bedroom_amount": 2, "hall_amount": 1, "bathroom_amount": 1,
+        "resblock_id": "3011054720095", "resblock_name": "万象城一期",
+        "fitment_status": "002", "fitment_status_desc": "毛坯",
+        "create_time": "2025-06-15T15:06:40Z",
     }
     # The request reached SessionProvider with the documented upstream params.
     assert len(session.calls) == 1

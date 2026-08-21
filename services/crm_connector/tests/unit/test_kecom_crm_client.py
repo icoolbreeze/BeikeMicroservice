@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -990,6 +991,7 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
         "area": 89.5, "price": 4500, "orientation": ["南"],
         "delType": 2,
         "title": "合租·万象城一期 次卧",
+        "floorLevel": "中", "totalFloor": 32,
         "titleImage": "https://img.ljcdn.com//110000-inspection/pc0_abc.jpg",
         "floorPlanImage": "https://img.ljcdn.com//hdic-frame/std_1.png",
     }
@@ -1004,6 +1006,8 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
     # delType distinguishes 普租 (2) from 托管 (5); detailHead only serves 普租.
     assert listing.del_type == 2
     assert listing.rent_mode_label == "合租"
+    assert listing.floor_desc == "中楼层"
+    assert listing.total_floors == 32
     # 图片字段原样透传（不带尺寸后缀——后缀由调用方按需拼接，见
     # docs/rental-image-cdn.md）。
     assert listing.title_image_url == "https://img.ljcdn.com//110000-inspection/pc0_abc.jpg"
@@ -1013,6 +1017,55 @@ def test_parse_listing_maps_upstream_fields_to_minimal_domain() -> None:
 def test_parse_listing_exposes_trusteeship_del_type() -> None:
     listing = _parse_listing({"delType": 5}, scope="my_maintained")
     assert listing.del_type == 5
+
+
+def test_parse_listing_maps_roughcast_ranking_fields() -> None:
+    # 2026-08-20 抓包实测的行级字段：清水房排名要靠它们才能不打详情就分级。
+    listing = _parse_listing(
+        {
+            "delCode": "RC-9",
+            "resblockName": "兴盛世家D区",
+            "resblockId": 3011054720095,  # upstream sends an int
+            "bedroomAmount": 2,
+            "hallAmount": 2,
+            "bathroomAmount": 1,
+            "kitchenAmount": 1,  # deliberately not mapped
+            "fitmentStatus": "002",
+            "fitmentStatusDesc": "毛坯",
+            "createTime": 1750000000000,
+        },
+        scope="all",
+    )
+    assert (listing.bedroom_amount, listing.hall_amount, listing.bathroom_amount) == (2, 2, 1)
+    # resblockId is opaque: carried as a string so it round-trips into
+    # RentalListingFilters.resblock_ids without int/str drift.
+    assert listing.resblock_id == "3011054720095"
+    assert listing.resblock_name == "兴盛世家D区"
+    assert listing.fitment_status == "002"
+    assert listing.fitment_status_desc == "毛坯"
+    assert listing.create_time == datetime(2025, 6, 15, 15, 6, 40, tzinfo=UTC)
+    # kitchenAmount has no consumer, so it must not appear on the model at all.
+    assert not hasattr(listing, "kitchen_amount")
+
+
+def test_parse_listing_keeps_unknown_fitment_distinguishable_from_decorated() -> None:
+    # 实测 5.7% 的行装修状态为空。'' 和 None 都必须原样保留：压成布尔会把
+    # 「装修未知」和「简装/精装」折叠成同一个 false，参考集就会被未知行污染。
+    assert _parse_listing({"fitmentStatus": None}, scope="all").fitment_status is None
+    assert _parse_listing({"fitmentStatus": ""}, scope="all").fitment_status == ""
+    assert _parse_listing({}, scope="all").fitment_status is None
+
+
+def test_parse_listing_preserves_zero_hall_and_bath_rather_than_dropping_them() -> None:
+    # 27% 的清水房是「1室0厅0卫」。0 必须落库为 0（而不是 None），否则消费方
+    # 分不清「上游给了 0」和「上游没给」——两者的处置不同。
+    listing = _parse_listing(
+        {"bedroomAmount": 1, "hallAmount": 0, "bathroomAmount": 0}, scope="all"
+    )
+    assert (listing.bedroom_amount, listing.hall_amount, listing.bathroom_amount) == (1, 0, 0)
+    assert listing.layout == "1室0厅0卫"
+    missing = _parse_listing({"bedroomAmount": 1}, scope="all")
+    assert (missing.hall_amount, missing.bathroom_amount) == (None, None)
 
 
 def test_parse_listing_rent_mode_prefers_structured_value_then_title() -> None:
@@ -1040,8 +1093,18 @@ def test_parse_listing_handles_missing_fields_without_crashing() -> None:
     assert listing.orientation is None
     assert listing.del_type is None
     assert listing.rent_mode_label is None
+    assert listing.floor_desc is None
+    assert listing.total_floors is None
     assert listing.title_image_url is None
     assert listing.floor_plan_image_url is None
+    assert listing.bedroom_amount is None
+    assert listing.hall_amount is None
+    assert listing.bathroom_amount is None
+    assert listing.resblock_id is None
+    assert listing.resblock_name is None
+    assert listing.fitment_status is None
+    assert listing.fitment_status_desc is None
+    assert listing.create_time is None
 
 
 def test_parse_page_returns_paged_domain_with_has_more() -> None:
@@ -1063,6 +1126,7 @@ def test_parse_page_returns_paged_domain_with_has_more() -> None:
     assert [item.listing_id for item in page.items] == ["RC-1", "RC-2"]
     assert [item.community for item in page.items] == ["万象城一期", "万象城二期"]
     assert page.page == 1 and page.page_size == 2
+    assert page.total == 25  # upstream totalCount, needed to derive expected page count
     assert page.has_more is True  # 1*2 < 25
     assert page.request_id == "req-1"
 
@@ -1070,6 +1134,28 @@ def test_parse_page_returns_paged_domain_with_has_more() -> None:
 def test_parse_page_marks_no_more_at_last_page() -> None:
     body = {"code": 100000, "data": {"result": [], "totalCount": 20}}
     page = _parse_page(body, _filters(page=2, page_size=20), request_id="req-2")
+    assert page.total == 20
+    assert page.has_more is False
+
+
+def test_parse_page_reports_zero_total_when_upstream_omits_count() -> None:
+    """A missing totalCount yields total=0, not the row count.
+
+    Callers that page through the whole result set must treat total=0 with a
+    non-empty items tuple as "count unknown" and fall back to paging until
+    has_more is False -- they cannot use it as an expected-page-count basis.
+    """
+    body = {
+        "code": 100000,
+        "data": {"result": [
+            {"delCode": "RC-1", "resblockName": "万象城一期",
+             "bedroomAmount": 2, "hallAmount": 1, "area": 80.0, "price": 3000,
+             "orientation": ["南"]},
+        ]},
+    }
+    page = _parse_page(body, _filters(page=1, page_size=20), request_id="req-3")
+    assert page.total == 0
+    assert len(page.items) == 1
     assert page.has_more is False
 
 
