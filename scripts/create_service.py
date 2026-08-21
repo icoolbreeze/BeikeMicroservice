@@ -60,22 +60,16 @@ def main() -> int:
         pkg_dir = target / pkg
         pkg_dir.mkdir(parents=True, exist_ok=True)
         (pkg_dir / "__init__.py").write_text(
-            '"""TODO: 补充模块说明。"""
-', encoding="utf-8"
+            '"""TODO: 补充模块说明。"""\n', encoding="utf-8"
         )
 
     (target / "app" / "main.py").write_text(
-        '"""'
-        + name
-        + ' 服务入口（占位）。"""
-
-
-def create_app():
-'
-        + '    """应用工厂（占位）。"""
-'
-        + "    raise NotImplementedError
-",
+        '"""' + name + ' 服务入口（占位）。"""\n'
+        "\n"
+        "\n"
+        "def create_app():\n"
+        '    """应用工厂（占位）。"""\n'
+        "    raise NotImplementedError\n",
         encoding="utf-8",
     )
 
@@ -85,10 +79,7 @@ def create_app():
         (target / keep).write_text("", encoding="utf-8")
 
     (target / "README.md").write_text(
-        "# " + name + "
-
-独立微服务（骨架，未实现任何业务功能）。
-",
+        "# " + name + "\n\n独立微服务（骨架，未实现任何业务功能）。\n",
         encoding="utf-8",
     )
     print(f"已创建服务骨架: {target}")
