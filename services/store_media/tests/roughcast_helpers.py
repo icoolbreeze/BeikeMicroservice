@@ -45,6 +45,11 @@ def make_row(listing_id: str, **overrides) -> RoughcastRow:
         "create_time": "2026-06-01T00:00:00+00:00",
         "title_image_url": "https://img.example.com/a.jpg",
     }
+    # V2.5 现实主义:测试数据有 `resblock_id` 时,默认 `community_lookup_status=found`
+    # 与生产 `_row_from_response` 一致。显式传 `community_lookup_status=...`
+    # 仍可覆盖。
+    if "community_lookup_status" not in overrides:
+        defaults["community_lookup_status"] = "found" if defaults["resblock_id"] else "not_found"
     row = RoughcastRow(listing_id=listing_id, **{**defaults, **overrides})
     return replace(row, community_id=community_key(row))
 
@@ -84,12 +89,25 @@ class RecordingSleeper:
 
 
 class FakeCrawlClient:
-    """按页返回预置数据。所有 HTTP 动作都记进 `requests`,便于断言零详情请求。"""
+    """按页返回预置数据。所有 HTTP 动作都记进 `requests`,便于断言零详情请求。
+
+    V2.5:支持 `price_range` 参数(透传给 `requests` 列表的 target 字段,
+    方便测试断言「第 1 档用 0:800、第 2 档用 800:1200」之类的预期)。
+    多个 `(page, price_range)` 组合按页号 + 价格区段联合索引,这样
+    11 档切分的测试可以同时预置所有档的 page 1。
+    """
 
     def __init__(self, pages: list[CrawlPage], *,
                  errors: dict[int, list[CrawlRequestError]] | None = None,
                  page_size: int = 50):
-        self._pages = {page.page: page for page in pages}
+        # V2.5:键是 `(page, price_range)`。`page_of` 接收 `price_range=`
+        # 时会写进 `CrawlPage.price_range`,这里读出来;没传时是 None,
+        # 与 V2.4 单查询路径一致——把同一批页既给单档用、也允许其他
+        # 档按 `price_range=` 预置不同页,`--status` 那批 11 档测试就用得上。
+        self._pages: dict[tuple[int, str | None], CrawlPage] = {}
+        for page in pages:
+            key = (page.page, page.price_range)
+            self._pages[key] = page
         self._errors = {key: list(value) for key, value in (errors or {}).items()}
         self._page_size = page_size
         self.requests: list[tuple[str, str]] = []      # (method, target)
@@ -98,18 +116,32 @@ class FakeCrawlClient:
     def page_size(self) -> int:
         return self._page_size
 
-    def search_page(self, page: int) -> CrawlPage:
-        self.requests.append(("POST", f"search:page={page}"))
+    def search_page(self, page: int, *, price_range: str | None = None) -> CrawlPage:
+        target = f"bucket={price_range}&page={page}" if price_range else f"page={page}"
+        self.requests.append(("POST", f"search:{target}"))
         pending = self._errors.get(page)
         if pending:
             raise pending.pop(0)
-        if page not in self._pages:
-            raise AssertionError(f"测试未预置第 {page} 页")
-        return self._pages[page]
+        # 先按精确 `(page, price_range)` 查;V2.5 11 档测试会预置带
+        # `price_range=` 的页。找不到时回退到 `(page, None)`——这是 V2.4
+        # 单查询路径,老测试和「同一批页给所有档共用」的场景都靠这条。
+        key = (page, price_range)
+        if key in self._pages:
+            return self._pages[key]
+        fallback = (page, None)
+        if fallback in self._pages:
+            return self._pages[fallback]
+        raise AssertionError(f"测试未预置 {target}")
 
 
-def page_of(rows, page: int, total: int, has_more: bool) -> CrawlPage:
-    return CrawlPage(rows=tuple(rows), page=page, total=total, has_more=has_more)
+def page_of(rows, page: int, total: int, has_more: bool, *,
+            price_range: str | None = None) -> CrawlPage:
+    """V2.5:把 `price_range` 透传到 `CrawlPage`,让 FakeCrawlClient
+    能按 `(page, price_range)` 联合索引,11 档测试可同时预置各档 page 1。"""
+    return CrawlPage(
+        rows=tuple(rows), page=page, total=total, has_more=has_more,
+        price_range=price_range,
+    )
 
 
 def make_crawler(database: Database, client, *, clock: FakeClock | None = None,

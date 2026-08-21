@@ -205,7 +205,11 @@ def test_first_round_end_to_end(tmp_path, connector) -> None:
         logged = db.execute(
             "SELECT target, status FROM roughcast_crawl_log ORDER BY id"
         ).fetchall()
-    assert [r["target"] for r in logged] == [f"page={n}" for n in (1, 2, 3, 4)]
+    # V2.5:11 档切分,默认单档 `((None, None),)` 渲染为 `0:-1`,所以
+    # crawl_log 的 target 也带 bucket 前缀。
+    assert [r["target"] for r in logged] == [
+        f"bucket=0:-1&page={n}" for n in (1, 2, 3, 4)
+    ]
     assert {r["status"] for r in logged} == {"ok"}
 
 
@@ -256,7 +260,9 @@ def test_no_detail_or_get_request_is_ever_issued(tmp_path, connector) -> None:
         assert method == "POST"
         assert path == "/api/v1/listings/rental/search"
         assert body["scope"] == "all"
-        assert body["condition_filters"] == {"fitment": "002"}
+        # V2.5:11 档切分,即使单档也要带 `price=0:-1`(V2.4 走的是无价过滤)。
+        # 上游 connector 的 `lo:hi` 协议(5d2e06e 起 `priceMin`/`priceMax` 已删)。
+        assert body["condition_filters"] == {"fitment": "002", "price": "0:-1"}
         assert body["page_size"] == PAGE_SIZE
 
 

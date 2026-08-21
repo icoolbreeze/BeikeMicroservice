@@ -6,6 +6,18 @@ import hashlib
 from dataclasses import asdict, dataclass, fields
 
 
+# V2.5:标记字段的枚举值用常量收口。模块顶层是因为 SQL CHECK 约束和
+# repository 里的 case 表达式都要引,改一处会牵连多处。
+COMMUNITY_LOOKUP_FOUND = "found"
+COMMUNITY_LOOKUP_NOT_FOUND = "not_found"
+COMMUNITY_LOOKUP_STATUSES: tuple[str, ...] = (COMMUNITY_LOOKUP_FOUND, COMMUNITY_LOOKUP_NOT_FOUND)
+
+SCORE_SOURCE_SELF = "self"
+SCORE_SOURCE_NEIGHBOR = "neighbor"
+SCORE_SOURCE_FALLBACK = "fallback"
+SCORE_SOURCES: tuple[str, ...] = (SCORE_SOURCE_SELF, SCORE_SOURCE_NEIGHBOR, SCORE_SOURCE_FALLBACK)
+
+
 @dataclass(frozen=True)
 class RoughcastRow:
     """队列 A 落库的一行。字段与 `roughcast_listing_current` 的业务列一一对应。
@@ -34,6 +46,12 @@ class RoughcastRow:
     fitment_status_desc: str | None = None
     create_time: str | None = None        # UTC ISO 绝对时间戳，绝不存天数（4.4 规则 3）
     title_image_url: str | None = None
+    # V2.5:由 `_row_from_response` 决定,不在 client 处之外的代码里改写——
+    # `found` 当 resblock_id 真有值,`not_found` 当只有 name:<sha1> 占位。
+    community_lookup_status: str = COMMUNITY_LOOKUP_NOT_FOUND
+    # V2.5:本期的 collector 不填这个值,统一 'fallback';`_assign_score_sources`
+    # 在 `complete_run` 末尾按 roughcast_communities 实际命中情况重写。
+    score_source: str = SCORE_SOURCE_FALLBACK
 
 
 BUSINESS_FIELDS: tuple[str, ...] = tuple(

@@ -1,9 +1,10 @@
 """清水房采集的仓储层（`docs/roughcast-quality-ranking.md` §4.2 / §4.5）。
 
-这一层持有 run 状态机的**事务边界**。唯一需要记住的规则：
-`COMPLETE` 是唯一允许发布的终态，而发布的全部动作都在 `complete_run()` 的
-一个事务里；`ABORTED` / `FAILED` 的 run 对 `listing_current` 与
-`listing_snapshot` 一个字节都碰不到（它们的数据止步于 `crawl_stage`）。
+这一层持有 run 状态机的**事务边界**。发布（写 `listing_current` /
+`listing_snapshot` / `roughcast_communities`）的终态是 `COMPLETE` 或
+`PARTIAL`——V2.5 起 PARTIAL 加入状态机,允许 11 档切分中部分档失败的轮
+只发布成功档,失败档的 stage 行作废。`ABORTED` / `FAILED` 的 run 一个字节
+都碰不到 `listing_*` 表（数据止步于 `crawl_stage`）。
 """
 
 from __future__ import annotations
@@ -12,15 +13,25 @@ import json
 import logging
 import sqlite3
 from datetime import UTC, datetime, timedelta
-from typing import Callable, Iterable, Sequence
+from typing import Callable, Iterable, Mapping, Sequence
 
-from app.domain.roughcast import BUSINESS_FIELDS, RoughcastRow, business_values, content_hash
+from app.domain.roughcast import (
+    BUSINESS_FIELDS,
+    SCORE_SOURCES,
+    SCORE_SOURCE_FALLBACK,
+    SCORE_SOURCE_NEIGHBOR,
+    SCORE_SOURCE_SELF,
+    RoughcastRow,
+    business_values,
+    content_hash,
+)
 from app.infrastructure.database import Database
 
 logger = logging.getLogger(__name__)
 
 RUNNING = "RUNNING"
 COMPLETE = "COMPLETE"
+PARTIAL = "PARTIAL"          # V2.5:11 档切分中部分档成功
 ABORTED = "ABORTED"
 FAILED = "FAILED"
 
@@ -49,11 +60,24 @@ class RoughcastRepository:
 
     # ---------------------------------------------------------------- runs
 
-    def start_run(self, queue: str) -> int:
+    def start_run(self, queue: str, *,
+                  planned_buckets: Sequence[tuple[int | None, int | None]] | None = None
+                  ) -> int:
+        """开一轮。
+
+        `planned_buckets` 是 11 档切分的 (lo, hi) 序列;`None` 走旧路径
+        (单一查询,无档切分),存为 `[]`。档的 JSON 形式是 `[[lo, hi], ...]`,
+        lo/hi 为 None 时序列化成 `null`——便于事后回溯和 `--status` 展示。
+        """
+        payload = json.dumps(
+            [[lo, hi] for lo, hi in (planned_buckets or ())],
+            ensure_ascii=False,
+        )
         with self.database.connect() as db:
             cursor = db.execute(
-                "INSERT INTO roughcast_crawl_runs (queue, status, started_at) VALUES (?, ?, ?)",
-                (queue, RUNNING, self._now()),
+                "INSERT INTO roughcast_crawl_runs (queue, status, started_at, planned_buckets) "
+                "VALUES (?, ?, ?, ?)",
+                (queue, RUNNING, self._now(), payload),
             )
             run_id = int(cursor.lastrowid)
         return run_id
@@ -130,43 +154,88 @@ class RoughcastRepository:
                 (queue, COMPLETE),
             ).fetchone()
 
+    def latest_published_run(self, queue: str) -> sqlite3.Row | None:
+        """最新**已发布**的 run。COMPLETE 与 PARTIAL 都算发布(4.2 规则 1)。"""
+        with self.database.connect() as db:
+            return db.execute(
+                "SELECT * FROM roughcast_crawl_runs "
+                "WHERE queue = ? AND status IN (?, ?) "
+                "ORDER BY started_at DESC, id DESC LIMIT 1",
+                (queue, COMPLETE, PARTIAL),
+            ).fetchone()
+
+    def record_bucket_outcomes(self, run_id: int,
+                               outcomes: Mapping[str, str]) -> None:
+        """`bucket_outcomes` 字段由 caller(队列编排)写入。键是 bucket 标签
+        (如 `0:800`),值是 `success` / `skipped_over_cap` / `bucket_failed`。
+
+        与 `abort_reason` 共存不冲突:PARTIAL 落 `status=PARTIAL`,
+        `abort_reason` 写 `'partial:<bucket>=<reason>'` 概要,详细结构在
+        `bucket_outcomes` 里——便于 `--status` 一次性展示。
+
+        终态在 `complete_run()` 里会被「完整 11 档映射」覆写一次(每档
+        都得有一行,不能漏);这里只是中途进度。
+        """
+        with self.database.connect() as db:
+            db.execute(
+                "UPDATE roughcast_crawl_runs SET bucket_outcomes = ? WHERE id = ?",
+                (json.dumps(dict(outcomes), ensure_ascii=False, sort_keys=True), run_id),
+            )
+
     # --------------------------------------------------------------- stage
 
-    def stage_rows(self, run_id: int, rows: Sequence[RoughcastRow]) -> int:
+    def stage_rows(self, run_id: int, rows: Sequence[RoughcastRow], *,
+                  bucket: str = "0:+inf") -> tuple[int, int]:
         """把一页抓到的行落进 stage。
 
         采集期数据唯一的出口(4.2 规则 1)。**全部**行都落,包括装修为空和非毛坯的
         行——§七.8 要求它们「计数并落库,不得静默丢弃」。发布时再按
         `fitment_status` 筛出被排序集 P。
+
+        V2.5:`bucket` 标记本批行来自哪一档;PARTIAL 时只发布成功档的行。
+        默认 `'0:+inf'` 兼容旧路径(单一查询时代)。
+
+        返回 `(inserted, returned)`:inserted 是实际新增行数(去重后),returned
+        是上游本批返回的原始行数。这两数在调用方用来回填 `crawl_log.rows_new /
+        rows_returned`,让「第 21 页起新增 0 行」这种深分页病灶立刻刺眼。
         """
+        returned = len(rows)
         if not rows:
-            return 0
+            return 0, 0
         seen_at = self._now()
         payload = [
             (run_id, row.listing_id, content_hash(row), row.fitment_status,
-             json.dumps(_row_payload(row), ensure_ascii=False, sort_keys=True), seen_at)
+             json.dumps(_row_payload(row), ensure_ascii=False, sort_keys=True),
+             seen_at, bucket)
             for row in rows
         ]
         with self.database.connect() as db:
+            before_count = int(db.execute(
+                "SELECT COUNT(DISTINCT listing_id) FROM roughcast_crawl_stage WHERE run_id = ?",
+                (run_id,),
+            ).fetchone()[0])
             db.executemany(
                 "INSERT INTO roughcast_crawl_stage "
-                "(run_id, listing_id, content_hash, fitment_status, payload_json, seen_at) "
-                "VALUES (?, ?, ?, ?, ?, ?) "
+                "(run_id, listing_id, content_hash, fitment_status, payload_json, seen_at, "
+                " bucket) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?) "
                 # 同一 run 内重复出现同一 listing_id 是上游翻页抖动的正常结果
                 # (总数变化导致跨页重排),取后见到的那次,不算错误。
                 "ON CONFLICT(run_id, listing_id) DO UPDATE SET "
                 "content_hash = excluded.content_hash, "
                 "fitment_status = excluded.fitment_status, "
-                "payload_json = excluded.payload_json, seen_at = excluded.seen_at",
+                "payload_json = excluded.payload_json, seen_at = excluded.seen_at, "
+                "bucket = excluded.bucket",
                 payload,
             )
+            inserted = _count_new_rows(db, run_id, before_count)
             counts = _stage_counts(db, run_id)
             db.execute(
                 "UPDATE roughcast_crawl_runs SET items_seen = ?, unknown_fitment_count = ?, "
                 "non_roughcast_count = ? WHERE id = ?",
                 (counts["items_seen"], counts["unknown"], counts["non_roughcast"], run_id),
             )
-        return len(payload)
+        return inserted, returned
 
     def stage_count(self, run_id: int) -> int:
         with self.database.connect() as db:
@@ -176,12 +245,43 @@ class RoughcastRepository:
 
     # ------------------------------------------------------------- publish
 
-    def complete_run(self, run_id: int) -> dict[str, int]:
-        """把 run 判 COMPLETE 并发布——**全部动作在一个事务里**。
+    def complete_run(
+        self, run_id: int, *,
+        bucket_outcomes: Mapping[str, str] | None = None,
+        bucket_details: Mapping[str, Mapping[str, object]] | None = None,
+    ) -> dict[str, int]:
+        """把 run 收尾并发布——**全部动作在一个事务里**。
+
+        V2.5 行为:接受 `bucket_outcomes` 形如 `{"0:800": "success", "1200:1500":
+        "skipped_over_cap", ...}`。
+
+        终态判定:
+        - 空 / 全 success → `COMPLETE`,发布全部 stage 行
+        - 部分 success 部分失败 → `PARTIAL`,**只发布成功档的 stage 行**,
+          失败档的行作废(留在 stage 但不进 listing_*)
+        - 全失败 → 抛 `RunStateError`,由调用方走 ABORTED 收尾
 
         任何一步抛异常,整个事务回滚:`listing_current` 保持原样、没有半更新、
-        run 也不会停在 COMPLETE。这正是 V1 数据损坏 bug 的修法。
+        run 也不会停在 COMPLETE / PARTIAL。这正是 V1 数据损坏 bug 的修法。
         """
+        if bucket_outcomes is not None:
+            if not bucket_outcomes:
+                raise RunStateError(
+                    f"run {run_id}:bucket_outcomes 为空,无法确定终态"
+                )
+            statuses = set(bucket_outcomes.values())
+            success_buckets = [b for b, s in bucket_outcomes.items() if s == "success"]
+            failed_buckets = [b for b, s in bucket_outcomes.items() if s != "success"]
+            if not success_buckets:
+                raise RunStateError(
+                    f"run {run_id}:0 档成功,应走 ABORTED 而非 complete_run"
+                )
+            terminal_status = COMPLETE if not failed_buckets else PARTIAL
+            allowed_buckets = tuple(success_buckets)
+        else:
+            terminal_status = COMPLETE
+            allowed_buckets = None                    # 旧路径:全发
+
         with self.database.connect() as db:
             run = db.execute(
                 "SELECT * FROM roughcast_crawl_runs WHERE id = ?", (run_id,)
@@ -191,7 +291,8 @@ class RoughcastRepository:
             if run["status"] != RUNNING:
                 raise RunStateError(f"run {run_id} 状态是 {run['status']},不是 {RUNNING}")
 
-            # 4.2:只有 pages_done 与 pages_expected 一致才允许判 COMPLETE。
+            # 4.2:只有 pages_done 与 pages_expected 一致才允许判终态。
+            # PARTIAL 也走这条:成功档必须全翻完。
             expected, done = run["pages_expected"], run["pages_done"]
             if expected is None or done != expected:
                 raise RunStateError(
@@ -199,11 +300,17 @@ class RoughcastRepository:
                 )
 
             now = self._now()
-            targets = db.execute(
+            sql = (
                 "SELECT payload_json FROM roughcast_crawl_stage "
-                "WHERE run_id = ? AND fitment_status = ? ORDER BY listing_id",
-                (run_id, TARGET_FITMENT),
-            ).fetchall()
+                "WHERE run_id = ? AND fitment_status = ?"
+            )
+            params: list[object] = [run_id, TARGET_FITMENT]
+            if allowed_buckets is not None:
+                placeholders = ", ".join("?" for _ in allowed_buckets)
+                sql += f" AND bucket IN ({placeholders})"
+                params.extend(allowed_buckets)
+            sql += " ORDER BY listing_id"
+            targets = db.execute(sql, params).fetchall()
             rows = [RoughcastRow(**json.loads(row["payload_json"])) for row in targets]
 
             snapshots_inserted = self._write_change_points(db, run_id, rows, now)
@@ -214,16 +321,63 @@ class RoughcastRepository:
                 (run_id,),
             ).rowcount
             self._upsert_communities(db, rows, now)
+            score_source_counts = self._assign_score_sources(db, run_id)
 
+            abort_reason = None
+            if terminal_status == PARTIAL:
+                failed_summary = ", ".join(
+                    f"{b}={bucket_outcomes[b]}" for b in failed_buckets
+                )
+                abort_reason = f"partial:{failed_summary}"
+
+            # `bucket_outcomes` 列只存简单的 `{"0:800": "success", ...}` 状态映射,
+            # 方便 `--status` 一眼看清每档的判定。详细结构(`pages`/`total`/
+            # `reason`)在 PARTIAL 时拼进 `abort_reason`(失败档那行),其他
+            # 终态不需要持久化。
             db.execute(
-                "UPDATE roughcast_crawl_runs SET status = ?, finished_at = ? WHERE id = ?",
-                (COMPLETE, now, run_id),
+                "UPDATE roughcast_crawl_runs SET status = ?, finished_at = ?, "
+                "abort_reason = ?, bucket_outcomes = ? WHERE id = ?",
+                (terminal_status, now, abort_reason,
+                 json.dumps(dict(bucket_outcomes or {}), ensure_ascii=False, sort_keys=True),
+                 run_id),
             )
         return {
             "published": len(rows),
             "snapshots_inserted": snapshots_inserted,
             "deactivated": deactivated,
+            "score_source_counts": score_source_counts,
         }
+
+    def _assign_score_sources(self, db: sqlite3.Connection, run_id: int) -> dict[str, int]:
+        """§4.6:给本轮刷新的 listing_current 行打 score_source 三值标记。
+
+        判定顺序(用 CASE 而非多次 UPDATE 拼接,事务里只一次写):
+        1. self:本 listing 的 `community_id` 命中 `roughcast_communities.id`
+        2. neighbor:第 1 条不命中,但同 `bizcircle` 至少 1 个其他小区命中
+        3. fallback:以上都不命中——通常是小小区或上游没给 bizcircle
+
+        写完后再 GROUP BY 数一遍三值计数,给 `--status` 和日志用。
+        """
+        db.execute(
+            "UPDATE roughcast_listing_current SET score_source = CASE "
+            "  WHEN community_id IN (SELECT id FROM roughcast_communities "
+            "                        WHERE id IS NOT NULL) THEN ? "
+            "  WHEN bizcircle IN (SELECT bizcircle FROM roughcast_communities "
+            "                     WHERE bizcircle IS NOT NULL) THEN ? "
+            "  ELSE ? "
+            "END "
+            "WHERE last_seen_run_id = ?",
+            (SCORE_SOURCE_SELF, SCORE_SOURCE_NEIGHBOR, SCORE_SOURCE_FALLBACK, run_id),
+        )
+        counts = db.execute(
+            "SELECT score_source, COUNT(*) AS n FROM roughcast_listing_current "
+            "WHERE last_seen_run_id = ? GROUP BY score_source",
+            (run_id,),
+        ).fetchall()
+        result: dict[str, int] = {src: 0 for src in SCORE_SOURCES}
+        for row in counts:
+            result[str(row["score_source"])] = int(row["n"])
+        return result
 
     def _write_change_points(self, db: sqlite3.Connection, run_id: int,
                              rows: Iterable[RoughcastRow], now: str) -> int:
@@ -334,6 +488,32 @@ class RoughcastRepository:
                 "UPDATE roughcast_crawl_log SET status = ?, http_status = ?, note = ? WHERE id = ?",
                 (status, http_status, note, log_id),
             )
+
+    def update_request_log_counters(self, log_id: int, *, rows_returned: int,
+                                     rows_new: int) -> None:
+        """V2.5:回填 `crawl_log.rows_returned / rows_new`。
+
+        `crawl_log` 一行 = 一次上游请求,但 stage 落库发生在请求返回之后,
+        两者时间不同步。把这两个数补上,「rows_new=0 且 rows_returned>0」就
+        能直接查出来——这是深分页硬顶的签名,run 1 漏 70% 就是这病灶。
+        """
+        with self.database.connect() as db:
+            db.execute(
+                "UPDATE roughcast_crawl_log SET rows_returned = ?, rows_new = ? "
+                "WHERE id = ?",
+                (rows_returned, rows_new, log_id),
+            )
+
+    def count_rows_with_zero_new(self, since: datetime) -> int:
+        """诊断:近一段时间内「返回了行但没新增」的请求数。健康值应接近 0。
+        """
+        with self.database.connect() as db:
+            return int(db.execute(
+                "SELECT COUNT(*) FROM roughcast_crawl_log "
+                "WHERE requested_at >= ? AND status = 'ok' "
+                "AND rows_returned > 0 AND rows_new = 0",
+                (since.isoformat(),),
+            ).fetchone()[0])
 
     def count_requests_since(self, since: datetime) -> int:
         """当天已花预算。以 crawl_log 为准而不是内存计数器——见第三章。"""
@@ -461,7 +641,65 @@ class RoughcastRepository:
                                        "WHERE is_active = 0"),
                 "snapshots": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_snapshot"),
                 "communities": _scalar(db, "SELECT COUNT(*) FROM roughcast_communities"),
+                # V2.5:score_source 三值 + community_lookup_status 二值
+                # (`§4.6`)。这些是当前态的分布,与 run 无关;`--status` 一次查清。
+                "score_self": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_current "
+                                          "WHERE is_active = 1 AND score_source = 'self'"),
+                "score_neighbor": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_current "
+                                              "WHERE is_active = 1 AND score_source = 'neighbor'"),
+                "score_fallback": _scalar(db, "SELECT COUNT(*) FROM roughcast_listing_current "
+                                              "WHERE is_active = 1 AND score_source = 'fallback'"),
+                "community_not_found": _scalar(
+                    db, "SELECT COUNT(*) FROM roughcast_listing_current "
+                        "WHERE is_active = 1 AND community_lookup_status = 'not_found'"
+                ),
             }
+
+    def bucket_outcomes_for(self, run_id: int) -> dict[str, str] | None:
+        """V2.5:从 `roughcast_crawl_runs.bucket_outcomes`(JSON 列)反序列化。
+
+        COMPLETE / PARTIAL 才有值;RUNNING / ABORTED / FAILED 落 None。
+        """
+        import json
+        with self.database.connect() as db:
+            row = db.execute(
+                "SELECT bucket_outcomes FROM roughcast_crawl_runs WHERE id = ?",
+                (run_id,),
+            ).fetchone()
+        if row is None or not row["bucket_outcomes"]:
+            return None
+        try:
+            return {str(k): str(v) for k, v in json.loads(row["bucket_outcomes"]).items()}
+        except (TypeError, ValueError):
+            return None
+
+    def coverage_stats_for(self, run_id: int) -> dict[str, int]:
+        """V2.5:`crawl_log.rows_returned / rows_new` 的覆盖度审计。
+
+        返回 `{requests, rows_returned_total, rows_new_total, dropped_pages}`:
+        - `dropped_pages` = `rows_new=0 AND rows_returned>0` 的请求数,
+          这是深分页硬顶的签名([[roughcast-deep-paging-cap]])。
+        """
+        with self.database.connect() as db:
+            row = db.execute(
+                "SELECT COUNT(*) AS n, "
+                "       COALESCE(SUM(rows_returned), 0) AS rr, "
+                "       COALESCE(SUM(rows_new), 0) AS rn "
+                "FROM roughcast_crawl_log WHERE run_id = ? AND status = 'ok'",
+                (run_id,),
+            ).fetchone()
+            dropped = int(db.execute(
+                "SELECT COUNT(*) FROM roughcast_crawl_log "
+                "WHERE run_id = ? AND status = 'ok' "
+                "AND rows_returned > 0 AND rows_new = 0",
+                (run_id,),
+            ).fetchone()[0])
+        return {
+            "requests": int(row["n"]),
+            "rows_returned_total": int(row["rr"]),
+            "rows_new_total": int(row["rn"]),
+            "dropped_pages": int(dropped),
+        }
 
 
 def _row_payload(row: RoughcastRow) -> dict[str, object]:
@@ -489,3 +727,18 @@ def _stage_counts(db: sqlite3.Connection, run_id: int) -> dict[str, int]:
         "unknown": int(row["unknown"] or 0),
         "non_roughcast": int(row["non_roughcast"] or 0),
     }
+
+
+def _count_new_rows(db: sqlite3.Connection, run_id: int, before_count: int) -> int:
+    """`stage_rows` 后调用:本批新增的(去重)行数。
+
+    思路:在 `stage_rows` 落库前记一次 `(run_id, listing_id) 去重计数`,
+    落库后再记一次,差即为本批真正新增——`ON CONFLICT DO UPDATE` 走的也是
+    rowcount=1,直接靠 cursor 算不出来。`COUNT(DISTINCT listing_id)` 把
+    翻页抖动去重后的版本作为分母,语义与 `_stage_counts` 一致。
+    """
+    after_count = int(db.execute(
+        "SELECT COUNT(DISTINCT listing_id) FROM roughcast_crawl_stage WHERE run_id = ?",
+        (run_id,),
+    ).fetchone()[0])
+    return max(after_count - before_count, 0)

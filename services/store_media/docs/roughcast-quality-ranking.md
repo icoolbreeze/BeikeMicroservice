@@ -1,4 +1,4 @@
-# 优质清水房排名方案 V2.4
+# 优质清水房排名方案 V2.5
 
 本文是「全市清水房优质指数排名」的设计基准。实现以本文为对照；实现与本文冲突时，
 先改本文再改代码。
@@ -10,6 +10,20 @@
 现状基线：`app/infrastructure/roughcast_rental_fetcher.py` 目前是「一页一透传」
 （每次只按 `page` 向 crm_connector 请求一页，按页缓存 60 秒）。没有全量视图，
 因此**做不了全局排序**。本方案要补的正是全量、离线、可解释的那一层。
+
+## V2.5 相对 V2.4 的改动
+
+| 项 | V2.4 | V2.5 | 动机 |
+| --- | --- | --- | --- |
+| 状态机 | RUNNING / COMPLETE / ABORTED / FAILED | + **PARTIAL** | 11 档切分里允许「部分档成功」,落 PARTIAL 而非 ABORTED 整轮重来,详见 §4.2 |
+| 价格切分 | 单查询,`totalCount` 全市 3289,上游只返 1000 行(漏 ~70%) | **11 档切分**,每档 `totalCount < 1000`,详见 §三 | 修深分页硬顶(2026-08-20 三次探针: `0:800=915`、`800:1200=785`、 `0:1500=1921` ⇒ 整体过 1000,必须切) |
+| `community_lookup_status` | 无 | **`found` / `not_found`** 二值 | 标记 `resblock_id` 是否为有效主键;`not_found` 的房源靠 name+sha1 占位,**不能跨数据源对齐** |
+| `score_source` | 无 | **`self` / `neighbor` / `fallback`** 三值 | 第 4 期评分器实装前的占位:本小区有数据走 self,周边小区兜底走 neighbor,全无走 fallback,见 §4.6 |
+| `crawl_log` 覆盖度审计 | `target / status / http_status / note` | + **`rows_returned` / `rows_new`** | 上一轮漏 70% 是「rows_new=0 且 rows_returned>0」这种病;没记这两列就再查不出 |
+| 出口条件 | 连续 3 天 COMPLETE | **连续 1 天 COMPLETE** | 11 档切分下每档都重跑,数据滞后 1 天可接受,排名是给自己实地考察用,3 天窗口过于保守 |
+
+详细说明:11 档切分见 §三;PARTIAL 终态见 §4.2;community_lookup_status / score_source
+见 §4.1 / §4.6;`SM_ROUGHCAST_BUCKET_PLAN` 环境变量控制切分方案(默认 11 档,见 §三)。
 
 ## 已用真实上游验证的事实（2026-08-20，共 3 次请求）
 
@@ -857,11 +871,21 @@ extreme_price / reason
 - `page_size=50`，页数**每轮由第 1 页返回的 `total` 现算**
   （`ceil(total / page_size)`；2026-08-20 实测 3289 → 66 页）。
   **66 不得写成常数**——`total` 会随市场变动，见第七章第 7 条
+- **V2.5 起 11 档切分**（`SM_ROUGHCAST_BUCKET_PLAN`）:单查询硬顶 1000 条,
+  全市 3289 超 3 倍,必须把价区间切小。默认 11 档:
+  `0:800 / 800:1200 / 1200:1500 / 1500:2000 / 2000:2500 / 2500:3000 /
+   3000:4000 / 4000:5000 / 5000:6000 / 6000:8000 / 8000:-1`,
+  每档的 `totalCount` 都应 < 1000。**某档 `totalCount ≥ 1000` 视为该档
+  切分不足**——11 档方案基于 2026-08-20 的三次探针(`0:800=915`、
+  `800:1200=785`、`0:1500=1921`)反推,日后若价格分布变化,需要重跑探针
+  并调档。失败的档落 PARTIAL 的 `skipped_over_cap`,不发布,其他档照常发。
 - 串行单并发；页间随机 25–90 秒
 - 每 8–15 页插入 3–8 分钟停顿
 - 仅在 09:30–19:00 窗口内运行；每日启动时间随机 ±40 分钟
-- 全程约 1.6 小时，稳稳落在窗口内：65 个页间间隔 × 均 57.5 秒 ≈ 62 分钟，
-  加约 6 次长停顿 × 均 5.5 分钟 ≈ 31 分钟，合计约 93 分钟
+- 全程约 1.6 小时(11 档总和),稳稳落在窗口内:每档 ~3-5 页 × 11 档 ≈
+  50-60 页 × 均 57.5 秒 ≈ 50 分钟,加 ~40 次长停顿 × 均 5.5 分钟 ≈
+  3.5 小时——**实际远低于该上限**,因长停顿触发概率是 1/8-1/15,
+  50 页里约 4-6 次。完整一轮约 1.5 小时。
 - **抓取阶段不做楼层详情回补**。`roughcast_rental_fetcher._fill_missing_floors`
   会对每行 `del_type == 2` 的房源打一次详情接口，全量场景下放大成上千次额外请求。
   它只允许用在「用户正在看的那一页」
@@ -1103,26 +1127,40 @@ computed_at
 `quality_score_raw` 与 `quality_score` **两列都存**。前者定序，后者展示；
 只存整数则 82.49 与 82.01 无法定序（见 2.6 的排序规则）。
 
-### 4.2 run 状态机与「只有 COMPLETE 才发布」
+### 4.2 run 状态机与「只有 COMPLETE / PARTIAL 才发布」
 
 ```
-RUNNING ──成功走完全部页──▶ COMPLETE
-   ├──熔断触发─────────────▶ ABORTED
-   └──异常/进程退出────────▶ FAILED
+RUNNING ──11 档全 success────────▶ COMPLETE
+   ├──11 档部分 success(0 < k < 11)──▶ PARTIAL  (只发成功档的 stage 行)
+   ├──熔断 / 预算耗尽 / 窗口关闭──▶ ABORTED
+   └──异常 / 进程退出─────────────▶ FAILED
 ```
+
+`PARTIAL` 是 V2.5 新增的终态:11 档切分允许「部分档成功」,如某档 `totalCount`
+过 1000 硬顶或某档中途网络失败,该档单独作废(stage 行不发布),其他成功档
+照常进 `listing_*`。**PARTIAL 与 COMPLETE 一样会发布**,只是发布的范围是
+「成功档的并集」——失败档的 stage 行物理上不进入 `listing_*`,靠 `bucket`
+列过滤(§4.1)。
+
+0 档成功的极端情况(`bucket_outcomes` 全为 `skipped_over_cap` 或
+`bucket_failed`)不落 PARTIAL,而是抛 `RunStateError` 由外层判 FAILED——
+发布 0 套房源没有意义,这种情况**应该人工介入**而不是被 PARTIAL 掩盖。
 
 硬规则，**这是 V1 的数据损坏 bug 的修法**：
 
 1. 采集过程**只写 `roughcast_crawl_stage` 与 `..._crawl_log`**（V2.4 修订，见下）。
-2. run 变为 `COMPLETE` 时，**在一个事务里**由本 run 的 stage 行做变更点写入
-   `roughcast_listing_snapshot`（4.5）、刷新 `roughcast_listing_current`，
-   并把「本 run 未出现的房源」标记 `is_active=0`；
+2. run 变为 `COMPLETE` 或 `PARTIAL` 时，**在一个事务里**由本 run 的 stage 行
+   做变更点写入 `roughcast_listing_snapshot`（4.5）、刷新 `roughcast_listing_current`，
+   并把「本 run 未出现的房源」标记 `is_active=0`；PARTIAL 时**只读成功档**的
+   stage 行(用 `bucket IN (成功档列表)` 过滤),失败档的 stage 行作废。
    队列 B 的 run 则在同一事务里把涉及小区的
    `roughcast_communities.reference_run_id` 前移到本 run。
 3. `ABORTED` / `FAILED` 的 run **绝不参与** `is_active` 计算，也绝不刷新 current，
    **也绝不前移 `reference_run_id`**，且**绝不写入 snapshot**。
-   它的 stage 数据保留（可用于排查），随 4.5 的保留策略清理。
-4. 评分器启动时读「最新的 COMPLETE run」；没有就沿用上一次评分结果，不产出新版本。
+   它的 stage 数据保留(可用于排查),随 4.5 的保留策略清理。
+4. 评分器启动时读「最新的 COMPLETE / PARTIAL run」;没有就沿用上一次评分结果,
+   不产出新版本。`PARTIAL` 数据视为「部分切片」,自用排名可以接受;若对外
+   展示则应等到有完整 `COMPLETE` 时再切版本。
 
 **V2.4 为什么引入 `roughcast_crawl_stage`**：V2.3 的规则 1 让采集过程直接写
 `listing_snapshot`。但 4.5 的变更点写入在「无变化」时要**就地 UPDATE**
@@ -1303,6 +1341,28 @@ content_hash = hash(monthly_rent_yuan, area_sqm, rooms, halls, baths,
 落库。口径必须与评分一致（2.5 的第 2 条），否则将来拿它做同期对比时
 又是一个看不出来的系统性偏移。
 
+### 4.6 community_lookup_status 与 score_source（V2.5 占位）
+
+第 1 期不评分,但评分器在第 4 期实装时**需要先知道每个房源的小区数据是否可用**,
+否则会出现「这个房该有自评但 Resolver 实际算的是周边」的隐性 bug。
+V2.5 在 `roughcast_listing_current` 与 `roughcast_listing_snapshot` 上加两列占位:
+
+| 列 | 取值 | 语义 | 由来 |
+| --- | --- | --- | --- |
+| `community_lookup_status` | `found` / `not_found` | `resblock_id` 是否为有效主键 | 采集期由 `_row_from_response` 直接打:`resblock_id` 非空 = `found`,空 = `not_found`。`name:<sha1[:16]>` 占位**不算 found**——它无法跨数据源对齐 |
+| `score_source` | `self` / `neighbor` / `fallback` | 第 4 期评分时本房会用哪种基准 | 采集期统一打 `fallback`(还没有评分器);`complete_run` 末尾由 `_assign_score_sources` 按 `roughcast_communities` 实际命中情况重写:本小区有 roughcast_count > 0 → `self`;本小区无但同商圈邻居有 → `neighbor`;都没有 → `fallback` |
+
+`community_lookup_status` 的诊断价值:run 1 探针 `not_found` 比例直接反映
+上游 `resblock_id` 字段的稳定性——比例高于 5% 就该回头查 connector,不该
+自欺欺人地用 `name:<sha1[:16]>` 蒙混过去。
+
+`score_source` 的诊断价值:同一份排名,`self` 行可信度高于 `neighbor` 高于
+`fallback`。`--status` 报告里给本轮 score_source 三值计数,自用排名时
+可以接受 30% 房源走 `fallback`,对外展示前要降版本。
+
+**这两列对当前阶段不参与任何业务逻辑**,只是占位——不要让第 1 期的
+展示 API 去读它们,免得提前绑死语义。
+
 ## 五、服务与页面
 
 评分是**离线批处理**：当天采集 COMPLETE 后跑一次，几千条毫秒级，
@@ -1350,7 +1410,7 @@ content_hash = hash(monthly_rent_yuan, area_sqm, rooms, halls, baths,
 
 | 期 | 内容 | 出口条件 |
 | --- | --- | --- |
-| 1 | **「建议的 connector 改动」A/B/C/D/E（已完成）** + 库表 + 队列 A + 节流器/熔断 + `crawl_runs` 状态机。**只采集，不评分**，也不写 `classify`/Resolver（理由见下方「为什么覆盖率复算挪到第 3 期」） | 连续 3 天产出 COMPLETE run；日志显示实际流量符合第三章；连续 3 天记录上游 `total` 以观察其波动（第七章第 7 条） |
+| 1 | **「建议的 connector 改动」A/B/C/D/E（已完成）** + 库表 + 队列 A + 11 档切分 + 节流器/熔断 + `crawl_runs` 状态机（RUNNING / COMPLETE / **PARTIAL** / ABORTED / FAILED）。**只采集，不评分**，也不写 `classify`/Resolver（理由见下方「为什么覆盖率复算挪到第 3 期」） | **V2.5 改** 连续 1 天产出 COMPLETE 或 PARTIAL run（11 档全成 = COMPLETE,部分成 = PARTIAL 都算合规发布）；日志显示实际流量符合第三章；记录上游 `total` 以观察其波动（第七章第 7 条）。原 V2.4 要求的「连续 3 天」对**自用实地考察**过于保守:11 档切分下每档都重跑,数据滞后 1 天可接受;若用于对客展示则仍需 3 天 |
 | 2 | ~~S 级覆盖率探针~~ **已完成（2026-08-20，31 次请求）** | 结论见文首；四条待落地结论见下 |
 | 3 | 队列 B + 半月轮转 + `community_reference_snapshot`，**随后**离线复算三个覆盖率、定稿 2.2 分级阶梯（V2.3 第 6 条）并落地下面「第 2 期的四条结论」 | 15 天内小区覆盖率 ≥95%；三个覆盖率复算完成且阶梯定稿 |
 | 4 | δ 标定 + Resolver + 评分器 + **Shadow Run** | 第八章 1–12 与 A–Y 全绿；算分但不上前端；人工核 50 套（含 10 套高分、10 套低分、10 套 `extreme_price`）；用正式样本重估 `k`（provisional 0.50）并升 `model_version` |

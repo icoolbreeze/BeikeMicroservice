@@ -21,7 +21,12 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from app.domain.roughcast import RoughcastRow, community_key
+from app.domain.roughcast import (
+    COMMUNITY_LOOKUP_FOUND,
+    COMMUNITY_LOOKUP_NOT_FOUND,
+    RoughcastRow,
+    community_key,
+)
 
 CRAWL_SCOPE = "all"
 CRAWL_FITMENT_CODE = "002"
@@ -35,6 +40,10 @@ class CrawlPage:
     page: int
     total: int
     has_more: bool
+    # V2.5:11 档切分时标记本行来自哪一档(只对 FakeCrawlClient 有意义,
+    # 生产 client 永远传 None——它不读这个字段)。默认 None 让 V2.4
+    # 调用方零改动。
+    price_range: str | None = None
 
 
 class CrawlRequestError(RuntimeError):
@@ -45,6 +54,17 @@ class CrawlRequestError(RuntimeError):
         super().__init__(message)
         self.http_status = http_status
         self.error_code = error_code
+
+
+def format_price_range(lo: int | None, hi: int | None) -> str:
+    """把 `(lo, hi)` 渲染成 connector 的 `lo:hi` 字符串。
+
+    V2.5:11 档切分依赖这个格式。`lo=None` 映射成 `"0"`,`hi=None` 映射成
+    `"-1"`(开区间),与目录里"3000元以下 → 0:3000"和"10000元以上 →
+    10000:-1"完全一致。`priceMin`/`priceMax` 这条老路 connector 在
+    `5d2e06e` 已经关掉,不再支持。
+    """
+    return f"{lo if lo is not None else 0}:{hi if hi is not None else -1}"
 
 
 class RoughcastCrawlClient:
@@ -60,10 +80,24 @@ class RoughcastCrawlClient:
     def page_size(self) -> int:
         return self._page_size
 
-    def search_page(self, page: int) -> CrawlPage:
+    def search_page(self, page: int, *, price_range: str | None = None) -> CrawlPage:
+        """一次 search 调用。
+
+        `price_range` 是 `lo:hi` 形式(如 `"0:800"`、`"800:-1"`)。
+        不传等价于"不切价",与 V2.4 的行为一致——保留这个默认值是为了让
+        FakeCrawlClient 与单条查询场景不用改测试。
+
+        一档请求的总响应里 totalCount 可能 ≥ 1000,这是 V2.4 漏 70% 的根因。
+        编排层(`RoughcastCrawler._crawl`)会断言 `total < 1000`,超了就
+        PARTIAL 该档;**这里不抛**——区分"上游返回 0"和"上游返回 1500"
+        是编排层的责任,不属于客户端。
+        """
+        filters: dict[str, str] = {"fitment": CRAWL_FITMENT_CODE}
+        if price_range is not None:
+            filters["price"] = price_range
         body = self._post_json(SEARCH_PATH, {
             "scope": CRAWL_SCOPE,
-            "condition_filters": {"fitment": CRAWL_FITMENT_CODE},
+            "condition_filters": filters,
             "page": page,
             "page_size": self._page_size,
         })
@@ -165,6 +199,16 @@ def _row_from_response(raw: dict[str, Any]) -> RoughcastRow | None:
         create_time=_text(raw.get("create_time")),
         # 原图 URL 是稳定契约,不在这里加尺寸后缀——那是展示层的事。
         title_image_url=_text(raw.get("title_image_url")),
+        # V2.5:found 当且仅当 resblock_id 真有值(可与 CRM 详情/链家详情对齐的
+        # 稳定主键)。'name:<sha1>' 占位不算 found,因为它无法跨数据源对齐。
+        # 见 §4.1 / §4.6 的语义约定。
+        community_lookup_status=(
+            COMMUNITY_LOOKUP_FOUND if _text(raw.get("resblock_id"))
+            else COMMUNITY_LOOKUP_NOT_FOUND
+        ),
+        # score_source 由 _assign_score_sources 在 complete_run 末尾按
+        # roughcast_communities 实际命中情况重写;这里先给 fallback,免得
+        # 4.2 阶段(未 publish)看不到这一列。
     )
     return RoughcastRow(**{**row.__dict__, "community_id": community_key(row)})
 

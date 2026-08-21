@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sqlite3
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -8,6 +9,14 @@ from typing import Iterator
 
 from app.domain.models import MediaItem, MediaType, Role, Store, User
 from app.infrastructure.roughcast_schema import ROUGHCAST_SCHEMA_SQL
+
+logger = logging.getLogger(__name__)
+
+# V2.5 起,数据库升级走 migrations/ 目录下的脚本。每个脚本是 .sql 文件,
+# 命名 NNN_description.sql。已运行的脚本 id 记在 schema_migrations 表里。
+# 新数据库走 ROUGHCAST_SCHEMA_SQL(IF NOT EXISTS)直接建表,不进 migrations 表。
+# 这一道闸让"全新部署"和"老库升级"两条路径共用同一个 initialize()。
+MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 
 
 def _now() -> str:
@@ -80,6 +89,39 @@ class Database:
                 """
             )
             db.executescript(ROUGHCAST_SCHEMA_SQL)
+            self._apply_migrations(db)
+
+    def _apply_migrations(self, db: sqlite3.Connection) -> None:
+        """按文件名字序跑 migrations/ 目录下的脚本,跳过已记录的。
+
+        全程在调用方事务里:某个脚本中途失败就整体回滚,schema_migrations 不会
+        误记半截成功的 id。
+
+        IF NOT EXISTS 的脚本对 V2.5 schema 是空操作,所以即便在新建空库上
+        跑也不会报错;只有从 V2.4 升级过来的旧库才需要这些 ALTER。
+        """
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS schema_migrations ("
+            "    id          TEXT PRIMARY KEY,"
+            "    applied_at  TEXT NOT NULL"
+            ")"
+        )
+        if not MIGRATIONS_DIR.is_dir():
+            return
+        applied = {
+            row["id"] for row in db.execute("SELECT id FROM schema_migrations").fetchall()
+        }
+        scripts = sorted(MIGRATIONS_DIR.glob("*.sql"))
+        for script in scripts:
+            migration_id = script.stem.split("_", 1)[0]
+            if migration_id in applied:
+                continue
+            logger.info("应用数据库迁移 %s", script.name)
+            db.executescript(script.read_text(encoding="utf-8"))
+            db.execute(
+                "INSERT INTO schema_migrations (id, applied_at) VALUES (?, ?)",
+                (migration_id, _now()),
+            )
 
     def user_count(self) -> int:
         with self.connect() as db:

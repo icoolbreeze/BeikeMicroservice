@@ -1,8 +1,28 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+
+# V2.5:11 档切分的默认计划。基于 [[roughcast-deep-paging-cap]] 的 3 次
+# 上游探针:`0:800=915`、`800:1200=785`、`0:1500=1921`(由此反推 800:1500
+# 过 cap,再切)。其余档按 3.78× 缩放 + 12 档切分,合并相邻小档成 11 档。
+# 11 档方案由 [[roughcast-phase1-state]] 与 [[roughcast-deep-paging-cap]]
+# 共同记录。
+DEFAULT_ROUGHCAST_BUCKET_PLAN: tuple[tuple[int | None, int | None], ...] = (
+    (0, 800),
+    (800, 1200),
+    (1200, 1500),
+    (1500, 2000),
+    (2000, 2500),
+    (2500, 3000),
+    (3000, 4000),
+    (4000, 5000),
+    (5000, 6000),
+    (6000, 8000),
+    (8000, None),                     # 8000:+inf 走 `lo:hi` 的 `-1` 表达开区间
+)
 
 
 @dataclass(frozen=True)
@@ -41,6 +61,11 @@ class Settings:
     roughcast_crawl_window: tuple[str, str] = ("09:30", "19:00")
     roughcast_crawl_start_jitter_minutes: int = 40
     roughcast_crawl_utc_offset_hours: int = 8        # Asia/Shanghai,无夏令时
+    # V2.5:11 档切分;`SM_ROUGHCAST_BUCKET_PLAN` 覆盖时填 lo,hi[,lo,hi…]
+    # 整数或 `inf` / `-1` 表开区间。
+    roughcast_bucket_plan: tuple[tuple[int | None, int | None], ...] = field(
+        default_factory=lambda: DEFAULT_ROUGHCAST_BUCKET_PLAN
+    )
 
     @property
     def database_path(self) -> Path:
@@ -131,4 +156,36 @@ def load_settings() -> Settings:
         roughcast_crawl_utc_offset_hours=int(
             os.getenv("SM_ROUGHCAST_CRAWL_UTC_OFFSET_HOURS", "8")
         ),
+        roughcast_bucket_plan=_bucket_plan(
+            "SM_ROUGHCAST_BUCKET_PLAN", DEFAULT_ROUGHCAST_BUCKET_PLAN
+        ),
     )
+
+
+def _bucket_plan(
+    name: str, default: tuple[tuple[int | None, int | None], ...]
+) -> tuple[tuple[int | None, int | None], ...]:
+    """读一个 'lo1,hi1,lo2,hi2,…' 形式的环境变量,长度必须是偶数。
+
+    整数字面或 `inf` / `-1` 表开区间(`-1` 与 connector 的约定一致,
+    表示「无上界」)。空字符串或未设值走 default。
+    """
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    if len(parts) % 2 != 0:
+        raise ValueError(f"{name} 需要偶数个值(lo,hi,lo,hi,…),收到 {raw!r}")
+    result: list[tuple[int | None, int | None]] = []
+    for index in range(0, len(parts), 2):
+        lo = _parse_bound(parts[index])
+        hi = _parse_bound(parts[index + 1])
+        result.append((lo, hi))
+    return tuple(result)
+
+
+def _parse_bound(text: str) -> int | None:
+    """`inf` / `-1` / `+inf` 走 None(开区间,见 `format_price_range`);其他按整数。"""
+    if text in ("inf", "+inf", "-1"):
+        return None
+    return int(text)

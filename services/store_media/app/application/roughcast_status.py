@@ -15,10 +15,10 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time as dtime, timedelta
 from statistics import median
-from typing import Callable, Sequence
+from typing import Callable, Mapping, Sequence
 
 from app.application.roughcast_crawler import RoughcastCrawlConfig
-from app.infrastructure.roughcast_repository import COMPLETE, RoughcastRepository
+from app.infrastructure.roughcast_repository import COMPLETE, PARTIAL, RoughcastRepository
 
 DEFAULT_RUN_LIMIT = 10
 TRAFFIC_DAYS = 7          # 日流量回看天数。3 天观察期 + 余量,又不至于刷爆首屏。
@@ -51,6 +51,12 @@ class RunLine:
     unknown_fitment: int
     non_roughcast: int
     abort_reason: str | None
+    # V2.5:11 档切分每档的判定。`{"0:800": "success", "1200:1500":
+    # "skipped_over_cap", ...}`。PARTIAL 时这条会显示失败档。
+    bucket_outcomes: Mapping[str, str] | None = None
+    # V2.5:覆盖度审计(§三/§4.6):`{requests, rows_returned_total,
+    # rows_new_total, dropped_pages}`。`dropped_pages>0` 是深分页硬顶的签名。
+    coverage_stats: Mapping[str, int] | None = None
 
     @property
     def day(self) -> date:
@@ -64,12 +70,12 @@ class RunLine:
 
     @property
     def published(self) -> bool:
-        """只有 COMPLETE 轮真的发布过(4.2 规则 1)。"""
-        return self.status == COMPLETE
+        """COMPLETE / PARTIAL 都算发布过(4.2 规则 1,V2.5 修订)。"""
+        return self.status in {COMPLETE, PARTIAL}
 
     @property
     def leaked_snapshots(self) -> bool:
-        """非 COMPLETE 轮却写进了快照——4.2 明令禁止的越界发布。"""
+        """非 COMPLETE/PARTIAL 轮却写进了快照——4.2 明令禁止的越界发布。"""
         return not self.published and self.snapshots_inserted > 0
 
 
@@ -247,6 +253,8 @@ def build_status_report(
             unknown_fitment=int(run["unknown_fitment_count"]),
             non_roughcast=int(run["non_roughcast_count"]),
             abort_reason=run["abort_reason"],
+            bucket_outcomes=repository.bucket_outcomes_for(run_id),
+            coverage_stats=repository.coverage_stats_for(run_id),
         ))
 
     now_local = _to_local_datetime(clock(), tz)
@@ -388,8 +396,9 @@ def render_status(report: StatusReport, config: RoughcastCrawlConfig, *,
     ]
     if database_path is not None:
         out.append(f"数据库 : {database_path}")
-    for section in (_runs_section, _drift_section, _traffic_section,
-                    _breaker_section, _exit_section, _inventory_section):
+    for section in (_runs_section, _bucket_section, _drift_section,
+                    _traffic_section, _breaker_section, _exit_section,
+                    _inventory_section):
         out.append("")
         out.extend(section(report, config))
     return "\n".join(out)
@@ -451,6 +460,50 @@ def _change_rate_hint(report: StatusReport) -> list[str]:
                if rate > CHANGE_RATE_ALERT else "正常,4.5 的变更点写入在生效")
     return [f"  最近一轮变更点率:{latest.snapshots_inserted}/{latest.roughcast_staged}"
             f" = {rate:.1%} —— {verdict}"]
+
+
+def _bucket_section(report: StatusReport, config: RoughcastCrawlConfig) -> list[str]:
+    """V2.5:11 档切分每档的判定 + 覆盖度审计(§三 / §4.6)。
+
+    COMPLETE 轮这里全 success 是好;PARTIAL 轮这里能看到哪些档被
+    `skipped_over_cap` / `bucket_failed` 切掉,以及覆盖度审计的
+    `dropped_pages` 是否为 0(`>0` 意味着深分页硬顶仍存在,见
+    [[roughcast-deep-paging-cap]])。
+    """
+    if not report.runs:
+        return ["11 档切分(V2.5):尚无 run。"]
+    out = ["11 档切分(V2.5)"]
+    for line in reversed(report.runs):
+        if not line.bucket_outcomes:
+            continue
+        statuses = line.bucket_outcomes
+        success = sum(1 for v in statuses.values() if v == "success")
+        over_cap = sum(1 for v in statuses.values() if v == "skipped_over_cap")
+        failed = sum(1 for v in statuses.values() if v == "bucket_failed")
+        out.append(
+            f"  run {line.run_id}({line.status}):"
+            f" success={success} / over_cap={over_cap} / failed={failed}"
+        )
+        if failed or over_cap:
+            for bucket, status in statuses.items():
+                if status != "success":
+                    out.append(f"    {bucket} = {status}")
+    latest_published = next(
+        (line for line in reversed(report.runs) if line.published), None
+    )
+    if latest_published and latest_published.coverage_stats:
+        cov = latest_published.coverage_stats
+        out.append(
+            f"  最近一轮覆盖度:crawl_log {cov['requests']} 次 / "
+            f"rows_returned={cov['rows_returned_total']} / "
+            f"rows_new={cov['rows_new_total']}"
+        )
+        if cov["dropped_pages"]:
+            out.append(
+                f"  ⚠ dropped_pages={cov['dropped_pages']}:有请求上行返回了行但没新增,"
+                "深分页硬顶([[roughcast-deep-paging-cap]])未根除,需重跑探针"
+            )
+    return out
 
 
 def _drift_section(report: StatusReport, config: RoughcastCrawlConfig) -> list[str]:
@@ -537,9 +590,17 @@ def _exit_section(report: StatusReport, config: RoughcastCrawlConfig) -> list[st
 
 def _inventory_section(report: StatusReport, config: RoughcastCrawlConfig) -> list[str]:
     totals = report.totals
+    score_total = totals.get("score_self", 0) + totals.get("score_neighbor", 0) + totals.get("score_fallback", 0)
+    score_pct = (totals.get("score_self", 0) / score_total * 100.0) if score_total else 0.0
     return [
         f"库存:在架 {totals['active']} 套 / 已下架 {totals['inactive']} 套 / "
-        f"快照 {totals['snapshots']} 行 / 小区 {totals['communities']} 个"
+        f"快照 {totals['snapshots']} 行 / 小区 {totals['communities']} 个",
+        f"  score_source:self={totals.get('score_self', 0)} "
+        f"/ neighbor={totals.get('score_neighbor', 0)} "
+        f"/ fallback={totals.get('score_fallback', 0)} "
+        f"(self 占比 {score_pct:.1f}% —— 自用排名 ≥30% 可接受,展示前应 ≥60%)",
+        f"  community_lookup_status:not_found={totals.get('community_not_found', 0)} 套"
+        f"({'高于 5% 查 connector' if totals.get('community_not_found', 0) > 0.05 * totals['active'] else '正常'})",
     ]
 
 
