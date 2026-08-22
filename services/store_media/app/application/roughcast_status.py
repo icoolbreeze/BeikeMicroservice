@@ -1,8 +1,10 @@
 """观察期的只读盘点视图（`docs/roughcast-quality-ranking.md` §六 第 1 期出口条件）。
 
-第 1 期的出口条件是三句话：**连续 3 天产出 COMPLETE run**、**日志显示实际流量符合
-第三章**、**连续 3 天记录上游 `total` 以观察波动**（§七.7）。这三条都只能靠真跑攒，
-于是观察期里每天都要把同样几个数从 sqlite 里捞一遍。本模块就是那次捞取。
+第 1 期的出口条件（**V2.5 改 1 天**）：**连续 1 天产出 COMPLETE 或 PARTIAL run**、
+**日志显示实际流量符合第三章**、**每天记录上游 `total` 以观察波动**
+（§七.7；11 档切分下每档都重跑，数据滞后 1 天可接受）。
+原 V2.4「连续 3 天」已废。三条都只能靠真跑攒，于是观察期里每天都要把
+同样几个数从 sqlite 里捞一遍。本模块就是那次捞取。
 
 **只 SELECT。**不发上游请求、不建表、不写一个字节——所以它跑多少遍都不花当日预算，
 也不会把 `crawl_log` 的账搅浑（预算是从那张表现算的，见第三章）。
@@ -21,8 +23,8 @@ from app.application.roughcast_crawler import RoughcastCrawlConfig
 from app.infrastructure.roughcast_repository import COMPLETE, PARTIAL, RoughcastRepository
 
 DEFAULT_RUN_LIMIT = 10
-TRAFFIC_DAYS = 7          # 日流量回看天数。3 天观察期 + 余量,又不至于刷爆首屏。
-REQUIRED_DAYS = 3         # §六:连续 3 天。
+TRAFFIC_DAYS = 7          # 日流量回看天数。1 天观察期 + 余量,又不至于刷爆首屏。
+REQUIRED_DAYS = 1         # §六 (V2.5):连续 1 天 COMPLETE 或 PARTIAL 即合规发布。
 BREAKER_STATUS = "breaker"
 
 # 变更点率高于这条线就说明 4.5 的哈希还在抖(见 V2.4 修正 5)：稳定期每轮只有
@@ -261,7 +263,7 @@ def build_status_report(
     since = _local_midnight_utc(now_local.date() - timedelta(days=TRAFFIC_DAYS - 1), tz)
     log_rows = repository.requests_since(since)
     # 出口条件与日流量都按这个固定窗口算,与 `limit` 无关:`--status 2` 不该
-    # 把「已经连续 3 天」显示成 1 天。
+    # 把「已经连续 1 天」显示成 0 天。
     window_facts = tuple(_run_facts(row, tz) for row in repository.runs_since(since))
     days = _day_lines(log_rows, window_facts, config)
     breakers = tuple(
@@ -584,7 +586,7 @@ def _exit_section(report: StatusReport, config: RoughcastCrawlConfig) -> list[st
         f"  {_mark(progress.traffic_ok)} 实际流量符合第三章:{traffic}",
     ]
     out.append("  三条齐了 → 可以开第 3 期(队列 B + 半月轮转 + 参考集 R)。"
-               if progress.ready else "  还没齐,继续每天跑一轮。")
+               if progress.ready else "  本轮尚未 COMPLETE/PARTIAL,跑完一次即触发。")
     return out
 
 

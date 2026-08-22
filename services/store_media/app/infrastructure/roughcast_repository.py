@@ -334,11 +334,28 @@ class RoughcastRepository:
             # 方便 `--status` 一眼看清每档的判定。详细结构(`pages`/`total`/
             # `reason`)在 PARTIAL 时拼进 `abort_reason`(失败档那行),其他
             # 终态不需要持久化。
+            #
+            # V2.5 修:`upstream_total` 这里覆盖写成 11 档 `totalCount` 之和,
+            # 才是 V2.4 单查询时代「全市毛坯总数」的语义对应。原本被每页
+            # `record_progress(upstream_total=...)` 反复覆写,最终值只是
+            # 「最后一档的 totalCount」,报"3290→916 极差 259%"是错的。
+            # V2.4 单查询路径不传 `bucket_details`,保持原样不动。
+            sum_total: int | None = None
+            if bucket_details:
+                bucket_totals = [
+                    int(d["total"])
+                    for d in bucket_details.values()
+                    if isinstance(d, Mapping) and d.get("total") is not None
+                ]
+                if bucket_totals:
+                    sum_total = sum(bucket_totals)
             db.execute(
                 "UPDATE roughcast_crawl_runs SET status = ?, finished_at = ?, "
-                "abort_reason = ?, bucket_outcomes = ? WHERE id = ?",
+                "abort_reason = ?, bucket_outcomes = ?, upstream_total = ? "
+                "WHERE id = ?",
                 (terminal_status, now, abort_reason,
                  json.dumps(dict(bucket_outcomes or {}), ensure_ascii=False, sort_keys=True),
+                 sum_total if sum_total is not None else run["upstream_total"],
                  run_id),
             )
         return {
