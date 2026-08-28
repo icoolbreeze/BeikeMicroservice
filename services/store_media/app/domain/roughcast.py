@@ -17,6 +17,9 @@ SCORE_SOURCE_NEIGHBOR = "neighbor"
 SCORE_SOURCE_FALLBACK = "fallback"
 SCORE_SOURCES: tuple[str, ...] = (SCORE_SOURCE_SELF, SCORE_SOURCE_NEIGHBOR, SCORE_SOURCE_FALLBACK)
 
+TARGET_FITMENT = "002"  # 毛坯,被排序集 P
+REFERENCE_FITMENTS: frozenset[str] = frozenset({"001", "003"})  # 简装 / 精装,参考集 R
+
 
 @dataclass(frozen=True)
 class RoughcastRow:
@@ -100,6 +103,18 @@ def content_hash(row: RoughcastRow) -> str:
 def business_values(row: RoughcastRow) -> tuple[object, ...]:
     data = asdict(row)
     return tuple(data[field] for field in BUSINESS_FIELDS)
+
+
+def is_roughcast_status(fitment_status: str | None) -> bool:
+    """行级 `fitmentStatus == '002'` 才是清水房。空值不是毛坯也不是参考。"""
+    return fitment_status == TARGET_FITMENT
+
+
+def unit_rent_of(area_sqm: float | None, monthly_rent_yuan: float | None) -> float | None:
+    """单价 = 月租 / 面积。面积缺失或 ≤0 时无法计算,留空而不是 0。"""
+    if area_sqm is None or monthly_rent_yuan is None or area_sqm <= 0:
+        return None
+    return monthly_rent_yuan / area_sqm
 
 
 def community_key(row: RoughcastRow) -> str | None:

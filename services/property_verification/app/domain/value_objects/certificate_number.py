@@ -17,9 +17,12 @@ _CERTIFICATE_NUMBER_PATTERNS = (
 )
 
 
-def is_valid_certificate_number(value: str) -> bool:
-    """宽容校验证件编码（新旧版格式）。"""
-    return any(p.fullmatch(value or "") for p in _CERTIFICATE_NUMBER_PATTERNS)
+def is_valid_certificate_number(value: object) -> bool:
+    """宽容校验证件编码（新旧版格式）；首尾空白忽略，非字符串视为空。"""
+    if not isinstance(value, str):
+        return False
+    cleaned = value.strip()
+    return any(p.fullmatch(cleaned) for p in _CERTIFICATE_NUMBER_PATTERNS)
 
 
 @dataclass(frozen=True)
@@ -29,6 +32,8 @@ class CertificateNumber:
     value: str
 
     def __post_init__(self) -> None:
-        if not is_valid_certificate_number(self.value):
+        cleaned = self.value.strip() if isinstance(self.value, str) else ""
+        if not is_valid_certificate_number(cleaned):
             raise ValueError(
                 f"证件编码格式不符：{self.value!r}（应为 监证编号 或 …第N号）")
+        object.__setattr__(self, "value", cleaned)

@@ -1643,3 +1643,9 @@ class SaleMapNearbySearchResponse(BaseModel):
             community_ids_truncated=result.community_ids_truncated,
             result=SaleListingPageResponse.from_domain(result.result),
         )
+
+
+class WorkbenchOpenResponse(BaseModel):
+    listing_id: str
+    url: str
+    opened: bool = True

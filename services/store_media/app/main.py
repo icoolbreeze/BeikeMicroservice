@@ -11,14 +11,17 @@ from starlette.responses import Response
 
 
 from app.api.router import router
-from app.application.roughcast_crawler import build_crawler
+from app.application.roughcast_loop import build_daily_loop
 from app.application.service import StoreMediaService
+from app.infrastructure.baidu_map_client import BaiduMapClient
 from app.infrastructure.database import Database
 from app.infrastructure.featured_fetcher import FeaturedListingsFetcher, FeaturedSnapshotStore
 from app.infrastructure.news_fetcher import OfficialNewsFetcher
 from app.infrastructure.roughcast_rental_fetcher import RoughcastRentalFetcher
 from app.infrastructure.settings import Settings, load_settings
 from app.infrastructure.weather_fetcher import OpenMeteoWeatherFetcher
+from app.infrastructure.district_catalog import DistrictCatalogFetcher
+from app.infrastructure.workbench_open_client import WorkbenchOpenClient
 
 
 class RevalidatedStaticFiles(StaticFiles):
@@ -61,17 +64,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         app_service.initialize()
-        # 清水房采集默认关闭:头几天用 scripts/roughcast_crawl_once.py 手动跑,
-        # 确认上游流量曲线后再打开常驻线程（SM_ROUGHCAST_CRAWL_ENABLED=1）。
-        crawler = build_crawler(resolved, database) if resolved.roughcast_crawl_enabled else None
-        _app.state.roughcast_crawler = crawler
-        if crawler is not None:
-            crawler.start()
+        # 清水房本地日 loop（`roughcast_loop.py`）。默认关闭,开关打开
+        # 时只起这一个线程——`roughcast-daily-loop`——它内部已经包了
+        # 队列 A / Shadow score / 队列 B 的编排,**不要**再额外起 A 的
+        # 守护线程,否则同一日凌晨会跑出两轮 A run,把硬顶撞穿。
+        loop = build_daily_loop(resolved, database) if resolved.roughcast_crawl_enabled else None
+        _app.state.roughcast_loop = loop
+        # 兼容老代码里读 `app.state.roughcast_crawler` 的路径(目前只有
+        # 测试 + 一些 debug 探针):把 A 实例暴露出去,但不要起它的
+        # 守护线程。A 的 daemon 入口由 loop 统一调度。
+        _app.state.roughcast_crawler = loop.queue_a if loop is not None else None
+        if loop is not None:
+            loop.start()
         try:
             yield
         finally:
-            if crawler is not None:
-                crawler.stop()
+            if loop is not None:
+                loop.stop()
 
     app = FastAPI(
         title="store_media",
@@ -85,6 +94,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.featured_fetcher = featured_fetcher
     app.state.featured_snapshot_store = featured_snapshot_store
     app.state.roughcast_rental_fetcher = roughcast_rental_fetcher
+    app.state.workbench_open_client = WorkbenchOpenClient(resolved.crm_connector_base_url)
+    app.state.district_catalog_fetcher = DistrictCatalogFetcher(resolved.crm_connector_base_url)
+    app.state.baidu_map_client = (
+        BaiduMapClient(resolved.baidu_map_ak) if resolved.baidu_map_ak else None
+    )
     app.state.roughcast_crawler = None      # lifespan 里按开关决定是否装上
     if resolved.cors_origins:
         app.add_middleware(

@@ -12,6 +12,7 @@ from app.application.qr_login import CredentialInstaller, QrLoginManager, auto_s
 from app.application.service import ConnectorService
 from app.application.session_watchdog import SessionWatchdog
 from app.application.featured_snapshot_push import FeaturedSnapshotPusher
+from app.application.workbench_browser import WorkbenchBrowser
 from app.bootstrap import UNCONFIGURED_PROFILE, build_providers
 from app.infrastructure.settings import Settings, load_settings
 from app.infrastructure.windows_dpapi_credential_store import WindowsDpapiCredentialStore
@@ -76,11 +77,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             check_interval_seconds=resolved.session_watchdog_check_interval_seconds,
         )
         app.state.crm_session_watchdog.start()
-    app.state.crm_credential_store = (
-        WindowsDpapiCredentialStore(resolved.credential_store_path)
+    credential_store = getattr(session_provider, "_store", None)
+    if credential_store is None and resolved.upstream_profile != UNCONFIGURED_PROFILE:
+        credential_store = WindowsDpapiCredentialStore(resolved.credential_store_path)
+    app.state.crm_credential_store = credential_store
+    app.state.crm_workbench_opener = WorkbenchBrowser(
+        resolved,
+        credential_store,
+        session_provider=session_provider
         if resolved.upstream_profile != UNCONFIGURED_PROFILE
-        else None
+        else None,
     )
+
+    @app.on_event("shutdown")
+    def stop_workbench_browser() -> None:
+        app.state.crm_workbench_opener.close()
+
     if resolved.featured_push_enabled:
         app.state.crm_featured_snapshot_pusher = FeaturedSnapshotPusher(resolved)
         app.state.crm_featured_snapshot_pusher.start()

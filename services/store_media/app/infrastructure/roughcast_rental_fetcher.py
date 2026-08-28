@@ -140,6 +140,33 @@ class RoughcastRentalFetcher:
         with self._lock:
             return self._galleries.get(safe_id)
 
+    def prospect_for_id(self, listing_id: str) -> RoughcastProspectGallery | None:
+        """分享路径:跳过 `knows_listing` 闸,直接抓 CRM `/prospect`。
+
+        主榜里的房源多数不在前台浏览缓存里(`_known_listing_ids` 来自
+        公开 `roughcast-rentals` 的搜索),所以这里不复用那条闸——分享页
+        是 share 专属调用,只走 `_fetch_prospect` 的去重 / `image_type=REAL`
+        过滤 / http(s) URL 校验。返回的 `gallery` 与 `prospect()` 同型。
+        """
+        safe_id = _safe_listing_id(listing_id)
+        if safe_id is None:
+            return None
+        with self._lock:
+            cached = self._galleries.get(safe_id)
+            fetched_at = self._gallery_fetched_at.get(safe_id, 0.0)
+            if cached is not None and time.monotonic() - fetched_at < self._cache_seconds:
+                return cached
+
+        fetched = self._fetch_prospect(safe_id)
+        if fetched is not None:
+            with self._lock:
+                self._galleries[safe_id] = fetched
+                self._gallery_fetched_at[safe_id] = time.monotonic()
+            return fetched
+
+        with self._lock:
+            return self._galleries.get(safe_id)
+
     def _fetch(self, page: int) -> RoughcastRentalFeed | None:
         body = self._post_json(
             "/api/v1/listings/rental/search",

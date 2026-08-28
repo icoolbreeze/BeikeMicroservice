@@ -20,6 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 windows = ["pywin32>=306"]
+workbench = ["playwright>=1.40"]
 dev = ["pytest", "httpx", "ruff", "mypy"]
 
 [project.scripts]

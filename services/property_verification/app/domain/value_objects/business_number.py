@@ -17,9 +17,12 @@ _BUSINESS_NUMBER_PATTERNS = (
 )
 
 
-def is_valid_business_number(value: str) -> bool:
-    """宽容校验业务件号（新旧版格式）。"""
-    return any(p.fullmatch(value or "") for p in _BUSINESS_NUMBER_PATTERNS)
+def is_valid_business_number(value: object) -> bool:
+    """宽容校验业务件号（新旧版格式）；首尾空白忽略，非字符串视为空。"""
+    if not isinstance(value, str):
+        return False
+    cleaned = value.strip()
+    return any(p.fullmatch(cleaned) for p in _BUSINESS_NUMBER_PATTERNS)
 
 
 @dataclass(frozen=True)
@@ -29,6 +32,8 @@ class BusinessNumber:
     value: str
 
     def __post_init__(self) -> None:
-        if not is_valid_business_number(self.value):
+        cleaned = self.value.strip() if isinstance(self.value, str) else ""
+        if not is_valid_business_number(cleaned):
             raise ValueError(
                 f"业务件号格式不符：{self.value!r}（应为 日期F编号 或 权编号）")
+        object.__setattr__(self, "value", cleaned)

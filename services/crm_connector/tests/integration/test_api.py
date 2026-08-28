@@ -853,3 +853,48 @@ def test_sale_map_nearby_marks_communities_truncated(tmp_path) -> None:
     assert body["community_ids_truncated"] is True
     assert len(session.calls[2].query["multi_community_id"].split(",")) == 100
 
+
+def test_open_rental_workbench_without_credential_is_auth_required(tmp_path) -> None:
+    session = StubSession()
+    _app, client = _wired_app(session, tmp_path)
+
+    response = client.post("/api/v1/workbench/rental/106106022223/open")
+
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "CRM_AUTH_REQUIRED"
+
+
+def test_open_rental_workbench_rejects_short_listing_id(tmp_path) -> None:
+    session = StubSession()
+    _app, client = _wired_app(session, tmp_path)
+
+    response = client.post("/api/v1/workbench/rental/ab/open")
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "CRM_UPSTREAM_INVALID_INPUT"
+
+
+def test_open_rental_workbench_uses_injected_opener(tmp_path) -> None:
+    session = StubSession()
+    app, client = _wired_app(session, tmp_path)
+
+    class FakeOpener:
+        def __init__(self) -> None:
+            self.ids: list[str] = []
+
+        def open_rental_listing(self, listing_id: str) -> str:
+            self.ids.append(listing_id)
+            return f"https://lease-pz.link.lianjia.com/rent/house/detail/{listing_id}"
+
+    opener = FakeOpener()
+    app.state.crm_workbench_opener = opener
+    response = client.post("/api/v1/workbench/rental/106106022223/open")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["opened"] is True
+    assert body["listing_id"] == "106106022223"
+    assert body["url"].endswith("/rent/house/detail/106106022223")
+    assert "ke.com/zufang" not in body["url"]
+    assert opener.ids == ["106106022223"]
+

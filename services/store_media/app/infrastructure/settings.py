@@ -5,6 +5,37 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+# 极简 .env 加载:仅在 os.environ 未设时填入(进程级 > 显式 export 优先)。
+# 不加 python-dotenv 依赖,只支持 KEY=VALUE / 注释(#) / 双引号包值 这三件。
+# 已在 .gitignore 内的 services/store_media/.env 用来放 SM_BAIDU_MAP_AK 等
+# 私密配置(参见 README 第 146 行:清水房分享海报的百度静态图 AK)。
+_DOTENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+
+
+def _load_dotenv_once() -> None:
+    if not _DOTENV_PATH.is_file():
+        return
+    try:
+        lines = _DOTENV_PATH.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        os.environ.setdefault(key, value)
+
+
+_load_dotenv_once()
+
+
 # V2.5:11 档切分的默认计划。基于 [[roughcast-deep-paging-cap]] 的 3 次
 # 上游探针:`0:800=915`、`800:1200=785`、`0:1500=1921`(由此反推 800:1500
 # 过 cap,再切)。其余档按 3.78× 缩放 + 12 档切分,合并相邻小档成 11 档。
@@ -45,6 +76,7 @@ class Settings:
     weather_location_name: str = "成都 · 成华"
     weather_cache_seconds: int = 600
     crm_connector_base_url: str = "http://127.0.0.1:8020"
+    baidu_map_ak: str = ""
     featured_cache_seconds: int = 600
     roughcast_cache_seconds: int = 60
     # 清水房全量采集（队列 A）。默认关闭:先用手动入口盯着跑几天,确认流量曲线
@@ -66,6 +98,11 @@ class Settings:
     roughcast_bucket_plan: tuple[tuple[int | None, int | None], ...] = field(
         default_factory=lambda: DEFAULT_ROUGHCAST_BUCKET_PLAN
     )
+    # 本地日 loop:默认 off,`SM_ROUGHCAST_CRAWL_ENABLED=1` 才起线程。
+    # `SM_ROUGHCAST_SCORE_AFTER_CRAWL=0` 可关掉 A 后的 Shadow Run(默认开)。
+    # `SM_ROUGHCAST_QUEUE_B_DAILY_LIMIT=0` 表示当天不跑队列 B。
+    roughcast_score_after_crawl: bool = True
+    roughcast_queue_b_daily_limit: int = 60
 
     @property
     def database_path(self) -> Path:
@@ -131,6 +168,10 @@ def load_settings() -> Settings:
         weather_location_name=os.getenv("SM_WEATHER_LOCATION", "成都 · 成华").strip(),
         weather_cache_seconds=int(os.getenv("SM_WEATHER_CACHE_SECONDS", "600")),
         crm_connector_base_url=os.getenv("SM_CRM_CONNECTOR_BASE_URL", "http://127.0.0.1:8020").strip(),
+        baidu_map_ak=(
+            os.getenv("SM_BAIDU_MAP_AK", "").strip()
+            or os.getenv("BAIDU_MAP_AK", "").strip()
+        ),
         featured_cache_seconds=int(os.getenv("SM_FEATURED_CACHE_SECONDS", "120")),
         roughcast_cache_seconds=int(os.getenv("SM_ROUGHCAST_CACHE_SECONDS", "60")),
         roughcast_crawl_enabled=os.getenv("SM_ROUGHCAST_CRAWL_ENABLED", "0").strip() in
@@ -158,6 +199,11 @@ def load_settings() -> Settings:
         ),
         roughcast_bucket_plan=_bucket_plan(
             "SM_ROUGHCAST_BUCKET_PLAN", DEFAULT_ROUGHCAST_BUCKET_PLAN
+        ),
+        roughcast_score_after_crawl=os.getenv("SM_ROUGHCAST_SCORE_AFTER_CRAWL", "1").strip()
+        in {"1", "true", "True", "yes", "on"},
+        roughcast_queue_b_daily_limit=int(
+            os.getenv("SM_ROUGHCAST_QUEUE_B_DAILY_LIMIT", "60")
         ),
     )
 

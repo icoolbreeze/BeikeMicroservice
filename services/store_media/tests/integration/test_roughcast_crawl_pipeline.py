@@ -353,19 +353,31 @@ def test_crawler_thread_is_off_by_default(tmp_path) -> None:
 
     with TestClient(app):
         assert app.state.roughcast_crawler is None
+        assert app.state.roughcast_loop is None
 
     names = [thread.name for thread in threading.enumerate()]
     assert "roughcast-crawler" not in names
+    assert "roughcast-daily-loop" not in names
 
 
 def test_crawler_thread_starts_and_stops_when_enabled(tmp_path) -> None:
+    """开 `SM_ROUGHCAST_CRAWL_ENABLED=1` → `roughcast-daily-loop` 线程起来。
+
+    旧 A 守护线程名 `roughcast-crawler` 已经退役:它被日 loop 接管,
+    否则同日 A 会跑两轮把硬顶撞穿。所以这里只看 `roughcast-daily-loop`,
+    也不去查 `roughcast-crawler`。
+    """
     app = create_app(Settings(storage_dir=tmp_path, roughcast_crawl_enabled=True))
 
     with TestClient(app):
+        assert app.state.roughcast_loop is not None
+        # 兼容旧探针:loop 把 A 实例挂在 `roughcast_crawler` 上,但不启它的 daemon
         assert app.state.roughcast_crawler is not None
-        assert "roughcast-crawler" in [t.name for t in threading.enumerate()]
+        names = [t.name for t in threading.enumerate()]
+        assert "roughcast-daily-loop" in names
+        assert "roughcast-crawler" not in names
 
-    assert "roughcast-crawler" not in [t.name for t in threading.enumerate()]
+    assert "roughcast-daily-loop" not in [t.name for t in threading.enumerate()]
 
 
 def test_display_api_contract_is_unchanged(tmp_path) -> None:
@@ -410,4 +422,10 @@ def test_schema_creation_is_idempotent(tmp_path) -> None:
         "roughcast_listing_current",
         "roughcast_listing_snapshot",
         "roughcast_communities",
+        "roughcast_community_district",
+        "roughcast_bizcircle_district",
+        "roughcast_community_reference_snapshot",
+        "roughcast_score_runs",
+        "roughcast_listing_scores",
+        "roughcast_review_views",
     }

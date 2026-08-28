@@ -1,9 +1,10 @@
-"""第 1 期库表（清水房优质指数排名 · 只采集不评分）。
+"""清水房优质指数排名的库表。
 
-对照 `docs/roughcast-quality-ranking.md` V2.5 §4.1。本期只建 6 张表：
-`crawl_runs / crawl_log / crawl_stage / listing_current / listing_snapshot / communities`。
-`community_reference_snapshot` 留到第 3 期，`community_month_benchmark` 与
-`listing_scores` 留到第 4 期——`CREATE TABLE IF NOT EXISTS` 是纯追加，延后零代价。
+对照 `docs/roughcast-quality-ranking.md` V2.5 §4.1。
+第 1 期 6 张表：`crawl_runs / crawl_log / crawl_stage / listing_current /
+listing_snapshot / communities`。
+第 3 期追加 `community_reference_snapshot`（队列 B 参考集 R）。
+第 4 期追加 `score_runs` / `listing_scores`。`community_month_benchmark` 仍可后置。
 """
 
 from __future__ import annotations
@@ -99,15 +100,16 @@ CREATE TABLE IF NOT EXISTS roughcast_crawl_stage (
 CREATE INDEX IF NOT EXISTS idx_roughcast_stage_run
     ON roughcast_crawl_stage(run_id);
 
--- 小区档案与轮转状态。本期只写 id/name/resblock_id/bizcircle/roughcast_count/
--- first_seen_at;reference_* 与 refresh_* 是队列 B(第 3 期)的字段,建列不写。
+-- 小区档案与轮转状态。队列 A 写 id/name/resblock_id/bizcircle/roughcast_count/
+-- first_seen_at;队列 B 写 reference_* 与 refresh_*。
 CREATE TABLE IF NOT EXISTS roughcast_communities (
     id                TEXT    PRIMARY KEY,          -- resblock_id,或 name:<sha1[:16]> 占位
     name              TEXT    NOT NULL,
     resblock_id       TEXT,
     bizcircle         TEXT,
-    district          TEXT,                         -- 行里没有,本期恒 NULL
-    latitude          REAL,                         -- 同上(§七.5 已定案放弃坐标)
+    district          TEXT,                         -- 商圈目录唯一命中时写入;歧义/未知为 NULL
+    -- district_status / districts_json / district_assigned_at 见 migrations/002
+    latitude          REAL,                         -- 百度地点检索写入 BD-09
     longitude         REAL,
     roughcast_count   INTEGER NOT NULL DEFAULT 0,
     reference_run_id  INTEGER,
@@ -118,6 +120,33 @@ CREATE TABLE IF NOT EXISTS roughcast_communities (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_roughcast_communities_resblock
     ON roughcast_communities(resblock_id) WHERE resblock_id IS NOT NULL;
+
+-- 商圈 → 行政区目录快照。来源是 CRM rental filter-options 的 districtId 树。
+-- 由 scripts/roughcast_assign_districts.py 整表替换;队列 A 发布时按这份目录回填小区。
+CREATE TABLE IF NOT EXISTS roughcast_bizcircle_district (
+    bizcircle    TEXT NOT NULL,
+    district     TEXT NOT NULL,
+    captured_at  TEXT NOT NULL,
+    PRIMARY KEY (bizcircle, district)
+);
+-- 小区 ↔ 行政区。唯一商圈一行;跨区商圈多行。本地 `WHERE district=` 走这里。
+CREATE TABLE IF NOT EXISTS roughcast_community_district (
+    community_id TEXT NOT NULL,
+    district     TEXT NOT NULL,
+    PRIMARY KEY (community_id, district)
+);
+CREATE INDEX IF NOT EXISTS idx_roughcast_communities_district
+    ON roughcast_communities(district);
+CREATE INDEX IF NOT EXISTS idx_roughcast_community_district_district
+    ON roughcast_community_district(district);
+
+-- 核分页「打开贝壳」浏览记录。
+CREATE TABLE IF NOT EXISTS roughcast_review_views (
+    listing_id      TEXT    PRIMARY KEY,
+    view_count      INTEGER NOT NULL DEFAULT 0,
+    first_viewed_at TEXT    NOT NULL,
+    last_viewed_at  TEXT    NOT NULL
+);
 
 -- 清水房当前态,唯一真相。只在 COMPLETE / PARTIAL 事务里被刷新。
 -- community_lookup_status / score_source 由 migrations/001 加入。
@@ -151,4 +180,85 @@ CREATE TABLE IF NOT EXISTS roughcast_listing_snapshot (
 );
 CREATE INDEX IF NOT EXISTS idx_roughcast_snapshot_listing
     ON roughcast_listing_snapshot(listing_id, captured_at);
+
+-- 小区参考房源快照,按批次 append。评分只读 `reference_run_id` 指向的那一批,
+-- 禁止 `max(run_id)`——那会读到 ABORTED 的半截批次(§4.1 / §4.2)。
+-- fitment_status 存原值;is_roughcast 是派生布尔,两者都留(§七.8 / V2.4)。
+-- 本表收录该小区搜索到的**全部**在租行(P / R / 装修未知),发布时不过滤,
+-- 评分再按 fitment 三分。空装修行必须落库计数,不得静默丢弃。
+CREATE TABLE IF NOT EXISTS roughcast_community_reference_snapshot (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    community_id        TEXT    NOT NULL,
+    run_id              INTEGER NOT NULL REFERENCES roughcast_crawl_runs(id),
+    listing_id          TEXT    NOT NULL,
+    rent_mode           TEXT,
+    rooms               INTEGER,
+    halls               INTEGER,
+    baths               INTEGER,
+    area_sqm            REAL,
+    monthly_rent_yuan   REAL,
+    unit_rent           REAL,
+    orientation         TEXT,
+    is_roughcast        INTEGER NOT NULL,
+    fitment_status      TEXT,
+    captured_at         TEXT    NOT NULL,
+    UNIQUE (run_id, listing_id)
+);
+CREATE INDEX IF NOT EXISTS idx_roughcast_ref_snapshot_community
+    ON roughcast_community_reference_snapshot(community_id, run_id);
+
+-- 第 4 期:一次 Shadow / 正式评分的批次。
+CREATE TABLE IF NOT EXISTS roughcast_score_runs (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    status           TEXT    NOT NULL,
+    started_at       TEXT    NOT NULL,
+    finished_at      TEXT,
+    model_version    TEXT    NOT NULL,
+    delta_version    INTEGER NOT NULL,
+    delta_value      REAL,
+    k_scale          REAL    NOT NULL,
+    listing_run_id   INTEGER,
+    scored_count     INTEGER NOT NULL DEFAULT 0,
+    nearby_count     INTEGER NOT NULL DEFAULT 0,
+    insufficient_count INTEGER NOT NULL DEFAULT 0,
+    data_error_count INTEGER NOT NULL DEFAULT 0,
+    extreme_count    INTEGER NOT NULL DEFAULT 0,
+    delta_note       TEXT,
+    abort_reason     TEXT
+);
+
+CREATE TABLE IF NOT EXISTS roughcast_listing_scores (
+    id                       INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_id               TEXT    NOT NULL,
+    score_run_id             INTEGER NOT NULL REFERENCES roughcast_score_runs(id),
+    listing_run_id           INTEGER,
+    reference_run_id         INTEGER,
+    model_version            TEXT    NOT NULL,
+    delta_version            INTEGER NOT NULL,
+    delta_value              REAL    NOT NULL,
+    unit_rent                REAL,
+    reference_unit_rent      REAL,
+    expected_unit_rent       REAL,
+    advantage                REAL,
+    quality_score_raw        REAL,
+    quality_score            INTEGER,
+    quality_status           TEXT    NOT NULL,
+    quality_tier             TEXT,
+    confidence_score         INTEGER,
+    city_rank                INTEGER,
+    peer_scope               TEXT,
+    comparable_grade         TEXT,
+    benchmark_mode           TEXT,
+    effective_sample_count   REAL,
+    reference_age_days       INTEGER,
+    reference_community_count INTEGER,
+    reference_spread         REAL,
+    extreme_price            INTEGER NOT NULL DEFAULT 0,
+    reason                   TEXT,
+    benchmark_pool_json      TEXT,
+    computed_at              TEXT    NOT NULL,
+    UNIQUE (score_run_id, listing_id)
+);
+CREATE INDEX IF NOT EXISTS idx_roughcast_scores_run_rank
+    ON roughcast_listing_scores(score_run_id, quality_status, city_rank);
 """

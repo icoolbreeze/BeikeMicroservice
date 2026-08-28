@@ -603,6 +603,9 @@ def _inventory_section(report: StatusReport, config: RoughcastCrawlConfig) -> li
         f"(self 占比 {score_pct:.1f}% —— 自用排名 ≥30% 可接受,展示前应 ≥60%)",
         f"  community_lookup_status:not_found={totals.get('community_not_found', 0)} 套"
         f"({'高于 5% 查 connector' if totals.get('community_not_found', 0) > 0.05 * totals['active'] else '正常'})",
+        f"  参考集:已刷新小区 {totals.get('referenced_communities', 0)} / "
+        f"快照 {totals.get('reference_rows', 0)} 行"
+        f"（第 3 期队列 B;指针只指向 COMPLETE/PARTIAL 批次）",
     ]
 
 

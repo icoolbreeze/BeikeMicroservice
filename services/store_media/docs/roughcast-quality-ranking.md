@@ -361,12 +361,17 @@ listing_snapshot / communities`）。`community_reference_snapshot` 留到第 3 
 
 | 级 | 条件（**自上而下命中即停，互斥**） | grade 分 |
 | --- | --- | --- |
-| S | 同小区 + 同租赁模式 + **室厅卫全等** + `\|面积差\| ≤ 5㎡` | 100 |
-| A | 不属于 S + 同小区 + 同租赁模式 + 室厅卫全等 + `5㎡ < \|面积差\| ≤ 10㎡` | 85 |
+| S | 同小区 + 同租赁模式 + **室相等** + 厅/卫各差 ≤1（`0H0B` 当未知、不参与）+ **相对面积** `\|Δa\|/a_t ≤ 0.05` | 100 |
+| A | 不属于 S + 同上布局 + `0.05 < \|Δa\|/a_t ≤ 0.10` | 85 |
 | B | 不属于 S/A + 同小区 + 同租赁模式 + **室数相等**（厅卫可不同）+ `sim_area ≥ 0.6` | 65 |
 | C | 不属于 S/A/B + 同小区 + 同租赁模式 + 室数差 1 + `sim_area ≥ 0.5` | 45 |
 | D | 不属于 S/A/B/C + 同小区 + 同租赁模式，其他可用非清水房 | 25 |
 | N | 周边小区（走 2.4 第 3 级） | 15 |
+
+> **第 3 期定稿（2026-08-24，全市 3227 套合格目标）**：S/A 不再用绝对 5㎡/10㎡，
+> 也不再要求室厅卫三元组全等。口径见第 2 期四条修正，全量复算后
+> `s_grade_coverage = 55.4%`（修正前 41.4%），保持六级，**不压成三级**。
+> 实现：`app/domain/roughcast_benchmark.py` 的 `CORRECTED`。
 
 **硬约束**：`S ∩ A ∩ B ∩ C ∩ D = ∅`。实现必须是一个返回**单个** grade 的函数
 
@@ -434,7 +439,7 @@ class BenchmarkResult:
 | `n_S = 2` 且 secondary 可用 | `0.80 × wmedian(S) + 0.20 × wmedian(secondary)` | `S2_BLEND` | 100 |
 | `n_S = 2` 且 secondary 不可用 | `weighted_median(S)` | `S2_ONLY_WEAK` | 70 |
 | `n_S = 1` 且 secondary 可用 | `0.40 × (唯一 S) + 0.60 × wmedian(secondary)` | `S1_BLEND` | 60 |
-| `n_S = 1` 且 secondary 不可用 | **INVALID** | — | — |
+| `n_S = 1` 且 secondary 不可用 | **落到 A→B→C→D 阶梯**（不直接 INVALID） | 该档 `*_ONLY` | 取该档 grade 分 |
 | `n_S = 0`，A→B→C→D 中首个 ≥3 的等级 | `weighted_median(该等级)` | `A_ONLY` / `B_ONLY` / `C_ONLY` / `D_ONLY` | 取该等级 grade 分 |
 | 以上都不满足 | **INVALID** | — | — |
 
@@ -455,9 +460,9 @@ class BenchmarkResult:
   secondary 权重只占 20%，且 secondary 有最低 2 套的要求，S 级主导地位明确。
 - `S2_ONLY_WEAK` 虽然用了纯 S 中位数，但 2 套样本无次级交叉验证，
   设 `structure_cap = 70` 反映「结构偏弱」。
-- `n_S = 1` 无 secondary → INVALID：单套房源没有任何交叉验证，
-  用它定价比没有基准更危险。宁可让房源从前端「高可信捡漏」筛掉，
-  也不能让人误以为「1 套就是可信的市场基准」。
+- `n_S = 1` 无 secondary → **不**用那 1 套 S 定价（没有交叉验证），
+  而是落到 A/B/C/D 阶梯。V2.3 已证实「恰好 1 条 S 就 INVALID」非单调：
+  多一条更好的参考不该让结果变差。只有阶梯也不满足才 INVALID。
 
 > `n_S = 1` 的融合比例，V2 提案原文给的是 55/45。这里改成 40/60：
 > 55% 的权重压在单套房源上，一份异常报价就能带偏整条结论，
@@ -604,8 +609,11 @@ Resolver** 产出。排除 `S1_BLEND / C_ONLY / D_ONLY` 与全部回退来源：
 不是绝对市场时点**：全市清水房整体相对装修房降 10%，δ 跟着降，大家分数仍在 50 附近。
 不得把它当市场指数使用。跨期可比性靠的是**冻结 δ 版本**，不是靠 δ 自动跟随。
 
-护栏：δ 必须落在 `[0.55, 0.95]`，否则判定标定失败，回退到配置值
-`SM_ROUGHCAST_DELTA_FALLBACK` 并告警，**不得静默使用异常 δ**。
+护栏：δ 必须落在 `[0.30, 0.95]`，否则判定标定失败，回退到配置值
+`SM_ROUGHCAST_DELTA_FALLBACK`（默认 0.45）并告警，**不得静默使用异常 δ**。
+下沿从 0.55 下调到 0.30：探针与全量都显示清水房价大约是精装的一半，
+`0.55` 会把真值判失败、把全市分数整体抬高。
+**2026-08-24 Shadow Run**：小区等权 δ = **0.530**（527 个小区 / 1276 套强基准），落在护栏内。
 
 ### 2.6 三个分离的指标
 
@@ -713,7 +721,7 @@ ORDER BY quality_score_raw DESC, confidence_score DESC, listing_id ASC
 
 | 类别 | 判据 | 处理 |
 | --- | --- | --- |
-| `data_error` | 面积 ≤5㎡、租金 ≤0、缺租金或缺面积、`u` 落在 `[1, 500]` 元/㎡·月 之外 | 不给分，排序沉底，`quality_status='data_error'` |
+| `data_error` | 面积 ≤5㎡、租金 ≤0、缺租金或缺面积、`u` 落在 `[1, 500]` 元/㎡·月 之外；**`1室0厅0卫`（1-0-0-0）疑似车位/储藏间** | 不给分，排序沉底，`quality_status='data_error'` |
 | `insufficient` | 回退链走到底仍无参考（含周边未过 2.4.2 三道门槛） | `quality_score = NULL`，**不进排名**，单独分组展示 |
 | `extreme_price` | `\|advantage\| > 0.7`（便宜/贵 50% 以上） | **照常给分、照常排名**，同时 `extreme_price=1` 标记待人工核 |
 
@@ -1412,9 +1420,9 @@ V2.5 在 `roughcast_listing_current` 与 `roughcast_listing_snapshot` 上加两�
 | --- | --- | --- |
 | 1 | **「建议的 connector 改动」A/B/C/D/E（已完成）** + 库表 + 队列 A + 11 档切分 + 节流器/熔断 + `crawl_runs` 状态机（RUNNING / COMPLETE / **PARTIAL** / ABORTED / FAILED）。**只采集，不评分**，也不写 `classify`/Resolver（理由见下方「为什么覆盖率复算挪到第 3 期」） | **V2.5 改** 连续 1 天产出 COMPLETE 或 PARTIAL run（11 档全成 = COMPLETE,部分成 = PARTIAL 都算合规发布）；日志显示实际流量符合第三章；记录上游 `total` 以观察其波动（第七章第 7 条）。原 V2.4 要求的「连续 3 天」对**自用实地考察**过于保守:11 档切分下每档都重跑,数据滞后 1 天可接受;若用于对客展示则仍需 3 天 |
 | 2 | ~~S 级覆盖率探针~~ **已完成（2026-08-20，31 次请求）** | 结论见文首；四条待落地结论见下 |
-| 3 | 队列 B + 半月轮转 + `community_reference_snapshot`，**随后**离线复算三个覆盖率、定稿 2.2 分级阶梯（V2.3 第 6 条）并落地下面「第 2 期的四条结论」 | 15 天内小区覆盖率 ≥95%；三个覆盖率复算完成且阶梯定稿 |
-| 4 | δ 标定 + Resolver + 评分器 + **Shadow Run** | 第八章 1–12 与 A–Y 全绿；算分但不上前端；人工核 50 套（含 10 套高分、10 套低分、10 套 `extreme_price`）；用正式样本重估 `k`（provisional 0.50）并升 `model_version` |
-| 5 | 排名 API + 前端 + 上云推送 | 本地跑通后再发布云端 |
+| 3 | 队列 B + 半月轮转 + `community_reference_snapshot`，**随后**离线复算三个覆盖率、定稿 2.2 分级阶梯（V2.3 第 6 条）并落地下面「第 2 期的四条结论」 | **已完成（2026-08-24）**：队列 B 全量 1425/1425 COMPLETE；`classify`/`Resolver` 落地四条修正；全量复算 `s=55.4%` / `strong=61.2%` / `valid=77.8%`，六级定稿不压级。小区参考指针覆盖 100%（有 R 行的小区 1284/1425=90.1%） |
+| 4 | δ 标定 + Resolver + 评分器 + **Shadow Run** | **Shadow Run 1 已完成（2026-08-24）**：δ=0.530（527 小区等权）、k 维持 0.50、`model_version=v2.1.0`；scored 2421 / nearby 43 / insufficient 801 / data_error 2 / extreme 423。分数在 `roughcast_listing_scores`，前端未接。人工核与第八章剩余（回退历史/Y fixture）仍待补 |
+| 5 | 排名 API + 前端 + 上云推送 | **first cut（2026-08-25）**:本地排名榜 + `/roughcast-rank.html`，只读最新 COMPLETE score run、零上游；`/api/v1/display/roughcast-ranked`（主榜 / 周边估算 / 基准不足 / 数据异常 四组 + deals / sort / 分页）。**本地长跑**（`SM_ROUGHCAST_CRAWL_ENABLED=1` + `scripts/start_store_media.ps1`）:进程内 `roughcast-daily-loop` 线程按 Asia/Shanghai 本地日把 A → Shadow Run → B 串起来，restart-safe（判重写进 SQLite 不靠内存）。**云端推送仍待办**——发布到公网访问入口放在「本地跑通后再上云」一行 |
 
 ### 第 2 期的四条结论（第 3 期实现 `classify`/Resolver 时直接带上）
 
@@ -1726,9 +1734,10 @@ store_media 只需把数据源指向推送产物。
    不是能靠样本量摊平的方差。
    两个候选修法：①R 只取 `003`（548 行，量足够），`001` 作次级回退；
    ②按装修档分层算 `b_i` 再融合。
-   **无法用现有产物判定**——探针的 CSV 没有逐条参考行的 `fitmentStatus` × 单位租金，
-   这正是上面「探针必须留下原始数据」那条缺陷的第二个受害者。
-   下一轮探针**必须一并输出 `001` 与 `003` 的单位租金分布差**。
+   **2026-08-24 全量已能量到**：当前指针批次 `001 n=3532 median=26.78 元/㎡`，
+   `003 n=20170 median=33.94 元/㎡`，简装比精装便宜约 **21%**。数量比约 1:5.7。
+   偏差坐实。**第 4 期评分器默认走修法 ①**（R 主池只取 `003`，`001` 作次级回退），
+   本阶段 `classify` 仍按 2.1 把两档都算进 R，以免覆盖率分母被提前改掉。
 10. **预算记账在 connector 里有一处缺口**（V2.4 新增，与上游行为无关，是我们自己的实现）。
    `crm_connector/app/infrastructure/kecom_session_provider.py` 的 `_maybe_autorefresh`
    在遇到 401 时会**自行重发一次请求**。那是一次真实上游请求，
@@ -1853,6 +1862,23 @@ store_media 只需把数据源指向推送产物。
 2. `D_ONLY` 占 40.3%，说明多数房源的基准来自最松一档。
    这不触发任何现有告警，但它意味着 `quality_score` 的平均信息量比设计预期低。
    应新增一条：`d_only_ratio > 50%` 告警。
+
+### 全量复算基线（2026-08-24，3227 套合格目标 / 1425 小区 / 当前指针批次）
+
+`python scripts/roughcast_coverage.py`。分母剔除 38 套 0 室与 2 套 `data_error`。
+
+| 指标 | 修正前 | 四条修正后 | 对告警线 |
+| --- | --- | --- | --- |
+| `s_grade_coverage` | 41.4% | **55.4%** | 高于 30%；落在 20–60% 上沿，**保持六级** |
+| `strong_comparable_coverage` | 45.8% | **61.2%** | 修正后越过 50% 告警线 |
+| `valid_community_benchmark_coverage` | 73.6% | **77.8%** | 高于 60% |
+| `S_ONLY` 占比 | 18.8% | **29.2%** | 修正后升为第一大模式 |
+| `D_ONLY` 占比 | 19.4% | 22.3% | 低于 50% 告警线 |
+| `S2_ONLY_WEAK + S1_BLEND` | 11.5% | 11.0% | 低于 40% |
+| `unknown_fitment_ratio` | 9.8%（2915/29883） | 同左 | 低于 20% |
+| 4 室 S 命中 | 33.4% | **49.9%** | 相对窗口修的就是这一档 |
+
+与探针预测「修完标定后 s_grade 升到 55–61%」一致。`001`/`003` 单价差见第七章第 9 条，留给第 4 期。
 
 ## 十、原则
 

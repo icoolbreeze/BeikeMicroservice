@@ -38,9 +38,11 @@ from app.api.schemas import (
     TrusteeshipDetailResponse,
     TrusteeshipListingPageResponse,
     TrusteeshipListingSearchRequest,
+    WorkbenchOpenResponse,
 )
 from app.application.qr_login import QrLoginManager
 from app.application.service import ConnectorService
+from app.application.workbench_browser import WorkbenchBrowser
 from app.domain.errors import ConnectorError, UpstreamNotConfiguredError
 from app.domain.models import ConnectionState
 from app.mcp.tools import tool_definitions
@@ -51,6 +53,21 @@ ResultT = TypeVar("ResultT")
 
 def service(request: Request) -> ConnectorService:
     return request.app.state.crm_connector_service
+
+
+def workbench_opener(request: Request) -> WorkbenchBrowser:
+    opener: WorkbenchBrowser | None = getattr(
+        request.app.state, "crm_workbench_opener", None
+    )
+    if opener is None:
+        raise HTTPException(
+            status_code=UpstreamNotConfiguredError.status_code,
+            detail={
+                "code": UpstreamNotConfiguredError.code,
+                "message": "workbench browser is not wired on this process",
+            },
+        )
+    return opener
 
 
 def qr_login_manager(request: Request) -> QrLoginManager:
@@ -224,6 +241,24 @@ def get_rental_listing_house_info(
             )
         )
     )
+
+
+@router.post(
+    "/workbench/rental/{listing_id}/open",
+    response_model=WorkbenchOpenResponse,
+)
+def open_rental_workbench(
+    listing_id: str,
+    opener: Annotated[WorkbenchBrowser, Depends(workbench_opener)],
+) -> WorkbenchOpenResponse:
+    """Open the CRM rental detail page in a headed browser with injected cookies.
+
+    The public ke.com page requires a consumer login. This endpoint only
+    constructs ``lease-pz.link.lianjia.com/rent/house/detail/{id}`` from a
+    validated listing id — it never accepts a caller-supplied URL.
+    """
+    url = invoke(lambda: opener.open_rental_listing(listing_id))
+    return WorkbenchOpenResponse(listing_id=listing_id.strip(), url=url, opened=True)
 
 
 @router.get("/listings/rental/{listing_id}/redirect", response_model=RentalListingRedirectResponse)

@@ -121,6 +121,41 @@ class RoughcastCrawlClient:
             has_more=bool(body.get("has_more")),
         )
 
+    def search_community_page(self, resblock_id: str, page: int) -> CrawlPage:
+        """队列 B:按 `resblock_ids` 拉该小区全部在租房源,**不带 fitment 过滤**。
+
+        装修状态由行级 `fitmentStatus` 就地三分(P / R / 未知),见 §三队列 B
+        与 §七.8。带上 `fitment=002` 就只剩被排序集,参考集 R 永远是空的。
+        """
+        if not resblock_id or not str(resblock_id).strip():
+            raise CrawlRequestError("resblock_id 为空,无法搜小区")
+        body = self._post_json(SEARCH_PATH, {
+            "scope": CRAWL_SCOPE,
+            "resblock_ids": [str(resblock_id).strip()],
+            "page": page,
+            "page_size": self._page_size,
+        })
+        items = body.get("items")
+        if not isinstance(items, list):
+            raise CrawlRequestError(
+                f"小区 {resblock_id} 第 {page} 页响应缺少 items 数组",
+                error_code="CRM_UPSTREAM_CHANGED",
+            )
+        rows = tuple(
+            row
+            for raw in items
+            if isinstance(raw, dict)
+            for row in (_row_from_response(raw),)
+            if row is not None
+        )
+        total = body.get("total")
+        return CrawlPage(
+            rows=rows,
+            page=page,
+            total=int(total) if isinstance(total, int) else 0,
+            has_more=bool(body.get("has_more")),
+        )
+
     def _post_json(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         request = Request(
             f"{self._base_url}{path}",
