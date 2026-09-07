@@ -61,6 +61,7 @@ class RankedCard:
     image: str | None
     ke_url: str
     view_count: int
+    share_count: int
 
 
 @dataclass(frozen=True)
@@ -239,7 +240,7 @@ def paginate(rows, page: int, page_size: int):
     return rows[start:end], len(rows), end < len(rows)
 
 
-def _card(row, views, catalog) -> RankedCard:
+def _card(row, views, shares, catalog) -> RankedCard:
     listing_id = str(row["listing_id"])
     raw_image = row["title_image_url"]
     image = original_image_url(raw_image) or public_image_url(raw_image)
@@ -275,6 +276,7 @@ def _card(row, views, catalog) -> RankedCard:
         image=image,
         ke_url=KE_LISTING_URL.format(listing_id=listing_id),
         view_count=int(views.get(listing_id, 0) or 0),
+        share_count=int(shares.get(listing_id, 0) or 0),
     )
 
 
@@ -347,7 +349,8 @@ def build_ranked_feed(
     page_rows, total, has_more = paginate(sorted_rows, resolved_page, resolved_size)
 
     views = repository.review_view_counts()
-    items = tuple(_card(row, views, resolved_catalog) for row in page_rows)
+    shares = repository.share_counts()
+    items = tuple(_card(row, views, shares, resolved_catalog) for row in page_rows)
     selected_str = "、".join(selected) if selected else None
     return RankedFeed(
         score_run_id=int(run["id"]),

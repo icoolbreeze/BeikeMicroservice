@@ -45,6 +45,7 @@ class ReviewCard:
     ke_url: str
     group_hint: str
     view_count: int
+    share_count: int
 
 
 @dataclass(frozen=True)
@@ -107,6 +108,7 @@ def build_review_feed(
         if _matches_districts(row, resolved_catalog, selected)
     ]
     views = repository.review_view_counts()
+    shares = repository.share_counts()
     scored_by_rank = sorted(
         visible, key=lambda row: (row["city_rank"] is None, row["city_rank"] or 10**9)
     )
@@ -124,10 +126,10 @@ def build_review_feed(
         and row["benchmark_mode"] in {"S_ONLY", "S2_BLEND"}
     ][:MID_N]
     groups = {
-        "top": tuple(_card(row, "最高分", resolved_catalog, views) for row in scored_by_rank[:TOP_N]),
-        "bottom": tuple(_card(row, "最低分", resolved_catalog, views) for row in bottom),
-        "extreme": tuple(_card(row, "待核极端", resolved_catalog, views) for row in extreme),
-        "mid": tuple(_card(row, "高可信对照", resolved_catalog, views) for row in mid),
+        "top": tuple(_card(row, "最高分", resolved_catalog, views, shares) for row in scored_by_rank[:TOP_N]),
+        "bottom": tuple(_card(row, "最低分", resolved_catalog, views, shares) for row in bottom),
+        "extreme": tuple(_card(row, "待核极端", resolved_catalog, views, shares) for row in extreme),
+        "mid": tuple(_card(row, "高可信对照", resolved_catalog, views, shares) for row in mid),
     }
     return ReviewFeed(
         score_run_id=int(run["id"]),
@@ -196,7 +198,8 @@ def _district_counts(rows, catalog: DistrictCatalog) -> tuple[DistrictCount, ...
     return tuple(ordered)
 
 
-def _card(row, hint: str, catalog: DistrictCatalog, views: dict[str, int]) -> ReviewCard:
+def _card(row, hint: str, catalog: DistrictCatalog,
+           views: dict[str, int], shares: dict[str, int]) -> ReviewCard:
     layout = row["layout"] or (
         f"{row['rooms'] or 0}室{row['halls'] or 0}厅{row['baths'] or 0}卫"
     )
@@ -226,4 +229,5 @@ def _card(row, hint: str, catalog: DistrictCatalog, views: dict[str, int]) -> Re
         ke_url=KE_LISTING_URL.format(listing_id=listing_id),
         group_hint=hint,
         view_count=int(views.get(listing_id, 0) or 0),
+        share_count=int(shares.get(listing_id, 0) or 0),
     )

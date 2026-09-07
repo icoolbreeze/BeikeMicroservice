@@ -1,0 +1,238 @@
+:root {
+  color-scheme: dark;
+  --page: #111814;
+  --card: #1a221e;
+  --ink: #eef3ef;
+  --muted: #9aa89f;
+  --line: #2a3530;
+  --green: #3dbe8c;
+  --sand: #e0b15c;
+  --danger: #e07068;
+  --font: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+.shell {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem 3rem;
+}
+
+.hero h1 {
+  margin: .2rem 0 .4rem;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  letter-spacing: .04em;
+}
+.eyebrow, .lede, .hint, .empty {
+  color: var(--muted);
+  font-size: .9rem;
+}
+.eyebrow { letter-spacing: .16em; text-transform: uppercase; font-size: .72rem; }
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 1.25rem 0 .75rem;
+  padding: .65rem 0;
+  background: linear-gradient(180deg, var(--page) 70%, transparent);
+}
+.tabs button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  padding: .45rem 1rem;
+  cursor: pointer;
+  font: inherit;
+}
+.tabs button.is-active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #082016;
+  font-weight: 700;
+}
+
+.districts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin: 0 0 .9rem;
+}
+.districts button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  padding: .3rem .75rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: .8rem;
+}
+.districts button.is-active {
+  background: var(--sand);
+  border-color: var(--sand);
+  color: #2a1e08;
+  font-weight: 700;
+}
+.districts .count {
+  color: var(--muted);
+  font-weight: 500;
+}
+.districts button.is-active .count {
+  color: #5a3f12;
+}
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin: -.4rem 0 .9rem;
+}
+.extras button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  padding: .3rem .75rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: .8rem;
+}
+.extras button.is-active {
+  background: var(--green);
+  border-color: var(--green);
+  color: #082016;
+  font-weight: 700;
+}
+.place {
+  margin: 0;
+  color: var(--sand);
+  font-size: .82rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18.5rem, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.card.is-seen {
+  background: #1a2030;
+  border-color: #4d6ea3;
+}
+.card.is-seen .body h2 {
+  color: #c5d6f2;
+}
+.cover {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #0c110f;
+}
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cover .ph {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--muted);
+  font-size: .85rem;
+}
+.badge {
+  position: absolute;
+  left: .7rem;
+  top: .7rem;
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+.badge span {
+  border-radius: .55rem;
+  padding: .2rem .5rem;
+  font-size: .78rem;
+  font-weight: 700;
+  background: rgb(8 16 12 / 78%);
+}
+.badge .score { color: var(--sand); }
+.badge .rank { color: #fff; }
+.badge .ext { color: var(--danger); }
+.badge .seen { color: #8ab4f8; }
+
+.body {
+  display: grid;
+  gap: .4rem;
+  padding: .85rem 1rem 1rem;
+}
+.body h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.meta, .prices, .reason {
+  margin: 0;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.45;
+}
+.prices strong { color: var(--ink); font-weight: 650; }
+.reason { color: #c5d0c8; }
+
+.actions {
+  display: flex;
+  gap: .5rem;
+  margin-top: .35rem;
+}
+.actions a, .actions button {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  border: 0;
+  border-radius: .7rem;
+  padding: .55rem .4rem;
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 650;
+  background: var(--green);
+  color: #082016;
+  cursor: pointer;
+}
+.actions a.ghost, .actions button.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.actions button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+.open-status {
+  min-height: 1.2em;
+  margin: 0 0 .85rem;
+  color: var(--sand);
+  font-size: .85rem;
+}
+.open-status.is-error {
+  color: var(--danger);
+}

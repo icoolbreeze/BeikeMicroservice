@@ -508,8 +508,12 @@ def share_roughcast_ranked_listing(
         facts, map_image=map_image, map_placeholder=map_placeholder,
         photos=photos, photo_loader=_photo_loader,
     )
+    # 自增在拼图完成之后:即便拼图报错也不污染计数;前端再读 X-Share-Count
+    # 更新"已分享 n 次"badge。
+    share_count = repository.increment_share_count(listing_id)
     headers = {
         "Cache-Control": "no-store",
         "Content-Disposition": f'attachment; filename="roughcast-{listing_id}.png"',
+        "X-Share-Count": str(share_count),
     }
     return Response(content=png, media_type="image/png", headers=headers)

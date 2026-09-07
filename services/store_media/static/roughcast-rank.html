@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f5f4f0">
+    <title>清水房排名</title>
+    <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+    <link rel="stylesheet" href="/roughcast-rank.css">
+    <script src="/roughcast-rank.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="清水房本地自用排名">
+          <span class="brand-mark" aria-hidden="true">榜</span>
+          <span class="brand-copy">
+            <strong>清水房排名</strong>
+            <small>本地自用 · 零上游</small>
+          </span>
+        </div>
+        <div class="run-meta" id="runMeta" aria-live="polite">载入最新评分…</div>
+      </header>
+
+      <nav class="groups" id="groups" aria-label="分组">
+        <button type="button" data-group="scored" class="is-active">主榜</button>
+        <button type="button" data-group="nearby_estimate">周边估算</button>
+        <button type="button" data-group="insufficient">基准不足</button>
+        <button type="button" data-group="data_error">数据异常</button>
+      </nav>
+
+      <nav class="districts" id="districts" aria-label="行政区筛选，可多选"></nav>
+
+      <div class="toolbar">
+        <nav class="sort" id="sort" aria-label="排序">
+          <button type="button" data-sort="quality" class="is-active">优质</button>
+          <button type="button" data-sort="confidence">可信</button>
+          <button type="button" data-sort="rent_asc">月租 ↑</button>
+          <button type="button" data-sort="unit_rent_asc">单价 ↑</button>
+          <button type="button" data-sort="latest">最新</button>
+        </nav>
+        <div class="extras">
+          <button type="button" id="dealsToggle" aria-pressed="false">高可信捡漏</button>
+          <button type="button" id="coverFilter" class="is-active" aria-pressed="true">有封面</button>
+        </div>
+      </div>
+
+      <p class="hint" id="hint" role="status" aria-live="polite">正在载入主榜…</p>
+      <p class="open-status" id="openStatus" role="status"></p>
+
+      <main>
+        <section class="grid" id="grid" aria-live="polite" aria-busy="true"></section>
+        <p class="empty" id="empty" hidden>这一组没有房源。</p>
+        <div class="load-more" id="loadMore" aria-live="polite" hidden>
+          <button type="button" id="loadMoreButton">载入更多</button>
+        </div>
+      </main>
+
+      <footer class="run-footer" id="runFooter" aria-live="polite"></footer>
+    </div>
+  </body>
+</html>

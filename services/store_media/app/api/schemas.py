@@ -218,6 +218,7 @@ class RoughcastScoreReviewCardSchema(BaseModel):
     ke_url: str
     group_hint: str = ""
     view_count: int = 0
+    share_count: int = 0
 
 
 class RoughcastDistrictCountSchema(BaseModel):
@@ -271,6 +272,7 @@ class RoughcastRankedCardSchema(BaseModel):
     image: str | None = None
     ke_url: str
     view_count: int = 0
+    share_count: int = 0
 
 
 class RoughcastRankedDistrictCountSchema(BaseModel):

@@ -148,6 +148,14 @@ CREATE TABLE IF NOT EXISTS roughcast_review_views (
     last_viewed_at  TEXT    NOT NULL
 );
 
+-- 分享海报被调用的次数累计(同 review_views 结构,字段语义改为 share)。
+CREATE TABLE IF NOT EXISTS roughcast_share_counts (
+    listing_id      TEXT    PRIMARY KEY,
+    share_count     INTEGER NOT NULL DEFAULT 0,
+    first_shared_at TEXT    NOT NULL,
+    last_shared_at  TEXT    NOT NULL
+);
+
 -- 清水房当前态,唯一真相。只在 COMPLETE / PARTIAL 事务里被刷新。
 -- community_lookup_status / score_source 由 migrations/001 加入。
 CREATE TABLE IF NOT EXISTS roughcast_listing_current (

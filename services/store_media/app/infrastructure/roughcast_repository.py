@@ -1150,6 +1150,38 @@ class RoughcastRepository:
             ).fetchone()
         return int(count["view_count"] if count is not None else 1)
 
+    def share_counts(self) -> dict[str, int]:
+        """全部 listing 的分享次数。表不存在时(老库、迁移没跑)返 {}。"""
+        with self.database.connect() as db:
+            try:
+                rows = db.execute(
+                    "SELECT listing_id, share_count FROM roughcast_share_counts"
+                ).fetchall()
+            except sqlite3.OperationalError:
+                return {}
+        return {str(row["listing_id"]): int(row["share_count"] or 0) for row in rows}
+
+    def increment_share_count(self, listing_id: str) -> int:
+        """分享海报接口被成功调用时 +1,返回新值。表不存在兜底返 1。"""
+        now = self._now()
+        with self.database.connect() as db:
+            try:
+                db.execute(
+                    "INSERT INTO roughcast_share_counts "
+                    "(listing_id, share_count, first_shared_at, last_shared_at) "
+                    "VALUES (?, 1, ?, ?) "
+                    "ON CONFLICT(listing_id) DO UPDATE SET "
+                    "share_count = share_count + 1, last_shared_at = excluded.last_shared_at",
+                    (listing_id, now, now),
+                )
+                count = db.execute(
+                    "SELECT share_count FROM roughcast_share_counts WHERE listing_id = ?",
+                    (listing_id,),
+                ).fetchone()
+            except sqlite3.OperationalError:
+                return 1
+        return int(count["share_count"] if count is not None else 1)
+
     def reference_snapshot_for(self, community_id: str) -> list[sqlite3.Row]:
         """本小区当前参考集 = 指针指向的那一批,不是 max(run_id)。"""
         with self.database.connect() as db:

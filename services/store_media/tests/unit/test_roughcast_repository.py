@@ -406,3 +406,26 @@ def test_run_request_count_is_synced_from_the_log(tmp_path) -> None:
 
     assert repository.sync_run_request_count(run_id) == 3
     assert repository.get_run(run_id)["request_count"] == 3
+
+
+# ------------------------------------------------------------------ 分享计数
+
+
+def test_increment_share_count_returns_running_total(tmp_path) -> None:
+    """同一 listing 连续 3 次分享 → 计数 1/2/3,单调递增。"""
+    repository = RoughcastRepository(make_db(tmp_path), clock=FakeClock())
+    assert repository.share_counts() == {}
+    assert repository.increment_share_count("L-SHARE-1") == 1
+    assert repository.increment_share_count("L-SHARE-1") == 2
+    assert repository.increment_share_count("L-SHARE-1") == 3
+    counts = repository.share_counts()
+    assert counts == {"L-SHARE-1": 3}
+
+
+def test_share_counts_isolates_listings(tmp_path) -> None:
+    """不同 listing 各自计数,互不串。"""
+    repository = RoughcastRepository(make_db(tmp_path), clock=FakeClock())
+    repository.increment_share_count("A")
+    repository.increment_share_count("B")
+    repository.increment_share_count("A")
+    assert repository.share_counts() == {"A": 2, "B": 1}
