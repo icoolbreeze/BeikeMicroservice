@@ -62,6 +62,27 @@ curl --fail http://127.0.0.1:8080/api/v1/health
 
 生产目录和首次发布步骤见 [`services/store_media/deploy/README.md`](../services/store_media/deploy/README.md)。
 
+## CRM 连接器（租赁本地化）
+
+| 项目 | 值 |
+| --- | --- |
+| SSH 别名 | `beike-server`（同一台机器） |
+| systemd 服务 | `crm-connector.service` |
+| 监听 | `127.0.0.1:8020`（经门店媒体 8080 公开看板） |
+| 代码 | `/opt/crm-connector/current` |
+| 持久化 | `/var/lib/crm-connector`（归档 SQLite + 凭证） |
+| 环境变量 | `/etc/crm-connector/crm-connector.env` |
+
+看板：http://119.29.187.184:8080/archive
+
+```bash
+ssh beike-server
+sudo systemctl status crm-connector
+curl --fail http://127.0.0.1:8020/api/v1/health
+```
+
+部署步骤见 [`services/crm_connector/deploy/README.md`](../services/crm_connector/deploy/README.md)。云枢必须在该主机上保持连接。
+
 ## 常见问题
 
 - `Permission denied (publickey)`：确认私钥路径正确、当前用户有权读取私钥，并检查 SSH 配置中的 `User` 和 `IdentityFile`。

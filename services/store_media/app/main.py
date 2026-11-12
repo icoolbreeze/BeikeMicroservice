@@ -4,13 +4,19 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from urllib.error import HTTPError, URLError
+from urllib.request import Request as UrlRequest, urlopen
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import Response
 
 
+from app.api.router import login as store_media_login
 from app.api.router import router
+from app.api.schemas import LoginRequest
 from app.application.roughcast_loop import build_daily_loop
 from app.application.service import StoreMediaService
 from app.infrastructure.baidu_map_client import BaiduMapClient
@@ -107,7 +113,111 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type"],
         )
+    # CRM connector 反代必须在 include_router 之前注册：门店后台自身也有
+    # POST /api/v1/auth/login（JSON 账号密码），只有先注册的路由才能截获
+    # 无 body 的扫码登录 POST。
+    crm_base = resolved.crm_connector_base_url.rstrip("/")
+
+    def _proxy_crm(
+        path: str,
+        *,
+        timeout: float = 8.0,
+        method: str = "GET",
+        data: bytes | None = None,
+    ) -> Response:
+        try:
+            upstream_request = UrlRequest(
+                f"{crm_base}{path}", data=data, method=method
+            )
+            with urlopen(upstream_request, timeout=timeout) as upstream:
+                body = upstream.read()
+                media = upstream.headers.get(
+                    "Content-Type", "application/octet-stream"
+                )
+                return Response(
+                    content=body,
+                    status_code=upstream.status,
+                    media_type=media,
+                )
+        except HTTPError as exc:
+            # 上游明确返回错误状态时（无 pending 登录为 404、冲突为 409 …）
+            # 原样透传，不要吞成 502。
+            body = exc.read()
+            media = (
+                exc.headers.get("Content-Type", "application/octet-stream")
+                if exc.headers is not None
+                else "application/octet-stream"
+            )
+            return Response(content=body, status_code=exc.code, media_type=media)
+        except TimeoutError:
+            return Response(
+                content="crm connector timeout",
+                status_code=504,
+                media_type="text/plain; charset=utf-8",
+            )
+        except URLError as exc:
+            return Response(
+                content=f"crm connector unavailable: {exc}",
+                status_code=502,
+                media_type="text/plain; charset=utf-8",
+            )
+
+    @app.get("/login", include_in_schema=False)
+    def crm_login_page() -> Response:
+        return _proxy_crm("/login", timeout=20)
+
+    @app.get("/api/v1/connection/status", include_in_schema=False)
+    def crm_connection_status() -> Response:
+        return _proxy_crm("/api/v1/connection/status", timeout=20)
+
+    @app.post("/api/v1/auth/login", include_in_schema=False)
+    async def crm_qr_login(request: Request) -> Response:
+        body = await request.body()
+        content_type = request.headers.get("content-type", "")
+        if body or content_type:
+            # 门店后台自身的账号密码登录（JSON）：交给原有登录逻辑处理，
+            # 保持后台登录不受扫码登录代理影响。
+            payload = LoginRequest.model_validate_json(body or b"{}")
+            return store_media_login(
+                payload, request.app.state.store_media_service
+            )
+        # 无 body：crm-connector 的扫码登录。首张二维码可能要数秒。
+        return await run_in_threadpool(
+            _proxy_crm,
+            "/api/v1/auth/login",
+            timeout=20,
+            method="POST",
+            data=b"",
+        )
+
+    @app.get("/api/v1/auth/login/current", include_in_schema=False)
+    def crm_current_qr_login() -> Response:
+        return _proxy_crm("/api/v1/auth/login/current", timeout=20)
+
+    @app.get("/api/v1/auth/login/{login_id}", include_in_schema=False)
+    def crm_qr_login_status(login_id: str) -> Response:
+        return _proxy_crm(f"/api/v1/auth/login/{login_id}", timeout=20)
+
+    @app.get("/api/v1/auth/login/{login_id}/qrcode.png", include_in_schema=False)
+    def crm_qr_login_qrcode(login_id: str) -> Response:
+        return _proxy_crm(
+            f"/api/v1/auth/login/{login_id}/qrcode.png", timeout=20
+        )
+
+    @app.get("/archive", include_in_schema=False)
+    def rental_archive_dashboard() -> Response:
+        return _proxy_crm("/archive")
+
+    @app.get("/api/v1/archive/rental/status", include_in_schema=False)
+    def rental_archive_status() -> Response:
+        return _proxy_crm("/api/v1/archive/rental/status", timeout=30)
+
+    @app.get("/api/v1/archive/sale/status", include_in_schema=False)
+    def sale_archive_status() -> Response:
+        return _proxy_crm("/api/v1/archive/sale/status", timeout=30)
+
     app.include_router(router)
+
     static_dir = Path(__file__).resolve().parent.parent / "static"
     app.mount("/", RevalidatedStaticFiles(directory=static_dir, html=True), name="static")
     return app

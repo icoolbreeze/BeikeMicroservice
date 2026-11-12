@@ -35,6 +35,7 @@ class Settings:
     crm_map_origin: str = "https://map.ke.com"
     crm_house_origin: str = "https://house.link.lianjia.com"
     crm_trusteeship_origin: str = "https://trusteeship.link.lianjia.com"
+    crm_haofang_origin: str = "https://haofang.lianjia.com"
     crm_default_city_code: str = "510100"
     http_user_agent: str = DEFAULT_HTTP_USER_AGENT
     http_accept_language: str = DEFAULT_HTTP_ACCEPT_LANGUAGE
@@ -62,10 +63,58 @@ class Settings:
     featured_push_remote_host: str = "beike-server"
     featured_push_remote_path: str = "/var/lib/store-media/featured_snapshot.json"
 
+    # --- rental listing localization (本地房源库) -------------------------
+    # On by default. Shares the employee's CRM account with the roughcast
+    # crawler (which stays off unless SM_ROUGHCAST_CRAWL_ENABLED=1).
+    rental_archive_enabled: bool = True
+    rental_archive_db_path: str = "./run/rental_archive.sqlite3"
+    # 0 = unlimited (no daily query / detail cap).
+    rental_archive_daily_request_cap: int = 0
+    rental_archive_detail_daily_cap: int = 0
+    rental_archive_detail_ttl_days: int = 14
+    # List pages keep a slower gap; each localized listing waits 2s after.
+    rental_archive_list_delay_min_seconds: float = 8.0
+    rental_archive_list_delay_max_seconds: float = 25.0
+    rental_archive_detail_delay_min_seconds: float = 2.0
+    rental_archive_detail_delay_max_seconds: float = 2.0
+    rental_archive_pause_every_min: int = 8
+    rental_archive_pause_every_max: int = 15
+    rental_archive_pause_seconds_min: float = 120.0
+    rental_archive_pause_seconds_max: float = 360.0
+    # Asia/Shanghai. Default runs working hours only: 09:00–21:00 (pauses
+    # 21:00–09:00).
+    rental_archive_window_start: str = "09:00"
+    rental_archive_window_end: str = "21:00"
+    rental_archive_page_size: int = 50
+
+    # --- 买卖 listing localization (same 14 districts as rental) ---------
+    # Parallel to the rental archive: own runner/SQLite/cursor, same 09:00–
+    # 21:00 window, sharing the employee's CRM account. On by default.
+    sale_archive_enabled: bool = True
+    sale_archive_db_path: str = "./run/sale_archive.sqlite3"
+    # 0 = unlimited (no daily query / detail cap).
+    sale_archive_daily_request_cap: int = 0
+    sale_archive_detail_daily_cap: int = 0
+    sale_archive_detail_ttl_days: int = 14
+    # List pages keep a slower gap; each localized listing waits 2s after.
+    sale_archive_list_delay_min_seconds: float = 8.0
+    sale_archive_list_delay_max_seconds: float = 25.0
+    sale_archive_detail_delay_min_seconds: float = 2.0
+    sale_archive_detail_delay_max_seconds: float = 2.0
+    sale_archive_pause_every_min: int = 8
+    sale_archive_pause_every_max: int = 15
+    sale_archive_pause_seconds_min: float = 120.0
+    sale_archive_pause_seconds_max: float = 360.0
+    # Asia/Shanghai. Default runs working hours only: 09:00–21:00.
+    sale_archive_window_start: str = "09:00"
+    sale_archive_window_end: str = "21:00"
+
 
 def load_settings() -> Settings:
     cors_raw = os.getenv("CC_CORS_ORIGINS", "")
     store_path = os.getenv("CC_CREDENTIAL_STORE_PATH", "").strip()
+    archive_db_path = os.getenv("CC_RENTAL_ARCHIVE_DB_PATH", "").strip()
+    sale_archive_db_path = os.getenv("CC_SALE_ARCHIVE_DB_PATH", "").strip()
     return Settings(
         bound_employee_principal=os.getenv("CC_BOUND_EMPLOYEE_PRINCIPAL", "").strip(),
         mcp_transport=os.getenv("CC_MCP_TRANSPORT", "stdio").strip() or "stdio",
@@ -89,6 +138,8 @@ def load_settings() -> Settings:
         or "https://house.link.lianjia.com",
         crm_trusteeship_origin=os.getenv("CC_CRM_TRUSTEESHIP_ORIGIN", "").strip()
         or "https://trusteeship.link.lianjia.com",
+        crm_haofang_origin=os.getenv("CC_CRM_HAOFANG_ORIGIN", "").strip()
+        or "https://haofang.lianjia.com",
         crm_default_city_code=os.getenv("CC_CRM_DEFAULT_CITY_CODE", "510100").strip()
         or "510100",
         http_user_agent=(
@@ -136,4 +187,94 @@ def load_settings() -> Settings:
             "CC_FEATURED_PUSH_REMOTE_PATH",
             "/var/lib/store-media/featured_snapshot.json",
         ).strip() or "/var/lib/store-media/featured_snapshot.json",
+        rental_archive_enabled=os.getenv("CC_RENTAL_ARCHIVE_ENABLED", "1").strip()
+        .lower() in ("1", "true", "yes", "on"),
+        rental_archive_db_path=archive_db_path
+        or str(Path("./run/rental_archive.sqlite3").resolve()),
+        rental_archive_daily_request_cap=int(
+            os.getenv("CC_RENTAL_ARCHIVE_DAILY_REQUEST_CAP", "0")
+        ),
+        rental_archive_detail_daily_cap=int(
+            os.getenv("CC_RENTAL_ARCHIVE_DETAIL_DAILY_CAP", "0")
+        ),
+        rental_archive_detail_ttl_days=int(
+            os.getenv("CC_RENTAL_ARCHIVE_DETAIL_TTL_DAYS", "14")
+        ),
+        rental_archive_list_delay_min_seconds=float(
+            os.getenv("CC_RENTAL_ARCHIVE_LIST_DELAY_MIN_SECONDS", "8")
+        ),
+        rental_archive_list_delay_max_seconds=float(
+            os.getenv("CC_RENTAL_ARCHIVE_LIST_DELAY_MAX_SECONDS", "25")
+        ),
+        rental_archive_detail_delay_min_seconds=float(
+            os.getenv("CC_RENTAL_ARCHIVE_DETAIL_DELAY_MIN_SECONDS", "2")
+        ),
+        rental_archive_detail_delay_max_seconds=float(
+            os.getenv("CC_RENTAL_ARCHIVE_DETAIL_DELAY_MAX_SECONDS", "2")
+        ),
+        rental_archive_pause_every_min=int(
+            os.getenv("CC_RENTAL_ARCHIVE_PAUSE_EVERY_MIN", "8")
+        ),
+        rental_archive_pause_every_max=int(
+            os.getenv("CC_RENTAL_ARCHIVE_PAUSE_EVERY_MAX", "15")
+        ),
+        rental_archive_pause_seconds_min=float(
+            os.getenv("CC_RENTAL_ARCHIVE_PAUSE_SECONDS_MIN", "120")
+        ),
+        rental_archive_pause_seconds_max=float(
+            os.getenv("CC_RENTAL_ARCHIVE_PAUSE_SECONDS_MAX", "360")
+        ),
+        rental_archive_window_start=os.getenv(
+            "CC_RENTAL_ARCHIVE_WINDOW_START", "09:00"
+        ).strip() or "09:00",
+        rental_archive_window_end=os.getenv(
+            "CC_RENTAL_ARCHIVE_WINDOW_END", "21:00"
+        ).strip() or "21:00",
+        # The 房源列表 page never serves more than 50 rows per request.
+        rental_archive_page_size=min(
+            max(int(os.getenv("CC_RENTAL_ARCHIVE_PAGE_SIZE", "50")), 1), 50
+        ),
+        sale_archive_enabled=os.getenv("CC_SALE_ARCHIVE_ENABLED", "1").strip()
+        .lower() in ("1", "true", "yes", "on"),
+        sale_archive_db_path=sale_archive_db_path
+        or str(Path("./run/sale_archive.sqlite3").resolve()),
+        sale_archive_daily_request_cap=int(
+            os.getenv("CC_SALE_ARCHIVE_DAILY_REQUEST_CAP", "0")
+        ),
+        sale_archive_detail_daily_cap=int(
+            os.getenv("CC_SALE_ARCHIVE_DETAIL_DAILY_CAP", "0")
+        ),
+        sale_archive_detail_ttl_days=int(
+            os.getenv("CC_SALE_ARCHIVE_DETAIL_TTL_DAYS", "14")
+        ),
+        sale_archive_list_delay_min_seconds=float(
+            os.getenv("CC_SALE_ARCHIVE_LIST_DELAY_MIN_SECONDS", "8")
+        ),
+        sale_archive_list_delay_max_seconds=float(
+            os.getenv("CC_SALE_ARCHIVE_LIST_DELAY_MAX_SECONDS", "25")
+        ),
+        sale_archive_detail_delay_min_seconds=float(
+            os.getenv("CC_SALE_ARCHIVE_DETAIL_DELAY_MIN_SECONDS", "2")
+        ),
+        sale_archive_detail_delay_max_seconds=float(
+            os.getenv("CC_SALE_ARCHIVE_DETAIL_DELAY_MAX_SECONDS", "2")
+        ),
+        sale_archive_pause_every_min=int(
+            os.getenv("CC_SALE_ARCHIVE_PAUSE_EVERY_MIN", "8")
+        ),
+        sale_archive_pause_every_max=int(
+            os.getenv("CC_SALE_ARCHIVE_PAUSE_EVERY_MAX", "15")
+        ),
+        sale_archive_pause_seconds_min=float(
+            os.getenv("CC_SALE_ARCHIVE_PAUSE_SECONDS_MIN", "120")
+        ),
+        sale_archive_pause_seconds_max=float(
+            os.getenv("CC_SALE_ARCHIVE_PAUSE_SECONDS_MAX", "360")
+        ),
+        sale_archive_window_start=os.getenv(
+            "CC_SALE_ARCHIVE_WINDOW_START", "09:00"
+        ).strip() or "09:00",
+        sale_archive_window_end=os.getenv(
+            "CC_SALE_ARCHIVE_WINDOW_END", "21:00"
+        ).strip() or "21:00",
     )

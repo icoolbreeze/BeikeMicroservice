@@ -137,6 +137,7 @@ class RentalListing:
     # NOT present in search rows; store the absolute instant here and derive
     # elapsed days at query time so stored values never go stale.
     create_time: datetime | None = None      # createTime 录入时间
+    hqi_score: str | None = None             # upstream search-row hqiScore
 
 
 @dataclass(frozen=True)
@@ -614,7 +615,8 @@ class SaleListingFilters:
     payment_mode: str | None
     building_type: str | None
     sort: str
-    page: int
+    page: int = 1
+    room_range: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -823,6 +825,120 @@ class SaleFollowRecord:
     remarks: str | None                   # remarks
     follow_label: str | None              # followLabel
     video_url: str | None                 # videoUrl
+
+
+@dataclass(frozen=True)
+class SaleAgentCommentSection:
+    """One section of the 买卖 经纪人点评 (getCurrentComent.detailList)."""
+
+    title: str | None                     # commentTitle 如 核心卖点
+    comment_type: str | None              # commentType
+    content: str | None                   # commentContent
+
+
+@dataclass(frozen=True)
+class SaleAgentComment:
+    """经纪人点评 from housedelComment/getCurrentComent.
+
+    ``comment_status`` is the upstream code (如 ``"50"``) and is stored as
+    returned. An empty comment — ``data`` null — is this object with null
+    fields and no sections, so a later reader can tell it was fetched.
+    """
+
+    comment_status: str | None            # commentStatus
+    summary: str | None                   # commentTitle 一句话标题
+    audit_text: str | None                # commentDesc 如 审核通过，外网可见
+    commented_at: str | None              # commentTime 展示文案
+    sections: tuple[SaleAgentCommentSection, ...]
+
+
+@dataclass(frozen=True)
+class SaleOwnerRecommend:
+    """房主自荐 from ownerCmts/getOwnerCmt.
+
+    No body is ``content is None`` and an empty ``picture_urls``. The
+    upstream "没有找到相关数据" message is not stored.
+    """
+
+    content: str | None
+    picture_urls: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SaleScoreDimension:
+    """One numeric comparison column of the 好房 radar."""
+
+    quota_score: float | None
+    price_dim_score: float | None
+    cust_dim_score: float | None
+    market_dim_score: float | None
+    owner_dim_score: float | None
+    house_dim_score: float | None
+
+
+@dataclass(frozen=True)
+class SaleScoreSection:
+    """One 评分解读 dimension. ``lines`` are the page's display sentences."""
+
+    title: str | None                     # 客户热度 / 市场热度 / 价格指数 / 业主意愿 / 基本属性
+    lines: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class SaleScoreDimensions:
+    """The five numeric comparison objects on /api/radar/newDetail."""
+
+    house: SaleScoreDimension
+    biz_average: SaleScoreDimension
+    biz_max: SaleScoreDimension
+    community_average: SaleScoreDimension
+    community_max: SaleScoreDimension
+
+
+@dataclass(frozen=True)
+class SaleListingScore:
+    """Right-hand 房源评分 from haofang /api/radar/newDetail.
+
+    ``is_haofang`` is 必看好房. Display ranks (带看 / 浏览 / 关注 / 维护完成度)
+    live inside ``sections[].lines``, not as separate fields.
+    """
+
+    score: float | None
+    is_haofang: bool | None
+    quota_score: float | None
+    quota_score_level: int | None
+    sections: tuple[SaleScoreSection, ...]
+    dimension_scores: SaleScoreDimensions
+
+
+def empty_sale_score_dimension() -> SaleScoreDimension:
+    return SaleScoreDimension(None, None, None, None, None, None)
+
+
+def empty_sale_agent_comment() -> SaleAgentComment:
+    return SaleAgentComment(None, None, None, None, ())
+
+
+def empty_sale_owner_recommend() -> SaleOwnerRecommend:
+    return SaleOwnerRecommend(None, ())
+
+
+def empty_sale_listing_score() -> SaleListingScore:
+    blank = empty_sale_score_dimension()
+    return SaleListingScore(
+        score=None,
+        is_haofang=None,
+        quota_score=None,
+        quota_score_level=None,
+        sections=(),
+        dimension_scores=SaleScoreDimensions(
+            house=blank,
+            biz_average=blank,
+            biz_max=blank,
+            community_average=blank,
+            community_max=blank,
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------

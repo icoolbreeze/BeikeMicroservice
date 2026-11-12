@@ -1087,6 +1087,25 @@ def test_parse_listing_preserves_zero_hall_and_bath_rather_than_dropping_them() 
     assert (missing.hall_amount, missing.bathroom_amount) == (None, None)
 
 
+def test_parse_listing_maps_search_row_hqi_score() -> None:
+    # Live check 2026-10-08 (青羊, delType=2, page 1): all 普租 rows carry the
+    # upstream search-row hqiScore int. This is the list score — distinct from
+    # detailHqiTab (house_info.hqi) and the trusteeship hqiEntranceDto.
+    assert _parse_listing({"hqiScore": 76}, scope="all").hqi_score == "76"
+    # 0 is a value, not a missing field: it must survive as "0".
+    assert _parse_listing({"hqiScore": 0}, scope="all").hqi_score == "0"
+    assert _parse_listing({}, scope="all").hqi_score is None
+    assert _parse_listing({"hqiScore": None}, scope="all").hqi_score is None
+    assert _parse_listing({"hqiScore": ""}, scope="all").hqi_score is None
+
+    # haoFangScore is a different upstream field: it must not populate
+    # hqi_score and must not grow a field of its own.
+    listing = _parse_listing({"hqiScore": 76, "haoFangScore": 95}, scope="all")
+    assert listing.hqi_score == "76"
+    assert not hasattr(listing, "hao_fang_score")
+    assert _parse_listing({"haoFangScore": 95}, scope="all").hqi_score is None
+
+
 def test_parse_listing_rent_mode_prefers_structured_value_then_title() -> None:
     assert _parse_listing(
         {"rentType": "001", "title": "合租·标题冲突"}, scope="all"
@@ -1349,6 +1368,8 @@ def test_main_uses_unconfigured_providers_when_profile_forced() -> None:
     app = create_app(Settings(
         upstream_profile="unconfigured",
         qr_login_auto_start=False,
+        rental_archive_enabled=False,
+        sale_archive_enabled=False,
     ))
     # unconfigured profile -> unconfigured stubs -> connection_status auth_required
     status = app.state.crm_connector_service.connection_status()
@@ -1363,6 +1384,9 @@ def test_main_defaults_to_real_profile(tmp_path) -> None:
     settings = Settings(
         credential_store_path=str(tmp_path / "cred.bin"),
         qr_login_auto_start=False,
+        rental_archive_enabled=False,
+        rental_archive_db_path=str(tmp_path / "rental_archive.sqlite3"),
+        sale_archive_enabled=False,
     )
     assert settings.upstream_profile == "kecom-prod"
     app = create_app(settings)
@@ -1381,6 +1405,9 @@ def test_main_wires_real_providers_when_profile_set(tmp_path) -> None:
         credential_store_path=str(tmp_path / "cred.bin"),
         bound_employee_principal="employee-1",
         qr_login_auto_start=False,
+        rental_archive_enabled=False,
+        rental_archive_db_path=str(tmp_path / "rental_archive.sqlite3"),
+        sale_archive_enabled=False,
     )
     app = create_app(settings)
 
@@ -1407,6 +1434,9 @@ def test_wired_app_search_returns_auth_required_when_no_credential(tmp_path) -> 
         credential_store_path=str(tmp_path / "cred.bin"),
         bound_employee_principal="employee-1",
         qr_login_auto_start=False,
+        rental_archive_enabled=False,
+        rental_archive_db_path=str(tmp_path / "rental_archive.sqlite3"),
+        sale_archive_enabled=False,
     )
     app = create_app(settings)
     # Without bootstrap, a wired app must still refuse search with the same
@@ -1504,6 +1534,16 @@ def test_sale_query_drops_unlimited_select_and_open_ranges() -> None:
     assert query["price"] == "0,200"
     assert "appro_broker" not in query
     assert query["role"] == "1"
+
+
+def test_sale_query_keeps_open_room_range_token() -> None:
+    from app.infrastructure.kecom_crm_client import _sale_query
+
+    query = _sale_query(_sale_filters(room_range=(5, -1)))
+    # The archive's "5 rooms and up" slice keeps the open high as -1 instead
+    # of collapsing the tuple into a 5,5 exact-room token.
+    assert query["room"] == "5,-1"
+    assert "5,5" not in query.values()
 
 
 def test_sale_query_emits_fixed_defaults_without_filters() -> None:
@@ -1798,6 +1838,111 @@ def test_sale_get_detail_rejects_unknown_id() -> None:
     client = KecomCrmClient(session)
     with pytest.raises(UpstreamInvalidInputError):
         client.get_sale_listing_detail("106128999999")
+
+
+def test_sale_agent_comment_keeps_status_code_and_sections() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_agent_comment
+
+    body = {
+        "code": 1,
+        "msg": "恭喜你，操作成功",
+        "data": {
+            "commentStatus": "50",
+            "commentTitle": "一句话卖点",
+            "commentDesc": "审核通过，外网可见",
+            "commentTime": "2026-10-18 21:15:05",
+            "detailList": [
+                {"commentTitle": "核心卖点", "commentType": "sellPoint",
+                 "commentContent": "交通方便"},
+                {"commentTitle": "周边配套", "commentType": "mate",
+                 "commentContent": "学校商场"},
+            ],
+        },
+    }
+    comment = _parse_sale_agent_comment(body)
+    assert comment.comment_status == "50"
+    assert comment.summary == "一句话卖点"
+    assert comment.audit_text == "审核通过，外网可见"
+    assert comment.commented_at == "2026-10-18 21:15:05"
+    assert [section.title for section in comment.sections] == ["核心卖点", "周边配套"]
+    assert comment.sections[0].comment_type == "sellPoint"
+    assert comment.sections[0].content == "交通方便"
+    assert _parse_sale_agent_comment({"code": 1, "data": None}).sections == ()
+
+
+def test_sale_owner_recommend_null_data_is_empty() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_owner_recommend
+
+    session = CapturingSession()
+    session.enqueue("sale_listing.get_owner_recommend", 200, {
+        "code": 1, "msg": "对不起，没有找到相关数据", "data": None,
+    })
+    client = KecomCrmClient(session)
+    empty = client.get_sale_listing_owner_recommend("106128785501")
+    assert empty.content is None
+    assert empty.picture_urls == ()
+    assert session.calls[0].query == {"housedelCode": "106128785501"}
+
+    filled = _parse_sale_owner_recommend({
+        "code": 1,
+        "data": {
+            "ownerComment": "自住装修",
+            "pictureList": [
+                {"url": "https://img.ljcdn.com/a.jpg", "uploader": "某人"},
+                "https://img.ljcdn.com/b.jpg",
+                {"pictureUrl": "https://img.ljcdn.com/c.jpg"},
+            ],
+            "phone": "13800001111",
+        },
+    })
+    assert filled.content == "自住装修"
+    assert filled.picture_urls == (
+        "https://img.ljcdn.com/a.jpg",
+        "https://img.ljcdn.com/b.jpg",
+        "https://img.ljcdn.com/c.jpg",
+    )
+
+
+def test_sale_score_keeps_radar_titles_and_lines() -> None:
+    from app.infrastructure.kecom_crm_client import _parse_sale_listing_score
+
+    body = {
+        "code": 1,
+        "msg": "恭喜你，操作成功",
+        "data": {
+            "score": 8.27,
+            "isHaofang": 0,
+            "quotaScore": 0,
+            "quotaScoreLevel": 1,
+            "radarDimVoList": [
+                {"title": "客户热度", "rule": "do not store", "columns": 2,
+                 "priceDimList": [
+                     {"value": "带看量6，排名第1", "bold": True},
+                     {"value": "浏览人数36，排名第6"},
+                 ]},
+                {"title": "市场热度", "priceDimList": [{"value": "成交3套"}]},
+                {"title": "价格指数", "priceDimList": [{"value": "均价1.2万"}]},
+                {"title": "业主意愿", "priceDimList": [{"value": "急售"}]},
+                {"title": "基本属性", "priceDimList": [{"value": "满五"}]},
+            ],
+            "houseRadarDimScore": {
+                "quotaScore": 1.0, "priceDimScore": 2.0, "custDimScore": 3.0,
+                "marketDimScore": 4.0, "ownerDimScore": 5.0, "houseDimScore": 6.0,
+            },
+        },
+    }
+    score = _parse_sale_listing_score(body)
+    assert score.score == 8.27
+    assert score.is_haofang is False
+    assert score.quota_score == 0.0
+    assert score.quota_score_level == 1
+    assert [section.title for section in score.sections] == [
+        "客户热度", "市场热度", "价格指数", "业主意愿", "基本属性",
+    ]
+    assert score.sections[0].lines == ("带看量6，排名第1", "浏览人数36，排名第6")
+    assert score.dimension_scores.house.house_dim_score == 6.0
+    assert score.dimension_scores.biz_average.quota_score is None
+    assert _parse_sale_listing_score({"code": 1, "data": None}).sections == ()
 
 
 def test_sale_detail_head_method_flows_views_then_ext() -> None:

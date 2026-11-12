@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>扫码登录</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #141a2e;
+      --line: #243049;
+      --text: #e8edf7;
+      --muted: #8b97b3;
+      --ok: #3dd68c;
+      --warn: #f5c15c;
+      --bad: #ff6b7a;
+      --accent: #6ea8fe;
+      --bar: #1e2a44;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg); color: var(--text);
+      font: 15px/1.45 "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 16px; padding: 22px 28px 8px;
+    }
+    h1 { margin: 0; font-size: 22px; font-weight: 650; letter-spacing: .02em; }
+    .sub { color: var(--muted); font-size: 13px; }
+    main {
+      padding: 12px 28px 40px;
+      display: flex; justify-content: center;
+    }
+    .login-wrap { width: 100%; max-width: 460px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      display: grid; gap: 16px; justify-items: center;
+      text-align: center;
+    }
+    .status-line { font-size: 17px; font-weight: 600; min-height: 24px; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot.ok { background: var(--ok); }
+    .dot.warn { background: var(--warn); }
+    .dot.bad { background: var(--bad); }
+    .qr-box {
+      width: 264px; height: 264px;
+      background: #ffffff; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 12px;
+    }
+    .qr-box img { width: 240px; height: 240px; display: block; }
+    .qr-loading { color: #5a6a8a; font-size: 15px; }
+    .instruct { color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .result { font-size: 14px; min-height: 20px; margin: 0; }
+    .result.bad { color: var(--bad); word-break: break-all; }
+    .btn {
+      background: var(--accent); color: #0b1020;
+      border: 0; border-radius: 10px;
+      padding: 10px 24px; font-size: 15px; font-weight: 650;
+      cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .link-btn {
+      color: var(--accent); font-size: 15px; font-weight: 600;
+      text-decoration: none;
+    }
+    .link-btn:hover { text-decoration: underline; }
+    .err { color: var(--bad); padding: 0 28px 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>扫码登录</h1>
+      <div class="sub" id="subtitle">正在检查登录状态…</div>
+    </div>
+  </header>
+  <div id="error" class="err" hidden></div>
+  <main>
+    <section class="login-wrap">
+      <article class="card">
+        <div class="status-line" id="panel-status">&nbsp;</div>
+        <div class="qr-box">
+          <div id="qr-loading" class="qr-loading">正在生成二维码</div>
+          <img id="qr-img" alt="登录二维码" hidden />
+        </div>
+        <div class="instruct" id="instruct">
+          请使用 Link、A+、D+、Studio 或企业微信扫描，并在手机上确认。请使用本服务绑定的员工账号。
+        </div>
+        <p class="result" id="result"></p>
+        <button id="retry-btn" class="btn" type="button" hidden>重新扫码登录</button>
+        <a id="archive-link" class="link-btn" href="/archive" hidden>进入归档状态页 →</a>
+      </article>
+    </section>
+  </main>
+  <script>
+    const POLL_MS = 2000;
+    const RETRY_MS = 2000;
+
+    let pollTimer = null;
+    let stepTimer = null;
+    let currentLogin = null;
+    let lastPayload = "";
+    let qrVersion = 0;
+
+    const el = (id) => document.getElementById(id);
+
+    function clearTimers() {
+      if (pollTimer !== null) { clearTimeout(pollTimer); pollTimer = null; }
+      if (stepTimer !== null) { clearTimeout(stepTimer); stepTimer = null; }
+    }
+
+    function showError(text) {
+      const box = el("error");
+      box.hidden = false;
+      box.textContent = text;
+    }
+
+    function clearErrorBox() {
+      el("error").hidden = true;
+    }
+
+    function fmtExpiry(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "";
+      return d.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    // --- views -------------------------------------------------------------
+
+    function showReady(login, expiresAt) {
+      clearTimers();
+      currentLogin = login;
+      el("qr-img").hidden = true;
+      el("qr-loading").hidden = true;
+      el("instruct").hidden = true;
+      el("retry-btn").hidden = true;
+      el("subtitle").textContent = "CRM 会话已登录";
+      el("panel-status").innerHTML = '<span class="dot ok"></span>已登录';
+      const expiry = fmtExpiry(expiresAt);
+      const result = el("result");
+      result.className = "result";
+      result.textContent = expiry ? "凭证有效期至 " + expiry : "";
+      el("archive-link").hidden = false;
+    }
+
+    function showPending(login) {
+      currentLogin = login;
+      el("archive-link").hidden = true;
+      el("instruct").hidden = false;
+      el("retry-btn").hidden = true;
+      const result = el("result");
+      result.className = "result";
+      result.textContent = "";
+      el("subtitle").textContent = "等待扫码确认";
+      el("panel-status").innerHTML =
+        '<span class="dot warn"></span>等待扫码…（二维码约 1 分钟自动刷新）';
+      renderQr(login);
+    }
+
+    function showTerminal(login) {
+      clearTimers();
+      currentLogin = login;
+      el("qr-img").hidden = true;
+      el("qr-loading").hidden = true;
+      el("instruct").hidden = true;
+      el("subtitle").textContent =
+        login.state === "cancelled" ? "登录已取消" : "登录失败";
+      el("panel-status").innerHTML =
+        '<span class="dot bad"></span>' +
+        (login.state === "cancelled" ? "已取消" : "登录失败");
+      const result = el("result");
+      result.className = "result bad";
+      result.textContent = login.message || "";
+      el("retry-btn").hidden = false;
+    }
+
+    function renderQr(login) {
+      const img = el("qr-img");
+      const loading = el("qr-loading");
+      const payload = login.qrcode;
+      if (!payload) {
+        img.hidden = true;
+        loading.hidden = false;
+        return;
+      }
+      loading.hidden = true;
+      img.hidden = false;
+      // The payload refreshes on the same login id roughly once a minute;
+      // bump a numeric cache-buster only when the payload actually changes.
+      // The raw payload is sent to this server only, never put in the URL,
+      // the DOM, or any visible text.
+      if (payload !== lastPayload) {
+        lastPayload = payload;
+        qrVersion += 1;
+        img.src =
+          "/api/v1/auth/login/" + encodeURIComponent(login.login_id) +
+          "/qrcode.png?v=" + qrVersion;
+      }
+    }
+
+    // --- API helpers -------------------------------------------------------
+
+    async function fetchJson(input, init) {
+      let response;
+      try {
+        response = await fetch(input, init);
+      } catch (e) {
+        throw new Error("网络错误：" + e.message);
+      }
+      let body = null;
+      try {
+        body = await response.json();
+      } catch (e) {
+        body = null;
+      }
+      return { status: response.status, ok: response.ok, body: body };
+    }
+
+    function errorMessage(res, fallback) {
+      const detail = res.body && res.body.detail;
+      if (detail !== null && typeof detail === "object" && detail.message) {
+        return detail.message;
+      }
+      if (typeof detail === "string") {
+        return detail;
+      }
+      if (res.body && typeof res.body.message === "string") {
+        return res.body.message;
+      }
+      return fallback + "（HTTP " + res.status + "）";
+    }
+
+    function scheduleStep(fn) {
+      stepTimer = setTimeout(fn, RETRY_MS);
+    }
+
+    // --- flow --------------------------------------------------------------
+
+    async function init() {
+      clearErrorBox();
+      let res;
+      try {
+        res = await fetchJson("/api/v1/connection/status");
+      } catch (e) {
+        showError(e.message + "，正在重试");
+        scheduleStep(init);
+        return;
+      }
+      if (!res.ok) {
+        showError(errorMessage(res, "无法读取连接状态") + "，正在重试");
+        scheduleStep(init);
+        return;
+      }
+      const state = res.body.state;
+      if (state === "ready" || state === "expiring") {
+        showReady(null, res.body.credential_expires_at);
+        return;
+      }
+      attach();
+    }
+
+    async function attach() {
+      clearErrorBox();
+      let res;
+      try {
+        res = await fetchJson("/api/v1/auth/login/current");
+      } catch (e) {
+        showError(e.message + "，正在重试当前步骤");
+        scheduleStep(attach);
+        return;
+      }
+      if (res.status === 200) {
+        beginPolling(res.body);
+        return;
+      }
+      if (res.status !== 404) {
+        showError(errorMessage(res, "无法读取当前登录") + "，正在重试当前步骤");
+        scheduleStep(attach);
+        return;
+      }
+      await startNewLogin();
+    }
+
+    async function startNewLogin() {
+      clearErrorBox();
+      let res;
+      try {
+        res = await fetchJson("/api/v1/auth/login", { method: "POST" });
+      } catch (e) {
+        showError(e.message + "，正在重试当前步骤");
+        scheduleStep(startNewLogin);
+        return;
+      }
+      if (res.status === 200) {
+        beginPolling(res.body);
+        return;
+      }
+      if (res.status === 409) {
+        // A pending attempt appeared between the 404 and the POST (watchdog
+        // race): re-attach instead of repeating the POST.
+        scheduleStep(attach);
+        return;
+      }
+      showError(errorMessage(res, "无法发起扫码登录") + "，正在重试当前步骤");
+      scheduleStep(startNewLogin);
+    }
+
+    function beginPolling(login) {
+      clearTimers();
+      if (login.state === "ready") {
+        showReady(login, login.expires_at);
+        return;
+      }
+      if (login.state === "failed" || login.state === "cancelled") {
+        showTerminal(login);
+        return;
+      }
+      showPending(login);
+      schedulePoll(login.login_id);
+    }
+
+    function schedulePoll(loginId) {
+      pollTimer = setTimeout(() => pollOnce(loginId), POLL_MS);
+    }
+
+    async function pollOnce(loginId) {
+      let res;
+      try {
+        res = await fetchJson(
+          "/api/v1/auth/login/" + encodeURIComponent(loginId)
+        );
+      } catch (e) {
+        showError(e.message + "，继续重试当前步骤");
+        schedulePoll(loginId);
+        return;
+      }
+      if (res.status === 200) {
+        clearErrorBox();
+        const login = res.body;
+        if (login.state === "ready") {
+          showReady(login, login.expires_at);
+          return;
+        }
+        if (login.state === "failed" || login.state === "cancelled") {
+          showTerminal(login);
+          return;
+        }
+        showPending(login);
+        schedulePoll(loginId);
+        return;
+      }
+      if (res.status === 404) {
+        // The session was pruned/vanished: re-attach from scratch.
+        attach();
+        return;
+      }
+      showError(errorMessage(res, "轮询登录状态失败") + "，继续重试当前步骤");
+      schedulePoll(loginId);
+    }
+
+    el("retry-btn").addEventListener("click", () => {
+      clearTimers();
+      clearErrorBox();
+      el("result").textContent = "";
+      attach();
+    });
+
+    el("qr-img").addEventListener("error", () => {
+      // The PNG endpoint can briefly answer 409 before the first payload is
+      // rendered; swap back to the placeholder and retry once.
+      const img = el("qr-img");
+      lastPayload = "";
+      img.hidden = true;
+      el("qr-loading").hidden = false;
+      setTimeout(() => {
+        if (currentLogin) {
+          renderQr(currentLogin);
+        }
+      }, 1000);
+    });
+
+    init();
+  </script>
+</body>
+</html>

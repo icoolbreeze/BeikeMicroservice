@@ -5,7 +5,24 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.application.rental_archive import ArchiveStatus, ArchiveTick
+from app.application.sale_archive import (
+    ArchiveStatus as SaleArchiveStatus,
+    ArchiveTick as SaleArchiveTick,
+)
 from app.application.rental_budget import price_range_for_budget
+from app.infrastructure.rental_archive_plan import ArchiveCursor
+from app.infrastructure.rental_archive_store import (
+    ArchiveRun,
+    DailyCounters,
+    StoredListing,
+)
+from app.infrastructure.sale_archive_plan import ArchiveCursor as SaleArchiveCursor
+from app.infrastructure.sale_archive_store import (
+    ArchiveRun as SaleArchiveRun,
+    DailyCounters as SaleDailyCounters,
+    StoredListing as SaleStoredListing,
+)
 from app.domain.models import (
     ConnectionStatus,
     HqiScore,
@@ -1649,3 +1666,471 @@ class WorkbenchOpenResponse(BaseModel):
     listing_id: str
     url: str
     opened: bool = True
+
+
+# --- rental listing localization (本地房源库) ------------------------------
+
+
+class ArchiveCursorResponse(BaseModel):
+    district_index: int
+    district_name: str
+    district_id: str
+    price_band: str | None = None
+    extra_filters: dict[str, str] = Field(default_factory=dict)
+    """Additional list conditions on the current unit, e.g. ``{"delType": "2"}``
+    when a 1-yuan price band was split by 普租/托管."""
+    pending_units_count: int = 0
+    """Remaining units (bands / delType slices) queued for this district."""
+    page: int
+    run_id: int | None = None
+    seen_count: int = 0
+    pending_detail_count: int = 0
+    unit_total: int | None = None
+    unit_resumed: bool = False
+
+    @classmethod
+    def from_domain(cls, cursor: ArchiveCursor) -> "ArchiveCursorResponse":
+        return cls(
+            district_index=cursor.district_index,
+            district_name=cursor.district.name,
+            district_id=cursor.district_id,
+            price_band=cursor.price_band,
+            extra_filters=dict(cursor.extra_filters),
+            pending_units_count=len(cursor.pending_units),
+            page=cursor.page,
+            run_id=cursor.run_id,
+            seen_count=len(cursor.seen_ids),
+            pending_detail_count=len(cursor.pending_detail_ids),
+            unit_total=cursor.unit_total,
+            unit_resumed=cursor.unit_resumed,
+        )
+
+
+class ArchiveCountersResponse(BaseModel):
+    local_date: str
+    request_count: int
+    detail_count: int
+
+    @classmethod
+    def from_domain(cls, counters: DailyCounters) -> "ArchiveCountersResponse":
+        return cls(
+            local_date=counters.local_date,
+            request_count=counters.request_count,
+            detail_count=counters.detail_count,
+        )
+
+
+class ArchiveRunResponse(BaseModel):
+    id: int
+    status: str
+    district_id: str | None = None
+    price_band: str | None = None
+    started_at: str
+    finished_at: str | None = None
+    pages_done: int = 0
+    items_seen: int = 0
+    request_count: int = 0
+    detail_count: int = 0
+    abort_reason: str | None = None
+
+    @classmethod
+    def from_domain(cls, run: ArchiveRun) -> "ArchiveRunResponse":
+        return cls(
+            id=run.id,
+            status=run.status,
+            district_id=run.district_id,
+            price_band=run.price_band,
+            started_at=run.started_at,
+            finished_at=run.finished_at,
+            pages_done=run.pages_done,
+            items_seen=run.items_seen,
+            request_count=run.request_count,
+            detail_count=run.detail_count,
+            abort_reason=run.abort_reason,
+        )
+
+
+class ArchiveDistrictStatusResponse(BaseModel):
+    district_id: str
+    district_name: str
+    total: int
+    active: int
+    complete: int
+    pending: int
+    skipped: int
+    failed: int
+
+
+class ArchiveStatusResponse(BaseModel):
+    connection_state: str = "auth_required"
+    enabled: bool
+    running: bool
+    db_path: str
+    window_start: str
+    window_end: str
+    within_window: bool
+    daily_request_cap: int
+    daily_detail_cap: int
+    detail_ttl_days: int
+    cursor: ArchiveCursorResponse
+    counters: ArchiveCountersResponse
+    listing_total: int
+    listing_active: int
+    listing_complete: int = 0
+    listing_pending: int = 0
+    listing_skipped: int = 0
+    listing_failed: int = 0
+    districts: list[ArchiveDistrictStatusResponse] = Field(default_factory=list)
+    last_run: ArchiveRunResponse | None = None
+
+    @classmethod
+    def from_domain(cls, status: ArchiveStatus) -> "ArchiveStatusResponse":
+        return cls(
+            connection_state=status.connection_state,
+            enabled=status.enabled,
+            running=status.running,
+            db_path=status.db_path,
+            window_start=status.window_start,
+            window_end=status.window_end,
+            within_window=status.within_window,
+            daily_request_cap=status.daily_request_cap,
+            daily_detail_cap=status.daily_detail_cap,
+            detail_ttl_days=status.detail_ttl_days,
+            cursor=ArchiveCursorResponse.from_domain(status.cursor),
+            counters=ArchiveCountersResponse.from_domain(status.counters),
+            listing_total=status.listing_total,
+            listing_active=status.listing_active,
+            listing_complete=status.listing_complete,
+            listing_pending=status.listing_pending,
+            listing_skipped=status.listing_skipped,
+            listing_failed=status.listing_failed,
+            districts=[
+                ArchiveDistrictStatusResponse(
+                    district_id=row.district_id,
+                    district_name=row.district_name,
+                    total=row.total,
+                    active=row.active,
+                    complete=row.complete,
+                    pending=row.pending,
+                    skipped=row.skipped,
+                    failed=row.failed,
+                )
+                for row in status.districts
+            ],
+            last_run=(
+                ArchiveRunResponse.from_domain(status.last_run)
+                if status.last_run is not None
+                else None
+            ),
+        )
+
+
+class ArchiveTickResponse(BaseModel):
+    did_work: bool
+    skipped_reason: str | None = None
+    detail_listing_id: str | None = None
+    cursor: ArchiveCursorResponse
+    counters: ArchiveCountersResponse
+
+    @classmethod
+    def from_domain(cls, tick: ArchiveTick) -> "ArchiveTickResponse":
+        return cls(
+            did_work=tick.did_work,
+            skipped_reason=tick.skipped_reason,
+            detail_listing_id=tick.detail_listing_id,
+            cursor=ArchiveCursorResponse.from_domain(tick.cursor),
+            counters=ArchiveCountersResponse.from_domain(tick.counters),
+        )
+
+
+class ArchiveListingResponse(BaseModel):
+    listing_id: str
+    district_id: str | None = None
+    price_band: str | None = None
+    del_type: int | None = None
+    community: str | None = None
+    detail_status: str
+    detail_captured_at: datetime | None = None
+    first_seen_at: str
+    last_seen_at: str
+    is_active: bool
+    payload: dict[str, object] = Field(
+        default_factory=dict,
+        description=(
+            "Sanitized archive payload. Never contains 具体楼层 / 详细地址 / "
+            "跟进记录 — the archive does not request them."
+        ),
+    )
+
+    @classmethod
+    def from_domain(cls, listing: StoredListing) -> "ArchiveListingResponse":
+        return cls(
+            listing_id=listing.listing_id,
+            district_id=listing.district_id,
+            price_band=listing.price_band,
+            del_type=listing.del_type,
+            community=listing.community,
+            detail_status=listing.detail_status,
+            detail_captured_at=listing.detail_captured_at,
+            first_seen_at=listing.first_seen_at,
+            last_seen_at=listing.last_seen_at,
+            is_active=listing.is_active,
+            payload=listing.payload,
+        )
+
+
+class ArchiveListingPageResponse(BaseModel):
+    items: list[ArchiveListingResponse] = Field(default_factory=list)
+    page: int
+    page_size: int
+    total: int
+
+    @classmethod
+    def from_domain(
+        cls,
+        listings: tuple[StoredListing, ...],
+        *,
+        page: int,
+        page_size: int,
+        total: int,
+    ) -> "ArchiveListingPageResponse":
+        return cls(
+            items=[ArchiveListingResponse.from_domain(item) for item in listings],
+            page=page,
+            page_size=page_size,
+            total=total,
+        )
+
+
+# --- 买卖 listing localization (same 14 districts as rental) --------------
+
+
+class SaleArchiveCursorResponse(BaseModel):
+    district_index: int
+    district_name: str
+    district_id: str
+    price_band: str | None = None
+    extra_filters: dict[str, str] = Field(default_factory=dict)
+    """Additional list conditions on the current unit, e.g.
+    ``{"area": "70,90", "room": "5,-1"}``."""
+    pending_units_count: int = 0
+    """Remaining units (price/area/room slices) queued for this district."""
+    page: int
+    run_id: int | None = None
+    seen_count: int = 0
+    pending_detail_count: int = 0
+    unit_total: int | None = None
+    unit_resumed: bool = False
+
+    @classmethod
+    def from_domain(cls, cursor: SaleArchiveCursor) -> "SaleArchiveCursorResponse":
+        return cls(
+            district_index=cursor.district_index,
+            district_name=cursor.district.name,
+            district_id=cursor.district_id,
+            price_band=cursor.price_band,
+            extra_filters=dict(cursor.extra_filters),
+            pending_units_count=len(cursor.pending_units),
+            page=cursor.page,
+            run_id=cursor.run_id,
+            seen_count=len(cursor.seen_ids),
+            pending_detail_count=len(cursor.pending_detail_ids),
+            unit_total=cursor.unit_total,
+            unit_resumed=cursor.unit_resumed,
+        )
+
+
+class SaleArchiveCountersResponse(BaseModel):
+    local_date: str
+    request_count: int
+    detail_count: int
+
+    @classmethod
+    def from_domain(cls, counters: SaleDailyCounters) -> "SaleArchiveCountersResponse":
+        return cls(
+            local_date=counters.local_date,
+            request_count=counters.request_count,
+            detail_count=counters.detail_count,
+        )
+
+
+class SaleArchiveRunResponse(BaseModel):
+    id: int
+    status: str
+    district_id: str | None = None
+    price_band: str | None = None
+    started_at: str
+    finished_at: str | None = None
+    pages_done: int = 0
+    items_seen: int = 0
+    request_count: int = 0
+    detail_count: int = 0
+    abort_reason: str | None = None
+
+    @classmethod
+    def from_domain(cls, run: SaleArchiveRun) -> "SaleArchiveRunResponse":
+        return cls(
+            id=run.id,
+            status=run.status,
+            district_id=run.district_id,
+            price_band=run.price_band,
+            started_at=run.started_at,
+            finished_at=run.finished_at,
+            pages_done=run.pages_done,
+            items_seen=run.items_seen,
+            request_count=run.request_count,
+            detail_count=run.detail_count,
+            abort_reason=run.abort_reason,
+        )
+
+
+class SaleArchiveDistrictStatusResponse(BaseModel):
+    district_id: str
+    district_name: str
+    total: int
+    active: int
+    complete: int
+    pending: int
+    skipped: int
+    failed: int
+
+
+class SaleArchiveStatusResponse(BaseModel):
+    connection_state: str = "auth_required"
+    enabled: bool
+    running: bool
+    db_path: str
+    window_start: str
+    window_end: str
+    within_window: bool
+    daily_request_cap: int
+    daily_detail_cap: int
+    detail_ttl_days: int
+    cursor: SaleArchiveCursorResponse
+    counters: SaleArchiveCountersResponse
+    listing_total: int
+    listing_active: int
+    listing_complete: int = 0
+    listing_pending: int = 0
+    listing_skipped: int = 0
+    listing_failed: int = 0
+    districts: list[SaleArchiveDistrictStatusResponse] = Field(default_factory=list)
+    last_run: SaleArchiveRunResponse | None = None
+
+    @classmethod
+    def from_domain(cls, status: SaleArchiveStatus) -> "SaleArchiveStatusResponse":
+        return cls(
+            connection_state=status.connection_state,
+            enabled=status.enabled,
+            running=status.running,
+            db_path=status.db_path,
+            window_start=status.window_start,
+            window_end=status.window_end,
+            within_window=status.within_window,
+            daily_request_cap=status.daily_request_cap,
+            daily_detail_cap=status.daily_detail_cap,
+            detail_ttl_days=status.detail_ttl_days,
+            cursor=SaleArchiveCursorResponse.from_domain(status.cursor),
+            counters=SaleArchiveCountersResponse.from_domain(status.counters),
+            listing_total=status.listing_total,
+            listing_active=status.listing_active,
+            listing_complete=status.listing_complete,
+            listing_pending=status.listing_pending,
+            listing_skipped=status.listing_skipped,
+            listing_failed=status.listing_failed,
+            districts=[
+                SaleArchiveDistrictStatusResponse(
+                    district_id=row.district_id,
+                    district_name=row.district_name,
+                    total=row.total,
+                    active=row.active,
+                    complete=row.complete,
+                    pending=row.pending,
+                    skipped=row.skipped,
+                    failed=row.failed,
+                )
+                for row in status.districts
+            ],
+            last_run=(
+                SaleArchiveRunResponse.from_domain(status.last_run)
+                if status.last_run is not None
+                else None
+            ),
+        )
+
+
+class SaleArchiveTickResponse(BaseModel):
+    did_work: bool
+    skipped_reason: str | None = None
+    detail_listing_id: str | None = None
+    cursor: SaleArchiveCursorResponse
+    counters: SaleArchiveCountersResponse
+
+    @classmethod
+    def from_domain(cls, tick: SaleArchiveTick) -> "SaleArchiveTickResponse":
+        return cls(
+            did_work=tick.did_work,
+            skipped_reason=tick.skipped_reason,
+            detail_listing_id=tick.detail_listing_id,
+            cursor=SaleArchiveCursorResponse.from_domain(tick.cursor),
+            counters=SaleArchiveCountersResponse.from_domain(tick.counters),
+        )
+
+
+class SaleArchiveListingResponse(BaseModel):
+    listing_id: str
+    district_id: str | None = None
+    price_band: str | None = None
+    del_type: int | None = None
+    community: str | None = None
+    detail_status: str
+    detail_captured_at: datetime | None = None
+    first_seen_at: str
+    last_seen_at: str
+    is_active: bool
+    payload: dict[str, object] = Field(
+        default_factory=dict,
+        description=(
+            "Sanitized archive payload. Never contains 具体楼层 / 详细地址 / "
+            "业主预期价 — the archive does not request or keep them."
+        ),
+    )
+
+    @classmethod
+    def from_domain(cls, listing: SaleStoredListing) -> "SaleArchiveListingResponse":
+        return cls(
+            listing_id=listing.listing_id,
+            district_id=listing.district_id,
+            price_band=listing.price_band,
+            del_type=listing.del_type,
+            community=listing.community,
+            detail_status=listing.detail_status,
+            detail_captured_at=listing.detail_captured_at,
+            first_seen_at=listing.first_seen_at,
+            last_seen_at=listing.last_seen_at,
+            is_active=listing.is_active,
+            payload=listing.payload,
+        )
+
+
+class SaleArchiveListingPageResponse(BaseModel):
+    items: list[SaleArchiveListingResponse] = Field(default_factory=list)
+    page: int
+    page_size: int
+    total: int
+
+    @classmethod
+    def from_domain(
+        cls,
+        listings: tuple[SaleStoredListing, ...],
+        *,
+        page: int,
+        page_size: int,
+        total: int,
+    ) -> "SaleArchiveListingPageResponse":
+        return cls(
+            items=[SaleArchiveListingResponse.from_domain(item) for item in listings],
+            page=page,
+            page_size=page_size,
+            total=total,
+        )

@@ -55,6 +55,9 @@ def _wired_app(session: StubSession, tmp_path) -> tuple[object, TestClient]:
         credential_store_path=str(tmp_path / "cred.bin"),
         bound_employee_principal="100000003",
         qr_login_auto_start=False,
+        rental_archive_enabled=False,
+        rental_archive_db_path=str(tmp_path / "rental_archive.sqlite3"),
+        sale_archive_enabled=False,
     ))
     # Swap in the stub *after* create_app wired the real KecomSessionProvider
     # and KecomCrmClient. Both ConnectorService (for _require_ready / status)

@@ -93,7 +93,67 @@ curl -X POST http://127.0.0.1:8020/api/v1/auth/login/<login_id>/cancel
 | keepalive | `GET /api/puzuHouse/.../accountRightInfo?typeList=2` | `code:100000`，`ConnectionState.READY` |
 | TGC 刷新 | CAS 双跳（无扫码） | 新 `puzu_lease_token` + `saas_token` 种入，`BootstrapResult` 正常返回 |
 
+## 租赁房源本地化（默认开启）
+
+覆盖成都 CRM「全部房源」**全部 24 个 `districtId`**（12 个主城/近郊 + 高新、青白江、新津、都江堰、简阳、金堂、崇州、彭州、大邑、邛崃、蒲江、天府新区南区），游标按区循环：每轮都重新扫列表（增量），任何区或租金档首页 `total > 1000`（上游深分页硬顶）就递归切开——先把租金档对半分，1 元档仍超 1000 再按 `delType`（普租 2 / 托管 5）切——直到每个单元都完整可达。**已本地化且未过期的房源不再打详情**（TTL 14 天，列表行内容变化才重采）。普租跟进随详情归档（已入库且缺 `follows` 的普租，后续列表扫到时补采一次）；具体楼层、详细地址仍不请求。游标按区循环，因此长跑即「增量 + 全量」：新区自动补采，旧区每轮复核。
+
+Connector 启动即归档。关闭：
+
+```
+CC_RENTAL_ARCHIVE_ENABLED=0
+```
+
+清水房采集默认关闭；不要和本归档同时打开去打同一 CRM 账号。
+
+库文件默认 `./run/rental_archive.sqlite3`（`CC_RENTAL_ARCHIVE_DB_PATH`）。Asia/Shanghai **仅工作时间 09:00–21:00 作业**，21:00–09:00 暂停。每套详情本地化后只停留 **2 秒**；列表翻页仍 8–25 秒。默认**不限制**日请求/详情封顶（`CC_RENTAL_ARCHIVE_DAILY_REQUEST_CAP=0`、`CC_RENTAL_ARCHIVE_DETAIL_DAILY_CAP=0`）。
+
+看板：浏览器打开 [http://127.0.0.1:8020/archive](http://127.0.0.1:8020/archive)（每 2 秒刷新，不含楼层/地址）。
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/archive` | 本地化状态看板 |
+| GET | `/api/v1/archive/rental/status` | 开关、游标、分区统计、当日计数、最近一轮 |
+| POST | `/api/v1/archive/rental/tick` | 执行一单位工作（一页列表或一套详情） |
+| GET | `/api/v1/archive/rental/listings` | 已归档列表（可按 `district_id` / `active` 过滤） |
+| GET | `/api/v1/archive/rental/listings/{id}` | 单套已归档 payload（已剥离敏感字段） |
+
+## 买卖房源本地化（默认开启）
+
+与租赁归档并行的独立归档：**爬取范围与租赁本地化相同的 14 个区**（主城/近郊，外加天府新区、高新西、高新、天府新区南区，游标按同一顺序在这 14 区间循环），并同样跳过青白江、新津、都江堰、简阳、金堂、崇州、彭州、大邑、邛崃、蒲江这 10 个远郊区县；始终用 `vertical=all`（不限，绝不发 `gdiv_mt`）；价格是**总价万元**，上游固定每页 **30 行**（pageSize 被忽略、不发送）。某单元首页 `total > 1000`（与租赁列表同一深分页硬顶）即递归切分——先总价、再面积、最后室数——用尽切分维度仍超 1000 则只采可达的 1000 行且不做失效下架。独立 runner、SQLite（默认 `./run/sale_archive.sqlite3`，`CC_SALE_ARCHIVE_DB_PATH`）与游标，与租赁归档**共用同一个 CRM 账号**和 09:00–21:00 窗口及延迟/封顶默认值；HTTP 路由同构于 `/api/v1/archive/sale/`（status/tick/listings/listings/{id}）。
+
+## 归档视觉持续处理（archive_vision）
+
+视觉命令与出租、出售归档进程独立，源库只读，不访问 CRM，不改 payload_json、content_hash、detail_status、计数或游标。Hermes 不在维护和验收范围。
+
+- 默认每页最多扫描 500 行，以 listing_id 主键分页。视觉库小型元数据表保存租售公平轮转进度；预算用完或中断后继续，同一房源多张图也可续跑。不加载全库 payload，不在模型调用期间持有源库快照。新增 ID 或旧房源换图最迟在下一轮完整扫描发现；这是周期扫描，不能保证实时。
+- --limit 是整个命令的图任务上限，下载失败也占额度；--batch-size 是每批额度，二者独立。缓存命中不占额度，未尝试的图不写 error。--backfill 无 limit 时完成当前扫描轮次后退出，--watch 持续轮转；分页游标不是 CRM 归档游标。
+- 串行请求，一个 NVIDIA_API_KEY（兼容 NIM_API_KEY），默认每次请求至少间隔 4 秒，重试也限速；HTTP 超时 22 秒、429 退避可中断。不经过 LiteLLM/OpenRouter。模型、提示词和关闭 thinking 的调用保持固定。
+- ok/miss 缓存按 model/prompt/schema 隔离，同字节 SHA 共享识别；规则变化只重算。error 冷却 15 分钟。推理后重新读取当前 URL/活动状态；换图保持 stale，下架/删除不参与筛选。删除 ID 另做有界核验，不依据未扫描到的分页数据判定下架。
+- OS 文件锁覆盖整个持续进程和离线重建，重复启动立即失败；SIGINT/SIGTERM 停止接新图，当前下载/请求有界结束。默认至少保留 2 GiB 空间，不足时 watch 输出 paused_storage，至少间隔 60 秒复查；有限小批测试可显式下调阈值。程序不会删除日志或图片。
+- labels 为空或不可读是 miss，设施 NULL。筛选仅 ready 的确定值；NULL 不进入“要”或“不要”的结果。实拍槽标记和车位标记保留，推断用途冲突不作为确定用途。
+
+从 services/crm_connector 运行，key 只放环境变量：
+
+```powershell
+python -m app.application.archive_vision --rental-db ./run/rental_archive.sqlite3 --sale-db ./run/sale_archive.sqlite3 --vision-db ./run/archive_vision.sqlite3 --backfill --limit 20
+python -m app.application.archive_vision --rental-db ./run/rental_archive.sqlite3 --sale-db ./run/sale_archive.sqlite3 --vision-db ./run/archive_vision.sqlite3 --backfill
+python -m app.application.archive_vision --rental-db ./run/rental_archive.sqlite3 --sale-db ./run/sale_archive.sqlite3 --vision-db ./run/archive_vision.sqlite3 --watch --batch-size 20 --poll-interval 60
+python -m app.application.archive_vision --rental-db ./run/rental_archive.sqlite3 --sale-db ./run/sale_archive.sqlite3 --vision-db ./run/archive_vision.sqlite3 --rebuild-derived
+```
+
+离线重建不需要 key、下载或模型。运行前可用 SQLite Backup API 备份视觉库。小批连续两次可能处理不同的待补图片；检验缓存幂等应固定同一房源/图片集合，不能要求下一批待补图请求数为零。
+
+部署模板 deploy/archive-vision.service 使用服务器现有 ubuntu 用户、venv、独立 vision-current 目录和独立环境文件（root:root 0600）。CPUQuota=20%、MemoryMax=384M、Nice=10；不更换 /opt/crm-connector/current，不重启 crm-connector.service。安装后用 systemctl start/stop archive-vision；先小批验收和检查磁盘再 enable。
+
 ## 本地运行
+
+Windows 长跑入口会先确认云枢（`YunShu.exe`）已启动，没有则拉起 `YunShuLauncher.exe`，再启动 Connector：
+
+```powershell
+..\..\scripts\start_crm_connector.ps1
+```
+
+直接跑 uvicorn：
 
 ```powershell
 cd services/crm_connector
@@ -170,6 +230,26 @@ api -> application -> domain <- infrastructure
 仅有 `puzu_lease_token` 时 `accountRightInfo`/`houseList` 返回 `100001`（请重新登录）；补上 `saas_token` 后翻成 `100000`。两跳共用同一 `TGC`，零额外扫码。
 
 终端二维码收到上游的过期状态后，`crm-authd login` 会自动重新初始化并展示新二维码。刷新初始等待时间由 `CC_BOOTSTRAP_QRCODE_REFRESH_INITIAL_DELAY_SECONDS` 控制，连续失败时采用最多 30 秒的指数退避。
+
+## 归档视觉识别与离线重建 (Archive Vision)
+
+离线户型图视觉识别流水线与规则重算工具（`app.application.archive_vision`）：
+
+### 简明命令行用法
+
+1. **运行推理流水线**（联网下载原图并调用模型打标）：
+   ```powershell
+   python -m app.application.archive_vision --rental-db ./run/rental_archive.sqlite3 --vision-db ./run/vision.sqlite3
+   ```
+2. **离线重建/规则重算**（不联网，基于已缓存观测重新计算 derived 字段与汇总）：
+   ```powershell
+   python -m app.application.archive_vision --rental-db ./run/rental_archive.sqlite3 --sale-db ./run/sale_archive.sqlite3 --vision-db ./run/vision.sqlite3 --rebuild-derived
+   ```
+
+### 备份与安全说明
+- 本地 Vision 数据库（如 `./run/vision.sqlite3`）可随时通过标准 SQLite 备份（`sqlite3 vision.sqlite3 ".backup backup.sqlite3"`）安全备份。
+- 所有推理及离线重建操作均不修改原始 `run/*.sqlite3` 业务存档库（源库以只读 `mode=ro&query_only=true` URI 打开）。
+- 未配置 `NVIDIA_API_KEY` 或 `NIM_API_KEY` 时调用推理流水线将提前报错退出，不会发起任何网络图片下载或模型调用。
 
 详细架构与实施计划见 [`docs/personal-crm-mcp-connector-plan.md`](../../docs/personal-crm-mcp-connector-plan.md)。
 

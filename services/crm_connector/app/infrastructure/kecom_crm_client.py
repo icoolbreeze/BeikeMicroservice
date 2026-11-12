@@ -24,6 +24,10 @@ from app.domain.models import (
     MaintainModule,
     MapBounds,
     Principal,
+    empty_sale_agent_comment,
+    empty_sale_listing_score,
+    empty_sale_owner_recommend,
+    empty_sale_score_dimension,
     ProspectPhoto,
     RentalListingFilterOption,
     RentalListing,
@@ -36,10 +40,17 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleAgentComment,
+    SaleAgentCommentSection,
     SaleCommunitySuggestion,
     SaleFollowRecord,
     SaleListing,
     SaleListingDetail,
+    SaleListingScore,
+    SaleOwnerRecommend,
+    SaleScoreDimension,
+    SaleScoreDimensions,
+    SaleScoreSection,
     SaleListingFilters,
     SaleListingFilterOption,
     SaleListingPage,
@@ -387,7 +398,12 @@ def _sale_query(filters: SaleListingFilters) -> dict[str, str | int]:
     if filters.area_sqm is not None:
         lo, hi = filters.area_sqm
         params["area"] = f"{_range_bound(lo)},{_range_bound(hi, open_high=True)}"
-    if filters.rooms:
+    if filters.room_range is not None:
+        # Explicit lo,hi range (the archive's 5,-1 room slice): keep an open
+        # high of -1 as-is and ignore the rooms tuple.
+        lo, hi = filters.room_range
+        params["room"] = f"{lo},{hi}"
+    elif filters.rooms:
         rooms = sorted(filters.rooms)
         lo, hi = rooms[0], rooms[-1]
         params["room"] = f"{lo},{hi}"
@@ -478,6 +494,36 @@ def _build_sale_follow_request(listing_id: str) -> AuthorizedRequest:
         route="sale_listing.get_follow",
         method="GET",
         query={"type": 0, "currentPage": 1, "housedelCode": listing_id, "pageSize": 100},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_agent_comment_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_agent_comment",
+        method="GET",
+        query={"housedelCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_owner_recommend_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_owner_recommend",
+        method="GET",
+        query={"housedelCode": listing_id},
+        body=None,
+        request_id=str(uuid.uuid4()),
+    )
+
+
+def _build_sale_score_request(listing_id: str) -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="sale_listing.get_score",
+        method="GET",
+        query={"housedelCode": listing_id},
         body=None,
         request_id=str(uuid.uuid4()),
     )
@@ -1127,6 +1173,7 @@ def _parse_listing(row: Mapping[str, Any], scope: str) -> RentalListing:
         fitment_status=_opt_str(row.get("fitmentStatus")),
         fitment_status_desc=_opt_str(row.get("fitmentStatusDesc")),
         create_time=_ts_to_datetime(row.get("createTime")),
+        hqi_score=_clean_opt_str(row.get("hqiScore")),
     )
 
 
@@ -2006,6 +2053,166 @@ def _parse_sale_follows(body: Mapping[str, Any]) -> tuple[SaleFollowRecord, ...]
     return tuple(records)
 
 
+_OWNER_TEXT_KEYS = ("content", "commentContent", "ownerComment", "cmtContent", "desc")
+_OWNER_ABSENT_MSG = "对不起，没有找到相关数据"
+
+
+def _owner_recommend_absent(body: Mapping[str, Any]) -> bool:
+    """Null ``data`` is an empty 房主自荐, including the known not-found msg."""
+    if body.get("data") is not None:
+        return False
+    if body.get("msg") == _OWNER_ABSENT_MSG:
+        return True
+    return body.get("code") in (1, "1", 0, "0")
+
+
+def _first_owner_text(data: Mapping[str, Any]) -> str | None:
+    for key in _OWNER_TEXT_KEYS:
+        if key not in data:
+            continue
+        value = data.get(key)
+        if isinstance(value, str):
+            return value
+    return None
+
+
+def _owner_picture_urls(raw: Any) -> tuple[str, ...]:
+    if not isinstance(raw, list):
+        return ()
+    urls: list[str] = []
+    for item in raw:
+        url: str | None = None
+        if isinstance(item, str):
+            url = item.strip() or None
+        elif isinstance(item, Mapping):
+            for key in ("url", "pictureUrl"):
+                candidate = item.get(key)
+                if isinstance(candidate, str) and candidate.strip():
+                    url = candidate.strip()
+                    break
+        if url:
+            urls.append(url)
+    return tuple(urls)
+
+
+def _parse_sale_agent_comment(body: Mapping[str, Any]) -> SaleAgentComment:
+    data = body.get("data")
+    if data is None:
+        return empty_sale_agent_comment()
+    if not isinstance(data, Mapping):
+        raise UpstreamChangedError("sale agent comment 'data' is not an object")
+    sections: list[SaleAgentCommentSection] = []
+    raw_sections = data.get("detailList")
+    if isinstance(raw_sections, list):
+        for row in raw_sections:
+            if not isinstance(row, Mapping):
+                continue
+            sections.append(
+                SaleAgentCommentSection(
+                    title=_opt_str(row.get("commentTitle")),
+                    comment_type=_opt_str(row.get("commentType")),
+                    content=_opt_str(row.get("commentContent")),
+                )
+            )
+    status = data.get("commentStatus")
+    return SaleAgentComment(
+        comment_status=_opt_str(status) if status is not None else None,
+        summary=_opt_str(data.get("commentTitle")),
+        audit_text=_opt_str(data.get("commentDesc")),
+        commented_at=_opt_str(data.get("commentTime")),
+        sections=tuple(sections),
+    )
+
+
+def _parse_sale_owner_recommend(body: Mapping[str, Any]) -> SaleOwnerRecommend:
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        return empty_sale_owner_recommend()
+    return SaleOwnerRecommend(
+        content=_first_owner_text(data),
+        picture_urls=_owner_picture_urls(data.get("pictureList")),
+    )
+
+
+def _score_line(value: Any) -> str | None:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return str(value)
+    return None
+
+
+def _haofang_flag(value: Any) -> bool | None:
+    if isinstance(value, bool):
+        return value
+    if value in (0, 1, "0", "1"):
+        return value in (1, "1")
+    return None
+
+
+def _parse_score_dimension(raw: Any) -> SaleScoreDimension:
+    if not isinstance(raw, Mapping):
+        return empty_sale_score_dimension()
+    return SaleScoreDimension(
+        quota_score=_as_numeric_float(raw.get("quotaScore")),
+        price_dim_score=_as_numeric_float(raw.get("priceDimScore")),
+        cust_dim_score=_as_numeric_float(raw.get("custDimScore")),
+        market_dim_score=_as_numeric_float(raw.get("marketDimScore")),
+        owner_dim_score=_as_numeric_float(raw.get("ownerDimScore")),
+        house_dim_score=_as_numeric_float(raw.get("houseDimScore")),
+    )
+
+
+def _parse_score_sections(raw: Any) -> tuple[SaleScoreSection, ...]:
+    if not isinstance(raw, list):
+        return ()
+    sections: list[SaleScoreSection] = []
+    for item in raw:
+        if not isinstance(item, Mapping):
+            continue
+        lines: list[str] = []
+        cells = item.get("priceDimList")
+        if isinstance(cells, list):
+            for cell in cells:
+                value = cell.get("value") if isinstance(cell, Mapping) else cell
+                line = _score_line(value)
+                if line is not None:
+                    lines.append(line)
+        sections.append(
+            SaleScoreSection(
+                title=_opt_str(item.get("title")),
+                lines=tuple(lines),
+            )
+        )
+    return tuple(sections)
+
+
+def _parse_sale_listing_score(body: Mapping[str, Any]) -> SaleListingScore:
+    data = body.get("data")
+    if data is None:
+        return empty_sale_listing_score()
+    if not isinstance(data, Mapping):
+        raise UpstreamChangedError("sale score 'data' is not an object")
+    if not data:
+        return empty_sale_listing_score()
+    return SaleListingScore(
+        score=_as_numeric_float(data.get("score")),
+        is_haofang=_haofang_flag(data.get("isHaofang")),
+        quota_score=_as_numeric_float(data.get("quotaScore")),
+        quota_score_level=_as_int(data.get("quotaScoreLevel")),
+        sections=_parse_score_sections(data.get("radarDimVoList")),
+        dimension_scores=SaleScoreDimensions(
+            house=_parse_score_dimension(data.get("houseRadarDimScore")),
+            biz_average=_parse_score_dimension(data.get("bizAverageDimScore")),
+            biz_max=_parse_score_dimension(data.get("bizMaxDimScore")),
+            community_average=_parse_score_dimension(data.get("communityAverageDimScore")),
+            community_max=_parse_score_dimension(data.get("communityMaxDimScore")),
+        ),
+    )
+
+
 def _parse_sale_map_suggestions(body: Mapping[str, Any]) -> tuple[SaleMapSuggestion, ...]:
     raw = body.get("data")
     if not isinstance(raw, list):
@@ -2183,12 +2390,14 @@ class KecomCrmClient:
 
         Four or five upstream records: getHouseLabel (labels), detailHdicInfo
         (小区/楼栋 attributes), detailHqiTab (HQI score), getMaintainInfo
-        (维护信息), and optionally detailFollow (跟进记录). Customer-facing
-        flows pass ``include_follows=False`` so the sensitive route is never
-        requested. HQI may be None for houses
-        without a score record and follows may be empty when no follow-up
-        exists; the hdicInfo call must succeed for a valid 普租 id, otherwise
-        the unknown-id error surfaces from it.
+        (维护信息), and optionally detailFollow (跟进记录).
+        ``include_follows=False`` still skips detailFollow entirely;
+        customer-facing flows keep passing False so the follow route is never
+        requested on their behalf. The rental localization archive passes
+        True and stores the parsed records under house_info ``follows`` — an
+        empty upstream result is a valid empty tuple. HQI may be None for
+        houses without a score record; the hdicInfo call must succeed for a
+        valid 普租 id, otherwise the unknown-id error surfaces from it.
         """
         request = _build_hdic_info_request(listing_id)
         response = self._session.authorized_fetch(request)
@@ -2448,6 +2657,41 @@ class KecomCrmClient:
         body = _coerce_mapping(response.body)
         _sale_business_error(body)
         return _parse_sale_follows(body)
+
+    def get_sale_listing_agent_comment(self, listing_id: str) -> SaleAgentComment:
+        request = _build_sale_agent_comment_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_agent_comment returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_agent_comment(body)
+
+    def get_sale_listing_owner_recommend(self, listing_id: str) -> SaleOwnerRecommend:
+        request = _build_sale_owner_recommend_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_owner_recommend returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        if _owner_recommend_absent(body):
+            return empty_sale_owner_recommend()
+        _sale_business_error(body)
+        return _parse_sale_owner_recommend(body)
+
+    def get_sale_listing_score(self, listing_id: str) -> SaleListingScore:
+        request = _build_sale_score_request(listing_id)
+        response = self._session.authorized_fetch(request)
+        if response.status_code != 200:
+            raise UpstreamChangedError(
+                f"sale_listing.get_score returned status {response.status_code}"
+            )
+        body = _coerce_mapping(response.body)
+        _sale_business_error(body)
+        return _parse_sale_listing_score(body)
 
     def sale_map_suggest(self, query: str, city_id: str) -> tuple[SaleMapSuggestion, ...]:
         request = _build_sale_map_suggest_request(query, city_id)

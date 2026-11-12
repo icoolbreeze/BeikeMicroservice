@@ -1,0 +1,27 @@
+[Unit]
+Description=Beike independent archive vision worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/crm-connector/vision-current
+EnvironmentFile=/etc/crm-connector/archive-vision.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/crm-connector/venv/bin/python -m app.application.archive_vision --rental-db /var/lib/crm-connector/rental_archive.sqlite3 --sale-db /var/lib/crm-connector/sale_archive.sqlite3 --vision-db /var/lib/crm-connector/archive_vision.sqlite3 --watch --batch-size 20 --scan-size 500 --poll-interval 60 --min-free-gib 2
+Restart=on-failure
+RestartSec=60s
+TimeoutStopSec=40s
+KillSignal=SIGTERM
+CPUQuota=20%
+Nice=10
+MemoryMax=384M
+NoNewPrivileges=true
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

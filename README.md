@@ -51,7 +51,13 @@ Docker Compose 启动后访问 `http://localhost:8080/`；直接运行 Uvicorn �
 
 架构扩展原则与分阶段改造计划见 [架构说明](docs/architecture.md) 和 [ADR-0001](docs/adr/0001-evolutionary-platform-architecture.md)。
 
-Hermes 通过微信处理房源任务时的渠道级降噪、回复时机、用户可见内容和投递验收要求，见 [Hermes 微信渠道回复策略](docs/hermes-weixin-response-policy.md)。
+## 维护范围
+
+Hermes 侧接口适配、技能、脚本及渠道流程已停止维护，不属于本项目后续开发、测试或验收范围。项目自身的 HTTP/MCP 接口继续维护，接口变更无需同步 Hermes。
+
+归档视觉识别按项目自身的独立命令、视觉结果库、历史归档补全和本地筛选能力验收。具体约定见 [项目规则](AGENTS.md)。
+
+[Hermes 微信渠道回复策略（历史资料，已停止维护）](docs/hermes-weixin-response-policy.md) 仅作为历史参考资料保留，不再作为当前实现或验收依据。
 
 ## License
 

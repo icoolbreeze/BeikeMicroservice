@@ -243,6 +243,21 @@ class QrLoginManager:
             session = self._session_or_raise(login_id)
             return self._snapshot(session)
 
+    def current_pending(self) -> QrLoginStatus | None:
+        """Return the in-flight PENDING login snapshot, or ``None``.
+
+        Finished sessions (ready/failed/cancelled) are never returned: this
+        is how a browser page attaches to the attempt the session watchdog
+        started in the background, whose id was never exposed on the outside
+        (and whose follow-up ``POST /auth/login`` answers 409).
+        """
+        with self._lock:
+            self._prune_locked()
+            for session in self._sessions.values():
+                if session.state is QrLoginState.PENDING:
+                    return self._snapshot(session)
+        return None
+
     def needs_login(self) -> bool:
         """True when the CRM session requires a human QR scan right now.
 

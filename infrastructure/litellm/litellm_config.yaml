@@ -1,0 +1,22 @@
+# Local LiteLLM Proxy config with NVIDIA Build Free Preview Endpoints & OpenRouter
+model_list:
+  - model_name: pv-vl-main
+    litellm_params:
+      model: openrouter/nvidia/nemotron-nano-12b-v2-vl:free
+      api_key: os.environ/OPENROUTER_API_KEY
+  - model_name: nv-free-omni
+    litellm_params:
+      model: nvidia/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+      api_base: https://integrate.api.nvidia.com/v1
+      api_key: os.environ/NVIDIA_API_KEY
+  - model_name: nv-free-llama-vision
+    litellm_params:
+      model: nvidia/meta/llama-3.2-90b-vision-instruct
+      api_base: https://integrate.api.nvidia.com/v1
+      api_key: os.environ/NVIDIA_API_KEY
+
+general_settings:
+  master_key: sk-litellm-local-dev
+litellm_settings:
+  drop_params: true
+  num_retries: 2

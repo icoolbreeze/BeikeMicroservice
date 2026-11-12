@@ -6,6 +6,14 @@ from typing import Annotated, TypeVar
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from app.api.schemas import (
+    ArchiveListingPageResponse,
+    ArchiveListingResponse,
+    ArchiveStatusResponse,
+    ArchiveTickResponse,
+    SaleArchiveListingPageResponse,
+    SaleArchiveListingResponse,
+    SaleArchiveStatusResponse,
+    SaleArchiveTickResponse,
     ConnectionStatusResponse,
     HealthResponse,
     ListingDetailInfoResponse,
@@ -41,6 +49,8 @@ from app.api.schemas import (
     WorkbenchOpenResponse,
 )
 from app.application.qr_login import QrLoginManager
+from app.application.rental_archive import RentalArchiveRunner
+from app.application.sale_archive import SaleArchiveRunner
 from app.application.service import ConnectorService
 from app.application.workbench_browser import WorkbenchBrowser
 from app.domain.errors import ConnectorError, UpstreamNotConfiguredError
@@ -137,6 +147,27 @@ def start_qr_login(
         note=status.note,
         message=status.message,
     )
+
+
+@router.get("/auth/login/current", response_model=QrLoginStatusResponse)
+def get_current_qr_login(
+    manager: Annotated[QrLoginManager, Depends(qr_login_manager)],
+) -> QrLoginStatusResponse:
+    """Snapshot of the currently pending login, or 404 when none is pending.
+
+    Registered before ``/auth/login/{login_id}`` so ``current`` is matched
+    as this route rather than captured as a login id.
+    """
+    pending = manager.current_pending()
+    if pending is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "CRM_QR_LOGIN_NOT_FOUND",
+                "message": "no QR login attempt is pending",
+            },
+        )
+    return QrLoginStatusResponse.from_status(pending)
 
 
 @router.get("/auth/login/{login_id}", response_model=QrLoginStatusResponse)
@@ -454,3 +485,150 @@ def search_sale_map_nearby(
 ) -> SaleMapNearbySearchResponse:
     result = invoke(lambda: svc.search_sale_map_nearby(payload.to_domain()))
     return SaleMapNearbySearchResponse.from_domain(result)
+
+
+# --- rental listing localization (本地房源库) ------------------------------
+
+
+def rental_archive(request: Request) -> RentalArchiveRunner:
+    runner: RentalArchiveRunner | None = getattr(
+        request.app.state, "crm_rental_archive_runner", None
+    )
+    if runner is None:
+        raise HTTPException(
+            status_code=UpstreamNotConfiguredError.status_code,
+            detail={
+                "code": UpstreamNotConfiguredError.code,
+                "message": "rental archive is not wired on this process",
+            },
+        )
+    return runner
+
+
+@router.get("/archive/rental/status", response_model=ArchiveStatusResponse)
+def rental_archive_status(
+    runner: Annotated[RentalArchiveRunner, Depends(rental_archive)],
+) -> ArchiveStatusResponse:
+    """Report the archive cursor, today's budget and the last run.
+
+    Answers 200 even while the archive is disabled — a disabled daemon is a
+    normal state, not an error.
+    """
+    return ArchiveStatusResponse.from_domain(runner.status())
+
+
+@router.post("/archive/rental/tick", response_model=ArchiveTickResponse)
+def rental_archive_tick(
+    runner: Annotated[RentalArchiveRunner, Depends(rental_archive)],
+) -> ArchiveTickResponse:
+    """Run one unit of work (one list page, or one listing's details)."""
+    return ArchiveTickResponse.from_domain(invoke(runner.run_tick))
+
+
+@router.get("/archive/rental/listings", response_model=ArchiveListingPageResponse)
+def rental_archive_listings(
+    runner: Annotated[RentalArchiveRunner, Depends(rental_archive)],
+    district_id: str | None = Query(default=None),
+    active: bool = Query(default=True),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=50),
+) -> ArchiveListingPageResponse:
+    items, total = runner.store.list_listings(
+        district_id=district_id, active=active, page=page, page_size=page_size
+    )
+    return ArchiveListingPageResponse.from_domain(
+        items, page=page, page_size=page_size, total=total
+    )
+
+
+@router.get(
+    "/archive/rental/listings/{listing_id}", response_model=ArchiveListingResponse
+)
+def rental_archive_listing(
+    listing_id: str,
+    runner: Annotated[RentalArchiveRunner, Depends(rental_archive)],
+) -> ArchiveListingResponse:
+    listing = runner.store.get_listing(listing_id)
+    if listing is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "CRM_ARCHIVE_LISTING_NOT_FOUND",
+                "message": f"listing {listing_id} is not localized yet",
+            },
+        )
+    return ArchiveListingResponse.from_domain(listing)
+
+
+# --- 买卖 listing localization (same 14 districts as rental) --------------
+
+
+def sale_archive(request: Request) -> SaleArchiveRunner:
+    runner: SaleArchiveRunner | None = getattr(
+        request.app.state, "crm_sale_archive_runner", None
+    )
+    if runner is None:
+        raise HTTPException(
+            status_code=UpstreamNotConfiguredError.status_code,
+            detail={
+                "code": UpstreamNotConfiguredError.code,
+                "message": "sale archive is not wired on this process",
+            },
+        )
+    return runner
+
+
+@router.get("/archive/sale/status", response_model=SaleArchiveStatusResponse)
+def sale_archive_status(
+    runner: Annotated[SaleArchiveRunner, Depends(sale_archive)],
+) -> SaleArchiveStatusResponse:
+    """Report the sale archive cursor, today's budget and the last run.
+
+    Answers 200 even while the archive is disabled — a disabled daemon is a
+    normal state, not an error.
+    """
+    return SaleArchiveStatusResponse.from_domain(runner.status())
+
+
+@router.post("/archive/sale/tick", response_model=SaleArchiveTickResponse)
+def sale_archive_tick(
+    runner: Annotated[SaleArchiveRunner, Depends(sale_archive)],
+) -> SaleArchiveTickResponse:
+    """Run one unit of work (one list page, or one listing's details)."""
+    return SaleArchiveTickResponse.from_domain(invoke(runner.run_tick))
+
+
+@router.get("/archive/sale/listings", response_model=SaleArchiveListingPageResponse)
+def sale_archive_listings(
+    runner: Annotated[SaleArchiveRunner, Depends(sale_archive)],
+    district_id: str | None = Query(default=None),
+    active: bool = Query(default=True),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=50),
+) -> SaleArchiveListingPageResponse:
+    items, total = runner.store.list_listings(
+        district_id=district_id, active=active, page=page, page_size=page_size
+    )
+    return SaleArchiveListingPageResponse.from_domain(
+        items, page=page, page_size=page_size, total=total
+    )
+
+
+@router.get(
+    "/archive/sale/listings/{listing_id}",
+    response_model=SaleArchiveListingResponse,
+)
+def sale_archive_listing(
+    listing_id: str,
+    runner: Annotated[SaleArchiveRunner, Depends(sale_archive)],
+) -> SaleArchiveListingResponse:
+    listing = runner.store.get_listing(listing_id)
+    if listing is None:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "CRM_ARCHIVE_LISTING_NOT_FOUND",
+                "message": f"listing {listing_id} is not localized yet",
+            },
+        )
+    return SaleArchiveListingResponse.from_domain(listing)

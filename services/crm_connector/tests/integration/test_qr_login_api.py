@@ -37,14 +37,25 @@ class FakeSession:
 
 
 class FakeBootstrap:
-    def __init__(self, renderer: Any, *, gate: threading.Event | None = None) -> None:
+    def __init__(
+        self,
+        renderer: Any,
+        *,
+        gate: threading.Event | None = None,
+        hold: threading.Event | None = None,
+    ) -> None:
         self.renderer = renderer
         self.gate = gate
+        # When set, block AFTER rendering the QR but before returning; keeps
+        # the attempt PENDING with a qrcode present.
+        self.hold = hold
 
     def bootstrap(self) -> BootstrapResult:
         if self.gate is not None:
             self.gate.wait(timeout=10)
         self.renderer.render("https://t.lianjia.com/APITEST", note="scan me")
+        if self.hold is not None:
+            self.hold.wait(timeout=10)
         return BootstrapResult(
             credential_material=b'{"UCID":"1000000031696069"}',
             expires_at=datetime.now(UTC) + timedelta(hours=1),
@@ -60,17 +71,21 @@ def _wired_app(
     tmp_path,
     *,
     gate: threading.Event | None = None,
+    hold: threading.Event | None = None,
     unconfigured: bool = False,
 ) -> tuple[TestClient, FakeSession]:
     settings = Settings(
         upstream_profile="unconfigured" if unconfigured else "kecom-prod",
         credential_store_path=str(tmp_path / "cred.bin"),
         qr_login_auto_start=False,
+        rental_archive_enabled=False,
+        rental_archive_db_path=str(tmp_path / "rental_archive.sqlite3"),
+        sale_archive_enabled=False,
     )
     app = create_app(settings)
     if not unconfigured:
         session = FakeSession()
-        bootstrap = FakeBootstrap(None, gate=gate)
+        bootstrap = FakeBootstrap(None, gate=gate, hold=hold)
 
         def factory(renderer: Any) -> FakeBootstrap:
             bootstrap.renderer = renderer
@@ -151,3 +166,82 @@ def test_login_unavailable_on_unconfigured_profile(tmp_path) -> None:
     response = client.post("/api/v1/auth/login")
     assert response.status_code == 501
     assert response.json()["detail"]["code"] == "CRM_UPSTREAM_NOT_CONFIGURED"
+
+
+def test_current_login_returns_pending_id_and_qrcode(tmp_path) -> None:
+    render_gate = threading.Event()
+    hold_gate = threading.Event()
+    client, _ = _wired_app(tmp_path, gate=render_gate, hold=hold_gate)
+
+    started = client.post("/api/v1/auth/login")
+    assert started.status_code == 200
+    login_id = started.json()["login_id"]
+
+    # Before the QR renders, current still reports the same pending attempt
+    # with an empty qrcode.
+    current = client.get("/api/v1/auth/login/current")
+    assert current.status_code == 200
+    body = current.json()
+    assert body["state"] == "pending"
+    assert body["login_id"] == login_id
+    assert body["qrcode"] == ""
+
+    render_gate.set()
+    deadline = time.monotonic() + 5.0
+    qrcode = ""
+    while time.monotonic() < deadline:
+        body = client.get("/api/v1/auth/login/current").json()
+        qrcode = body["qrcode"]
+        if qrcode:
+            break
+        time.sleep(0.01)
+    assert body["login_id"] == login_id
+    assert qrcode == "https://t.lianjia.com/APITEST"
+
+    hold_gate.set()
+    _poll_until(client, login_id, "ready")
+
+
+def test_current_login_404_when_nothing_pending(tmp_path) -> None:
+    client, _ = _wired_app(tmp_path)
+    response = client.get("/api/v1/auth/login/current")
+    assert response.status_code == 404
+    assert response.json()["detail"]["code"] == "CRM_QR_LOGIN_NOT_FOUND"
+
+
+def test_current_attaches_to_watchdog_started_login(tmp_path) -> None:
+    # Simulate the session watchdog starting a login in the background: no
+    # id was exposed to the outside, and POST answers 409. The browser page
+    # must discover that attempt via /auth/login/current.
+    render_gate = threading.Event()
+    hold_gate = threading.Event()
+    client, _ = _wired_app(tmp_path, gate=render_gate, hold=hold_gate)
+    manager = client.app.state.crm_qr_login_manager
+
+    out_of_band = manager.start()
+    assert client.post("/api/v1/auth/login").status_code == 409
+
+    current = client.get("/api/v1/auth/login/current")
+    assert current.status_code == 200
+    assert current.json()["state"] == "pending"
+    assert current.json()["login_id"] == out_of_band.login_id
+
+    render_gate.set()
+    hold_gate.set()
+    _poll_until(client, out_of_band.login_id, "ready")
+
+    # Once finished, current no longer returns it.
+    after = client.get("/api/v1/auth/login/current")
+    assert after.status_code == 404
+
+
+def test_login_page_served(tmp_path) -> None:
+    client, _ = _wired_app(tmp_path)
+    response = client.get("/login")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert response.headers["cache-control"].lower() == "no-store"
+    text = response.text
+    assert "扫码登录" in text
+    assert "/api/v1/auth/login/current" in text
+    assert "qrcode.png" in text

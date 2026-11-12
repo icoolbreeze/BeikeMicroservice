@@ -16,6 +16,7 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleAgentComment,
     SaleCommunitySuggestion,
     SaleFollowRecord,
     SaleListing,
@@ -23,7 +24,9 @@ from app.domain.models import (
     SaleListingFilters,
     SaleListingFilterOption,
     SaleListingPage,
+    SaleListingScore,
     SaleMaintainInfo,
+    SaleOwnerRecommend,
     SaleMapBubble,
     SaleMapBubbleFilters,
     SaleMapSuggestion,
@@ -60,9 +63,11 @@ class CrmClient(Protocol):
     ) -> ListingDetailInfo:
         """Return the aggregated detail-page information beyond detailHead.
 
-        Labels, 小区/楼栋 attributes, and HQI score. ``hqi`` may be None
-        for houses without a score record. Set ``include_follows=False`` for
-        customer-facing flows so the sensitive follow-up route is never called.
+        Labels, 小区/楼栋 attributes, HQI score, and — unless
+        ``include_follows=False`` — the detailFollow 跟进记录 list. ``hqi``
+        may be None for houses without a score record and ``follows`` may be
+        empty. Passing False skips detailFollow for customer-facing flows;
+        the rental localization archive passes True and stores the records.
         """
 
     def get_rental_listing_redirect_url(self, listing_id: str) -> str | None:
@@ -106,6 +111,15 @@ class CrmClient(Protocol):
 
     def get_sale_listing_follows(self, listing_id: str) -> tuple[SaleFollowRecord, ...]:
         """Return the 买卖 detail-page 跟进记录 (queryfollows)."""
+
+    def get_sale_listing_agent_comment(self, listing_id: str) -> SaleAgentComment:
+        """Return the 买卖 经纪人点评 (housedelComment/getCurrentComent)."""
+
+    def get_sale_listing_owner_recommend(self, listing_id: str) -> SaleOwnerRecommend:
+        """Return the 买卖 房主自荐 (ownerCmts/getOwnerCmt)."""
+
+    def get_sale_listing_score(self, listing_id: str) -> SaleListingScore:
+        """Return the 买卖 right-hand 房源评分 (haofang radar newDetail)."""
 
     def sale_map_suggest(self, query: str, city_id: str) -> tuple[SaleMapSuggestion, ...]:
         """Resolve a 买卖 map phrase into a coordinate-bearing community entry."""

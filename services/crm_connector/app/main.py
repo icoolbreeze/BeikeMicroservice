@@ -4,16 +4,23 @@ import logging
 import threading
 from typing import cast
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from app.api.router import router
 from app.application.qr_login import CredentialInstaller, QrLoginManager, auto_start_login
+from app.application.rental_archive import RentalArchiveRunner
+from app.application.sale_archive import SaleArchiveRunner
 from app.application.service import ConnectorService
 from app.application.session_watchdog import SessionWatchdog
 from app.application.featured_snapshot_push import FeaturedSnapshotPusher
 from app.application.workbench_browser import WorkbenchBrowser
 from app.bootstrap import UNCONFIGURED_PROFILE, build_providers
+from app.infrastructure.rental_archive_store import RentalArchiveStore
+from app.infrastructure.sale_archive_store import SaleArchiveStore
 from app.infrastructure.settings import Settings, load_settings
 from app.infrastructure.windows_dpapi_credential_store import WindowsDpapiCredentialStore
 
@@ -100,6 +107,37 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         @app.on_event("shutdown")
         def stop_featured_snapshot_pusher() -> None:
             app.state.crm_featured_snapshot_pusher.stop()
+
+    # Always wired so /archive/rental/status answers while disabled; the
+    # daemon thread only starts when the archive is explicitly enabled. The
+    # store connects lazily, so wiring alone touches no filesystem.
+    app.state.crm_rental_archive_runner = RentalArchiveRunner(
+        resolved,
+        app.state.crm_connector_service,
+        RentalArchiveStore(resolved.rental_archive_db_path),
+    )
+    if resolved.rental_archive_enabled:
+        app.state.crm_rental_archive_runner.start()
+
+        @app.on_event("shutdown")
+        def stop_rental_archive_runner() -> None:
+            app.state.crm_rental_archive_runner.stop()
+
+    # Same pattern for the 买卖 archive (same 14 crawled districts as
+    # rental): always wired so
+    # /archive/sale/status answers while disabled; own thread, own SQLite.
+    app.state.crm_sale_archive_runner = SaleArchiveRunner(
+        resolved,
+        app.state.crm_connector_service,
+        SaleArchiveStore(resolved.sale_archive_db_path),
+    )
+    if resolved.sale_archive_enabled:
+        app.state.crm_sale_archive_runner.start()
+
+        @app.on_event("shutdown")
+        def stop_sale_archive_runner() -> None:
+            app.state.crm_sale_archive_runner.stop()
+
     if resolved.cors_origins:
         app.add_middleware(
             CORSMiddleware,
@@ -108,4 +146,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             allow_headers=["Authorization", "Content-Type"],
         )
     app.include_router(router)
+    static_dir = Path(__file__).resolve().parent / "static"
+    dashboard = static_dir / "archive.html"
+    login_page = static_dir / "login.html"
+
+    @app.get("/archive", include_in_schema=False)
+    def rental_archive_dashboard() -> FileResponse:
+        return FileResponse(
+            dashboard,
+            media_type="text/html; charset=utf-8",
+            headers={"Cache-Control": "no-store"},
+        )
+
+    @app.get("/login", include_in_schema=False)
+    def qr_login_page() -> FileResponse:
+        return FileResponse(
+            login_page,
+            media_type="text/html; charset=utf-8",
+            headers={"Cache-Control": "no-store"},
+        )
+
     return app

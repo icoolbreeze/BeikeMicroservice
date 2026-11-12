@@ -85,10 +85,11 @@ python scripts/roughcast_shadow_score.py
 ## start_store_media.ps1
 
 `store_media` 的 Windows 本地长跑入口（模仿 `start_crm_connector.ps1`）。
-`SM_ROUGHCAST_CRAWL_ENABLED=1` 启动 uvicorn，**只在那个进程里**打开开关，
-不动仓库里的 `.env.example`。如果 8010 已经在监听（通常是老进程没退干净），
+脚本默认把 `SM_ROUGHCAST_CRAWL_ENABLED=0`（清水房 daily loop 关闭）。
+需要采集时再在脚本里改为 `1`，或用 `roughcast_crawl_once.py` 手工跑一轮。
+如果 8010 已经在监听（通常是老进程没退干净），
 脚本直接打印「already listening」并 `exit 0`，不杀活进程。修法是先停掉老进程
-再重跑，否则新代码里的 `roughcast-daily-loop` 与 ranked API 不会被加载。
+再重跑。
 
 ```powershell
 ..\..\scripts\start_store_media.ps1

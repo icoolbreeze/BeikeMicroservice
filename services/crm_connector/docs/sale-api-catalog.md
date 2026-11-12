@@ -156,6 +156,41 @@ communityId, delType}]`。`communityId` 直接回填 `searchQueryNew.multi_commu
 返回跟进记录 `{id, followContent, creatorName(含角色/门店/电话),
 createTime(文案如 2026-08-07 16:58), onTop, remarks, followLabel, videoUrl}`。
 
+### 归档补充（2026-10-22 实测，仅归档，不暴露 MCP）
+
+买卖详情页右侧评分、经纪人点评、房主自荐是三次独立 GET，查询参数都是
+`housedelCode`。一次本地化详情因此是六次服务调用、七次上游请求（详情头仍算两次）。
+空结果也写成对象，用来区分「查过、没有」和「还没查」。已完成但缺这三块的行，
+下一轮列表扫到时补一次，之后仍按 14 天刷新。
+
+| 归档字段 | 路由 | 域 |
+| --- | --- | --- |
+| `detail.agent_comment` | `GET /housedelComment/getCurrentComent` | `house.link` |
+| `detail.owner_recommend` | `GET /ownerCmts/getOwnerCmt` | `house.link` |
+| `detail.score` | `GET /api/radar/newDetail` | `haofang.lianjia.com` |
+
+经纪人点评成功信封仍是 `code:1`。`commentStatus` 原样保存（如 `"50"`）。
+`detailList[]` 的 `commentTitle` / `commentType` / `commentContent` 有几段存几段。
+`data` 为 null 时存空点评对象。
+
+房主自荐没有内容时 `data` 为 null，`msg` 为 `对不起，没有找到相关数据`。
+归档记 `content: null`、`picture_urls: []`，不保存这句 msg。有正文时按
+`content`、`commentContent`、`ownerComment`、`cmtContent`、`desc` 取第一段文字，
+图片从 `pictureList` 的 `url` / `pictureUrl` 取。电话、证件、上传人字段不存。
+
+右侧评分在好房域 `https://haofang.lianjia.com`（`CC_CRM_HAOFANG_ORIGIN`）。
+请求头与买卖详情相同的 `lianjia_curworkcity` / `lianjia_bucid`，referer 指向
+`{house}/housedel/view`，不新增 cookie。`score`、`isHaofang`（必看好房）、
+`quotaScore`、`quotaScoreLevel` 入库。`radarDimVoList[].title` 与
+`priceDimList[].value` 展示句按顺序入库，已见到的标题是客户热度、市场热度、
+价格指数、业主意愿、基本属性。`rule` 不存。五组对比分
+`houseRadarDimScore` / `bizAverageDimScore` / `bizMaxDimScore` /
+`communityAverageDimScore` / `communityMaxDimScore` 记到 `dimension_scores`。
+不调用 `/housedel/detail/systemScore`（404）、`/api/radar/detail`、
+`/api/radar/isAllow`、`/api/radar/newIsAllow`。
+
+证件页、业主预期价、原购价、电话、具体楼层、详细地址继续不存。
+
 ## 与租赁的差异速查
 
 | 维度 | 租赁（lease-pz） | 买卖（house.link） |
@@ -166,7 +201,7 @@ createTime(文案如 2026-08-07 16:58), onTop, remarks, followLabel, videoUrl}`�
 | 搜索路由 | `/api/houseList/search/pc/list` | `/search/searchQueryNew` |
 | 筛选字典 | `/api/houseList/search/pc/searchOption` | `/search/getSearchFilters` |
 | 小区联想 | 地图域 `sug`（itemType 分型） | `/search/sugCommunityInfo`（communityId） |
-| 详情 | `detailHead` 等 7 个路由 | `housedel/views` + ext/maintain/follows |
+| 详情 | `detailHead` 等 7 个路由 | `housedel/views` + ext/maintain/follows，外加点评、房主自荐、好房评分 |
 | 范围 | `relationRange` 1/4/9 | `vertical` 9 个池 id |
 | 地图域 | 代理 `map.ke.com` | house.link 自身 `/search/map/*` |
 

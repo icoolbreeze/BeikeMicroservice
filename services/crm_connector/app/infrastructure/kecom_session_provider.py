@@ -77,6 +77,14 @@ _DEFAULT_CITY_HEADER = "house_current_work_citycode"
 _EXPIRY_ROLL_FORWARD_SECONDS = 30 * 60
 _EXPIRY_EXTENSION_SECONDS = 60 * 60
 
+# Transient transport failures (云枢 blip: ConnectError, read timeout, ...)
+# get a couple of in-place retries before the call is surfaced as
+# NetworkRequiredError — a one-shot connect failure must never abort a crawl
+# run. HTTP 4xx/5xx bodies are httpx.Response objects, not raised errors, so
+# only httpx.RequestError subclasses are retried here.
+_NETWORK_MAX_ATTEMPTS = 3
+_NETWORK_RETRY_DELAYS = (0.5, 1.5)
+
 
 class KecomSessionProvider:
     """Authentication boundary that owns the active business cookie jar.
@@ -101,6 +109,7 @@ class KecomSessionProvider:
         *,
         client: httpx.Client | None = None,
         clock: Callable[[], datetime] | None = None,
+        sleep: Callable[[float], None] | None = None,
     ) -> None:
         self._settings = settings
         self._store = credential_store
@@ -120,6 +129,9 @@ class KecomSessionProvider:
             },
         )
         self._clock = clock or _utc_now
+        # Injectable so unit tests run the retry loop instantly; production
+        # uses time.sleep.
+        self._sleep = sleep or time.sleep
 
         self._lock = threading.RLock()
         self._refresh_lock = threading.Lock()
@@ -361,6 +373,8 @@ class KecomSessionProvider:
             base_url = self._settings.crm_house_origin
         elif origin == "trusteeship":
             base_url = self._settings.crm_trusteeship_origin
+        elif origin == "haofang":
+            base_url = self._settings.crm_haofang_origin
         else:
             base_url = self._settings.crm_business_origin
         url = f"{base_url}{path}"
@@ -395,6 +409,15 @@ class KecomSessionProvider:
             bucid = cookies.get("UCID") or cookies.get("login_ucid")
             if bucid:
                 headers["lianjia_bucid"] = bucid
+        if origin == "haofang":
+            # 好房 radar (haofang.lianjia.com) is called from the sale detail
+            # page. Captured 2026-10-22: same city/bucid headers as house,
+            # referer is the housedel view page. Cookies are the existing jar.
+            headers["referer"] = f"{self._settings.crm_house_origin}/housedel/view"
+            headers["lianjia_curworkcity"] = self._settings.crm_default_city_code
+            bucid = cookies.get("UCID") or cookies.get("login_ucid")
+            if bucid:
+                headers["lianjia_bucid"] = bucid
         if origin == "trusteeship":
             # 托管 workbench (省心租) request signature captured live
             # 2026-08-15: the SPA calls its own domain with the same cookie
@@ -406,32 +429,50 @@ class KecomSessionProvider:
             headers[_DEFAULT_CITY_HEADER] = self._settings.crm_default_city_code
         headers["x-request-id"] = request_id
 
-        try:
-            request_cookies = _select_cookies(cookies)
-            if origin == "trusteeship":
-                # The 托管 SPA authenticates with the shared ke.com family;
-                # live observation (2026-08-15) shows a fresh security_ticket
-                # (planted by the CAS walk) is what distinguishes a working
-                # 托管 session from a stale one.
-                refresh_cookies = _decode_material(active.refresh_material)
-                security_ticket = refresh_cookies.get("security_ticket")
-                if security_ticket:
-                    request_cookies = {**request_cookies, "security_ticket": security_ticket}
-            return self._client.request(
-                method,
-                url,
-                params=params or None,
-                json=body if body is not None else None,
-                cookies=request_cookies,
-                headers=headers,
-            )
-        except httpx.HTTPError as exc:
-            logger.warning(
-                "authorized_fetch.network_failed route=%s class=%s request_id=%s",
-                request.route, exc.__class__.__name__, request_id,
-            )
-            self._last_business_failure_at = self._clock()
-            raise NetworkRequiredError(f"CRM upstream unreachable: {exc}") from exc
+        request_cookies = _select_cookies(cookies)
+        if origin == "trusteeship":
+            # The 托管 SPA authenticates with the shared ke.com family;
+            # live observation (2026-08-15) shows a fresh security_ticket
+            # (planted by the CAS walk) is what distinguishes a working
+            # 托管 session from a stale one.
+            refresh_cookies = _decode_material(active.refresh_material)
+            security_ticket = refresh_cookies.get("security_ticket")
+            if security_ticket:
+                request_cookies = {**request_cookies, "security_ticket": security_ticket}
+
+        # Retry only transport-level errors (ConnectError, timeouts): a
+        # returned httpx.Response — including 4xx/5xx bodies — is never
+        # raised and must not be retried here.
+        for attempt in range(1, _NETWORK_MAX_ATTEMPTS + 1):
+            try:
+                return self._client.request(
+                    method,
+                    url,
+                    params=params or None,
+                    json=body if body is not None else None,
+                    cookies=request_cookies,
+                    headers=headers,
+                )
+            except httpx.RequestError as exc:
+                if attempt < _NETWORK_MAX_ATTEMPTS:
+                    logger.warning(
+                        "authorized_fetch.network_retry route=%s class=%s attempt=%s"
+                        " request_id=%s",
+                        request.route,
+                        exc.__class__.__name__,
+                        attempt,
+                        request_id,
+                    )
+                    self._sleep(_NETWORK_RETRY_DELAYS[attempt - 1])
+                    continue
+                logger.warning(
+                    "authorized_fetch.network_failed route=%s class=%s request_id=%s",
+                    request.route, exc.__class__.__name__, request_id,
+                )
+                self._last_business_failure_at = self._clock()
+                raise NetworkRequiredError(f"CRM upstream unreachable: {exc}") from exc
+        # Unreachable: the loop either returns or raises on the last attempt.
+        raise RuntimeError("unreachable authorized send state")  # pragma: no cover
 
     def _maybe_autorefresh(
         self, active: ActiveCredential, response: httpx.Response
@@ -781,6 +822,20 @@ _ROUTE_TABLE = {
     "sale_listing.get_ext_info": ("/housedel/housedelExtInfo", False, "house"),
     "sale_listing.get_maintain_info": ("/housedel/getMaintainInfo", False, "house"),
     "sale_listing.get_follow": ("/housedelfollow/queryfollows", False, "house"),
+    # 经纪人点评 / 房主自荐, captured 2026-10-22 from the sale detail page.
+    # The Coment typo is the real path.
+    "sale_listing.get_agent_comment": (
+        "/housedelComment/getCurrentComent",
+        False,
+        "house",
+    ),
+    "sale_listing.get_owner_recommend": (
+        "/ownerCmts/getOwnerCmt",
+        False,
+        "house",
+    ),
+    # Right-hand 房源评分. Lives on haofang, not house.link.
+    "sale_listing.get_score": ("/api/radar/newDetail", False, "haofang"),
     # 买卖地图找房 (mapSearch workbench, captured live 2026-08-11).
     "sale_map.suggest": ("/search/map/suggest", False, "house"),
     "sale_map.bubbles": ("/search/map/bubbleSearch", False, "house"),

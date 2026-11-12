@@ -15,6 +15,7 @@ from app.domain.models import (
     RentalMapSearchFilters,
     RentalMapSuggestion,
     RentalMapSuggestionFilters,
+    SaleAgentComment,
     SaleCommunitySuggestion,
     SaleFollowRecord,
     SaleListing,
@@ -22,7 +23,9 @@ from app.domain.models import (
     SaleListingFilters,
     SaleListingFilterOption,
     SaleListingPage,
+    SaleListingScore,
     SaleMaintainInfo,
+    SaleOwnerRecommend,
     SaleMapBubble,
     SaleMapBubbleFilters,
     SaleMapSuggestion,
@@ -88,6 +91,15 @@ class UnconfiguredCrmClient:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
 
     def get_sale_listing_follows(self, listing_id: str) -> tuple[SaleFollowRecord, ...]:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_agent_comment(self, listing_id: str) -> SaleAgentComment:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_owner_recommend(self, listing_id: str) -> SaleOwnerRecommend:
+        raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
+
+    def get_sale_listing_score(self, listing_id: str) -> SaleListingScore:
         raise UpstreamNotConfiguredError("CRM upstream routes have not been configured")
 
     def sale_map_suggest(self, query: str, city_id: str) -> tuple[SaleMapSuggestion, ...]:

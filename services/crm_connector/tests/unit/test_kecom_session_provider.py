@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
+import pytest
 
 from app.domain.models import ConnectionState, Principal
 from app.domain.providers.credential_bootstrap_provider import BootstrapResult
@@ -94,7 +96,13 @@ def _fresh_result() -> BootstrapResult:
     )
 
 
-def _provider(store: FakeStore, bootstrap: FakeBootstrap, handler: Any) -> KecomSessionProvider:
+def _provider(
+    store: FakeStore,
+    bootstrap: FakeBootstrap,
+    handler: Any,
+    *,
+    sleep: Callable[[float], None] | None = None,
+) -> KecomSessionProvider:
     return KecomSessionProvider(
         Settings(),
         store,
@@ -105,6 +113,7 @@ def _provider(store: FakeStore, bootstrap: FakeBootstrap, handler: Any) -> Kecom
             follow_redirects=False,
         ),
         clock=lambda: NOW,
+        sleep=sleep,
     )
 
 
@@ -234,6 +243,35 @@ def test_authorized_fetch_success_rolls_expiry_forward() -> None:
     assert response.status_code == 200
     assert bootstrap.refresh_calls == []
     assert store.saved[-1].expires_at == NOW + timedelta(hours=1)
+
+
+def test_haofang_score_route_uses_house_detail_referer() -> None:
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=10)))
+    seen: dict[str, str] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["referer"] = request.headers["referer"]
+        seen["city"] = request.headers["lianjia_curworkcity"]
+        seen["bucid"] = request.headers["lianjia_bucid"]
+        return httpx.Response(200, json={"code": 1, "msg": "恭喜你，操作成功", "data": {}})
+
+    provider = _provider(store, FakeBootstrap(None), handler)
+    response = provider.authorized_fetch(
+        AuthorizedRequest(
+            route="sale_listing.get_score",
+            method="GET",
+            query={"housedelCode": "106128785501"},
+            body=None,
+            request_id="req-score",
+        )
+    )
+
+    assert response.status_code == 200
+    assert seen["url"].startswith("https://haofang.lianjia.com/api/radar/newDetail")
+    assert seen["referer"] == "https://house.link.lianjia.com/housedel/view"
+    assert seen["city"] == "510100"
+    assert seen["bucid"] == "1000000031696069"
 
 
 def test_default_client_headers_mirror_workbench_browser() -> None:
@@ -520,3 +558,72 @@ def test_autorefresh_success_invalidates_old_as_replaced_not_rejected() -> None:
     replaced = [reason for sid, reason in store.invalidated if sid == "ssid-1" and reason == "replaced"]
     assert not rejected
     assert replaced
+
+
+# -- transient transport errors are retried inside the provider -------------
+
+
+def _search_request() -> AuthorizedRequest:
+    return AuthorizedRequest(
+        route="rental_listing.search",
+        method="GET",
+        query={"pageIndex": 1, "pageSize": 10},
+        body=None,
+        request_id="req-retry",
+    )
+
+
+def test_authorized_fetch_retries_transport_error_then_succeeds() -> None:
+    # A one-shot 云枢 ConnectError must never surface as
+    # NetworkRequiredError: the same request is retried in place and the
+    # successful retry's response is returned unchanged.
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
+    bootstrap = FakeBootstrap(None)
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise httpx.ConnectError("boom")
+        return httpx.Response(200, json=_ok_envelope())
+
+    delays: list[float] = []
+    provider = _provider(
+        store, bootstrap, handler, sleep=lambda dt: delays.append(dt)
+    )
+
+    response = provider.authorized_fetch(_search_request())
+
+    assert response.status_code == 200
+    assert calls["n"] == 2
+    # One back-off between the failed first attempt and the retry.
+    assert delays == [0.5]
+    # Transport errors are not credential failures: no refresh, no latch.
+    assert bootstrap.refresh_calls == []
+    assert provider.status().state is ConnectionState.READY
+
+
+def test_authorized_fetch_retries_transport_error_three_times_then_raises() -> None:
+    # Only after the last (3rd) attempt does the provider log
+    # network_failed and raise NetworkRequiredError.
+    from app.domain.errors import NetworkRequiredError
+
+    store = FakeStore(_credential(expires_at=NOW + timedelta(minutes=50)))
+    bootstrap = FakeBootstrap(None)
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        raise httpx.ConnectError("boom")
+
+    delays: list[float] = []
+    provider = _provider(
+        store, bootstrap, handler, sleep=lambda dt: delays.append(dt)
+    )
+
+    with pytest.raises(NetworkRequiredError):
+        provider.authorized_fetch(_search_request())
+
+    assert calls["n"] == 3
+    # Back-off after attempt 1 and attempt 2, not after the final failure.
+    assert delays == [0.5, 1.5]

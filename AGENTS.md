@@ -1,11 +1,13 @@
 # 项目规则
 
-## crm_connector MCP ↔ Hermes 技能联动
+## 维护范围：停止 Hermes 联动维护
 
-- 房源技能的**唯一来源**是 Hermes 技能目录（`~/AppData/Local/hermes/skills/`）。仓库内不得保留技能副本（已清理）。
-- **当 `services/crm_connector` 的 MCP 服务有更改时，必须检查 Hermes 侧对应技能是否需要同步修改**：
-  - 工具集变更（新增/删除/重命名 MCP 工具）→ 检查 rental-search / sale-search / listing-screening 等技能的调用约定；
-  - input/output schema 或默认值变更（如 `scope` 默认值、过滤目录、分页上限）→ 检查技能的查询纪律与筛选规则；
-  - 上游接口行为变更 → 检查技能中"实测验证"类说明（CDN 后缀规则、cell_code 解析、中心点解析顺序等）；
-  - 完成代码修改后，提醒用户在 Hermes 技能目录中核对并同步对应技能。
-- 同理适用于 `services/property_verification`（pv-mcp）与其对应技能（pv-verify）。
+- Hermes 侧接口适配、技能、脚本及渠道流程停止维护，不属于本项目后续开发、测试、兼容或验收范围。
+- 修改 `services/crm_connector` 或 `services/property_verification` 的 HTTP/MCP 工具、schema、默认值或上游接口行为时，无需检查、同步或兼容 Hermes，也无需提醒同步 Hermes 技能。
+- 本项目自身的 HTTP/MCP 接口及其契约继续维护，供其他 Agent 和客户端使用；停止维护 Hermes 不等于停止维护 MCP。
+- 不修改 Hermes 技能目录，不在仓库中新增或恢复 Hermes 技能副本。历史 Hermes 文档仅保留为参考，不再作为当前实现或验收依据。
+
+## 归档视觉识别的验收边界
+
+- 以本项目的独立识别命令、视觉结果库、历史归档补全和本地筛选能力为验收对象，不依赖 Hermes 流水线、视觉审核门禁、推荐名单或海报生成。
+- 项目内部的模型调用、结果解析、三值逻辑、冲突处理、缓存与失效机制，以及归档数据完整性仍需独立验证。

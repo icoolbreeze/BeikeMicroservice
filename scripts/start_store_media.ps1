@@ -5,10 +5,9 @@ $serviceDir = Join-Path $repoRoot 'services\store_media'
 $python = 'C:\ProgramData\miniconda3\python.exe'
 $port = 8010
 
-# 清水房本地日 loop:打开后,uvicorn 启动时会顺带起 `roughcast-daily-loop`
-# 线程——它内部按 Asia/Shanghai 当日把 A → Shadow score → B 串起来。
-# 不要写到仓库的 .env.example(那里留默认 0,本地长跑用这个脚本设进程级 env)。
-$env:SM_ROUGHCAST_CRAWL_ENABLED = '1'
+# 清水房 daily loop 默认关闭，避免和租赁本地化抢同一 CRM 账号额度。
+# 需要采集时再改为 1。
+$env:SM_ROUGHCAST_CRAWL_ENABLED = '0'
 
 if (-not (Test-Path -LiteralPath $python)) {
     throw "Python runtime was not found: $python"
@@ -29,4 +28,4 @@ Start-Process `
     -RedirectStandardOutput (Join-Path $serviceDir 'run\store_media.out.log') `
     -RedirectStandardError (Join-Path $serviceDir 'run\store_media.err.log')
 
-Write-Output "store_media start requested on 0.0.0.0:$port (roughcast-daily-loop enabled)"
+Write-Output "store_media start requested on 0.0.0.0:$port (roughcast-daily-loop disabled)"

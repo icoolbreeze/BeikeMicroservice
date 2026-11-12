@@ -1,0 +1,24 @@
+[Unit]
+Description=CRM connector (rental localization)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/crm-connector/current
+Environment=APP_ENV=production
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=-/etc/crm-connector/crm-connector.env
+ExecStart=/opt/crm-connector/venv/bin/uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8020
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/crm-connector
+
+[Install]
+WantedBy=multi-user.target
