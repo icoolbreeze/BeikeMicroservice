@@ -253,7 +253,7 @@ def test_dashboard_page_is_served(tmp_path) -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "买卖" in response.text
-    assert "/api/v1/archive/sale/status" in response.text
+    assert "/api/v1/archive/sale/dashboard" in response.text
 
 
 def test_tick_localizes_a_listing_without_sensitive_fields(tmp_path) -> None:

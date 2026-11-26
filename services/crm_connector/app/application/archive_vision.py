@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from app.infrastructure.archive_vision_store import ArchiveVisionStore
+from app.application.archive_telemetry import WorkerTelemetry, new_model_stats, record_usage
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,17 @@ PROMPT_VERSION = "archive-print-labels-flat-v3"
 MODEL_ID = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning"
 SCHEMA_VERSION = "1.0"
 RULES_VERSION = "2026-11-11-v2"
+
+TRANSIENT_ERROR_COOLDOWN_SECONDS = 900
+PERMANENT_ERROR_COOLDOWN_SECONDS = 86400
+PERMANENT_ERROR_CODES = frozenset({"download_http_404", "download_http_410", "download_http_415"})
+_AREA_TOKEN_RE = re.compile("(?:\\d+(?:\\.\\d+)?\\s*(?:m[\u00b22]?|\u5e73\u7c73|\u5e73\u65b9\u7c73)|\u00b2)$", re.IGNORECASE)
+
+
+class _ImageProcessingError(Exception):
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
 
 PROMPT_TEXT = (
     "你是户型图文字提取器。只输出一个JSON对象，恰好包含image_kind、readability、labels三个字段。\n"
@@ -139,6 +151,9 @@ def normalize_image_url(url: str) -> str:
         url = url[:-1]
     if url.endswith("."):
         url = url[:-1]
+    if "://" in url:
+        scheme, rest = url.split("://", 1)
+        url = scheme + "://" + re.sub(r"/{2,}", "/", rest)
     return url
 
 
@@ -278,7 +293,7 @@ def derive_labels(image_kind: str, readability: str, labels: list[str]) -> Deriv
         if not isinstance(token, str):
             continue
         token = token.strip()
-        if not token or token in ignored_tokens or "²" in token or "m" in token.lower():
+        if not token or token in ignored_tokens or "²" in token or _AREA_TOKEN_RE.search(token):
             continue
 
         negated = None
@@ -809,16 +824,19 @@ def rollup_listing(refs_and_derived: list, *, crm: CrmHints, observations: list[
     garden_pos_set = {d.garden_position for d in ok_derived if d.garden_position}
     garden_position = list(garden_pos_set)[0] if len(garden_pos_set) == 1 else None
 
-    shop_levels = [d.shop_level for d in ok_derived if d.shop_level is not None]
-    shop_level = shop_levels[0] if shop_levels else None
+    shop_levels = {d.shop_level for d in ok_derived if d.shop_level is not None}
+    if len(shop_levels) == 1:
+        shop_level = next(iter(shop_levels))
+    else:
+        shop_level = None
+        if len(shop_levels) > 1:
+            is_ground_shop = None
 
     source_url = refs_and_derived[0][0].image_url if refs_and_derived else None
     urls = [r.image_url for r, _ in refs_and_derived] if isinstance(refs_and_derived[0], (tuple, list)) else [item["ref"].image_url for item in refs_and_derived]
     image_set_sha256 = image_set_fingerprint(urls)
 
     vision_status = "ready" if floor_plan_status in ("ok", "conflict") else "partial"
-    if vision_status == "conflict":
-        vision_status = "ready"
 
     return ListingVision(
         biz=biz,
@@ -853,21 +871,36 @@ def rollup_listing(refs_and_derived: list, *, crm: CrmHints, observations: list[
     )
 
 
-def default_download_image(url: str) -> bytes | None:
+def _download_image_checked(url: str) -> bytes:
     if not url:
-        return None
+        raise _ImageProcessingError("download_empty_url")
     norm = normalize_image_url(url)
-    req_url = norm.rstrip('/') + '.800x.jpg'
+    req_url = norm.rstrip("/") + ".800x.jpg"
     try:
         req = urllib.request.Request(req_url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             content = resp.read(5 * 1024 * 1024 + 1)
             if len(content) > 5 * 1024 * 1024:
-                return None
+                raise _ImageProcessingError("download_too_large")
             if not content.startswith(b"\xff\xd8"):
-                return None
+                raise _ImageProcessingError("download_not_jpeg")
             return content
+    except _ImageProcessingError:
+        raise
+    except urllib.error.HTTPError as e:
+        if e.code in (403, 404, 410, 415):
+            raise _ImageProcessingError(f"download_http_{e.code}") from None
+        if 400 <= e.code < 500:
+            raise _ImageProcessingError("download_http_4xx") from None
+        raise _ImageProcessingError("download_http_5xx") from None
     except Exception:
+        raise _ImageProcessingError("download_network_error") from None
+
+
+def default_download_image(url: str) -> bytes | None:
+    try:
+        return _download_image_checked(url)
+    except _ImageProcessingError:
         return None
 
 
@@ -876,7 +909,7 @@ _MODEL_RATE_LOCK = threading.Lock()
 _MODEL_LAST_REQUEST = 0.0
 
 
-def default_call_model(img_bytes: bytes, *, stop_event=None, min_request_interval=0.) -> tuple[str, str, list[str], dict] | None:
+def default_call_model(img_bytes: bytes, *, stop_event=None, min_request_interval=0., telemetry=None) -> tuple[str, str, list[str], dict] | None:
     global _MODEL_LAST_REQUEST
     def pause(seconds):
         if stop_event is not None:
@@ -932,6 +965,8 @@ def default_call_model(img_bytes: bytes, *, stop_event=None, min_request_interva
                         return None
                     _MODEL_LAST_REQUEST = time.monotonic()
             try:
+                if telemetry is not None:
+                    telemetry['http_attempts'] += 1
                 with urllib.request.urlopen(req, timeout=22.0) as resp:
                     if resp.status == 429:
                         sleep_time = _parse_retry_after(resp.headers, 2.0 ** attempt)
@@ -940,6 +975,7 @@ def default_call_model(img_bytes: bytes, *, stop_event=None, min_request_interva
                         continue
                     body = resp.read().decode("utf-8")
                     res_json = json.loads(body)
+                    record_usage(telemetry, res_json.get('usage'))
                     choices = res_json.get("choices")
                     if not choices:
                         return None
@@ -950,7 +986,11 @@ def default_call_model(img_bytes: bytes, *, stop_event=None, min_request_interva
                     content = message.get("content")
                     if not content:
                         return None
-                    parsed = json.loads(content)
+                    cleaned = str(content).strip()
+                    if cleaned.startswith("```"):
+                        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
+                        cleaned = re.sub(r"\s*```$", "", cleaned)
+                    parsed = json.loads(cleaned)
                     if not isinstance(parsed, dict):
                         return None
                     if set(parsed.keys()) != {"image_kind", "readability", "labels"}:
@@ -1113,13 +1153,19 @@ def _process_image(store, ref, metrics, downloader, model_caller, offline=False)
     obs = store.get_observation(ref.image_url)
     if _current_observation(obs) and obs.get('status') in ('ok', 'miss'):
         metrics['cache_hit'] += 1
+        metrics['url_cache_hit'] = metrics.get('url_cache_hit', 0) + 1
         return True
     if offline:
         return True
     if _current_observation(obs) and obs.get('status') == 'error':
+        cooldown_seconds = (
+            PERMANENT_ERROR_COOLDOWN_SECONDS
+            if obs.get('error') in PERMANENT_ERROR_CODES
+            else TRANSIENT_ERROR_COOLDOWN_SECONDS
+        )
         try:
             age = (datetime.now(UTC) - datetime.fromisoformat(obs['labeled_at'])).total_seconds()
-            if age < 900:
+            if age < cooldown_seconds:
                 metrics['cooldown'] += 1
                 return True
         except (ValueError, TypeError, KeyError):
@@ -1131,9 +1177,14 @@ def _process_image(store, ref, metrics, downloader, model_caller, offline=False)
     values = dict(model_id=MODEL_ID, prompt_version=PROMPT_VERSION, schema_version=SCHEMA_VERSION,
                   rules_version=RULES_VERSION, labeled_at=datetime.now(UTC).isoformat(), error=None)
     try:
-        blob = downloader(ref.image_url)
-        if not blob or not blob.startswith(b'\xff\xd8'):
-            raise ValueError('download_failed_or_not_jpeg')
+        if downloader is default_download_image:
+            blob = _download_image_checked(ref.image_url)
+        else:
+            blob = downloader(ref.image_url)
+            if not blob:
+                raise _ImageProcessingError('download_failed')
+            if not blob.startswith(b'\xff\xd8'):
+                raise _ImageProcessingError('download_not_jpeg')
         values['image_sha256'] = hashlib.sha256(blob).hexdigest()
         with store._connect() as conn:
             cached = conn.execute("SELECT * FROM image_observation WHERE image_sha256=? AND model_id=? AND prompt_version=? AND (schema_version=? OR schema_version IS NULL) AND status IN ('ok','miss') LIMIT 1",
@@ -1141,15 +1192,21 @@ def _process_image(store, ref, metrics, downloader, model_caller, offline=False)
         if cached:
             kind, readability, labels = cached['image_kind'], cached['readability'], json.loads(cached['labels_json'] or '[]')
             metrics['cache_hit'] += 1
+            metrics['sha_cache_hit'] = metrics.get('sha_cache_hit', 0) + 1
         else:
             response = model_caller(blob)
             if response is None:
-                raise ValueError('model_call_failed')
+                raise _ImageProcessingError('model_call_failed')
             kind, readability, labels, _ = response
         derived = derive_labels(kind, readability, labels)
         values.update(image_kind=kind, readability=readability, labels_json=json.dumps(labels, ensure_ascii=False),
                       derived_json=json.dumps(asdict(derived), ensure_ascii=False), status=derived.status)
         metrics['success' if derived.status == 'ok' else 'miss'] += 1
+    except _ImageProcessingError as err:
+        values.update(status='error', error=err.code, image_kind=None, readability=None,
+                      labels_json=None, derived_json=None)
+        metrics['error'] += 1
+        metrics['has_failure'] = True
     except Exception:
         # Exceptions may contain keys, full response bodies or URLs. Persist only a fixed code.
         values.update(status='error', error='image_processing_failed', image_kind=None, readability=None,
@@ -1161,7 +1218,7 @@ def _process_image(store, ref, metrics, downloader, model_caller, offline=False)
 
 
 def _new_metrics(budget=None):
-    return dict(success=0, miss=0, error=0, cache_hit=0, pending=0, cooldown=0,
+    return dict(success=0, miss=0, error=0, cache_hit=0, url_cache_hit=0, sha_cache_hit=0, pending=0, cooldown=0,
                 attempted=0, scanned=0, has_failure=False, budget=budget, pass_complete=False)
 
 
@@ -1271,6 +1328,7 @@ class ArchiveVisionRunner:
         self._thread = None
         self._lock = None
         self.last_metrics = None
+        self._telemetry = None
 
     def _acquire(self):
         _validate(self.rental_db, self.sale_db, self.vision_db, self.model_caller)
@@ -1278,25 +1336,44 @@ class ArchiveVisionRunner:
         if not lock.acquire():
             raise RuntimeError('Another archive vision process is already running')
         self._lock = lock
+        self._telemetry = WorkerTelemetry(self.vision_db, self.min_free_gib)
+        self._telemetry.__enter__()
 
     def _storage_ok(self):
         parent = Path(self.vision_db).resolve().parent
         while not parent.exists():
             parent = parent.parent
-        return shutil.disk_usage(parent).free >= self.min_free_gib * 1024**3
+        free = shutil.disk_usage(parent).free / 1024**3
+        if self._telemetry:
+            self._telemetry.state('running', disk_free_gib=round(free, 3))
+        return free >= self.min_free_gib
 
     def _run(self, budget):
+        if self._telemetry:
+            self._telemetry.state('running')
         if not self._storage_ok():
             metrics = _new_metrics()
             metrics.pop('budget')
             metrics['status'] = 'paused_storage'
         else:
-            caller = self.model_caller or (lambda blob: default_call_model(blob, stop_event=self._stop_event, min_request_interval=4.))
+            model_stats = new_model_stats()
+            base_caller = self.model_caller or (lambda blob: default_call_model(blob, stop_event=self._stop_event, min_request_interval=4., telemetry=model_stats))
+            def caller(blob):
+                started = time.monotonic()
+                model_stats['model_calls'] += 1
+                try:
+                    return base_caller(blob)
+                finally:
+                    model_stats['model_seconds'] += time.monotonic() - started
             metrics = _batch(self.rental_db, self.sale_db, self.vision_db, budget, self.scan_size,
                              self.downloader or default_download_image, caller,
                              self._stop_event)
             metrics['status'] = 'ok'
+            metrics.update(model_stats)
+            metrics['average_model_seconds'] = model_stats['model_seconds'] / model_stats['model_calls'] if model_stats['model_calls'] else None
         self.last_metrics = metrics
+        if self._telemetry:
+            self._telemetry.batch(metrics)
         logger.info('archive_vision %s', json.dumps(metrics))
         return metrics
 
@@ -1305,6 +1382,9 @@ class ArchiveVisionRunner:
         try:
             return self._run(min(self.batch_size, self.limit) if self.limit is not None else self.batch_size)
         finally:
+            if self._telemetry:
+                self._telemetry.close(error=sys.exc_info()[0] is not None)
+                self._telemetry = None
             self._lock.release()
             self._lock = None
 
@@ -1332,11 +1412,15 @@ class ArchiveVisionRunner:
                 if remaining == 0 or (result['pass_complete'] and not watch):
                     break
                 if watch:
-                    self._stop_event.wait(self.poll_interval)
+                    wait_seconds = min(5.0, self.poll_interval) if (not result['pass_complete'] and result.get('pending', 0) > 0) else self.poll_interval
+                    self._stop_event.wait(wait_seconds)
                 elif result['scanned'] == 0 and not result['pass_complete']:
                     raise RuntimeError('Scanner made no progress')
             return total
         finally:
+            if self._telemetry:
+                self._telemetry.close(error=sys.exc_info()[0] is not None)
+                self._telemetry = None
             self._lock.release()
             self._lock = None
 

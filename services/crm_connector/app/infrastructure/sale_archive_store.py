@@ -103,6 +103,8 @@ CREATE TABLE IF NOT EXISTS daily_counters (
     request_count INTEGER NOT NULL DEFAULT 0,
     detail_count INTEGER NOT NULL DEFAULT 0
 );
+CREATE INDEX IF NOT EXISTS idx_crawl_log_listing_id ON crawl_log (listing_id, id);
+CREATE INDEX IF NOT EXISTS idx_listing_current_freshness ON listing_current (district_id, is_active, detail_status, detail_captured_at);
 """
 
 DETAIL_STATUS_NONE = "none"

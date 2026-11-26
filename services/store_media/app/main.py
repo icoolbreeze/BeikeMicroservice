@@ -216,6 +216,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def sale_archive_status() -> Response:
         return _proxy_crm("/api/v1/archive/sale/status", timeout=30)
 
+    def _archive_dashboard_proxy(path: str) -> Response:
+        result = _proxy_crm(path, timeout=10)
+        result.headers["Cache-Control"] = "no-store"
+        return result
+
+    @app.get("/api/v1/archive/vision/status", include_in_schema=False)
+    def vision_dashboard_status() -> Response:
+        return _archive_dashboard_proxy("/api/v1/archive/vision/status")
+
+    @app.get("/api/v1/archive/{biz}/dashboard", include_in_schema=False)
+    def archive_dashboard_status(biz: str) -> Response:
+        if biz not in ("rental", "sale"):
+            return Response(status_code=404)
+        return _archive_dashboard_proxy(f"/api/v1/archive/{biz}/dashboard")
+
+    @app.get("/api/v1/archive/{biz}/issues", include_in_schema=False)
+    def archive_dashboard_issues(biz: str, request: Request) -> Response:
+        from urllib.parse import urlencode
+        if biz not in ("rental", "sale"):
+            return Response(status_code=404)
+        query = urlencode({key: request.query_params[key] for key in
+                           ("status", "district_id", "page", "page_size")
+                           if key in request.query_params})
+        return _archive_dashboard_proxy(f"/api/v1/archive/{biz}/issues" + ("?" + query if query else ""))
+
     app.include_router(router)
 
     static_dir = Path(__file__).resolve().parent.parent / "static"

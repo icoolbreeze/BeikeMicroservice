@@ -1,538 +1,84 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>房源归档看板</title>
-  <style>
-    :root {
-      --bg: #0b1020;
-      --panel: #141a2e;
-      --panel-2: #171f36;
-      --line: #243049;
-      --line-strong: #33436b;
-      --text: #e8edf7;
-      --muted: #8b97b3;
-      --faint: #5f6c8a;
-      --ok: #3dd68c;
-      --warn: #f5c15c;
-      --bad: #ff6b7a;
-      --accent: #6ea8fe;
-      --bar: #1e2a44;
-    }
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0; padding: 0;
-      background: var(--bg); color: var(--text);
-      font: 14px/1.5 "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-    a { color: var(--accent); }
-
-    /* ---- header ---- */
-    header {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; padding: 20px 28px 14px; flex-wrap: wrap;
-    }
-    h1 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: .02em; }
-    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-    .head-right { display: flex; align-items: center; gap: 14px; color: var(--muted); font-size: 13px; }
-    #clock { font-variant-numeric: tabular-nums; }
-    .refresh-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--panel-2); color: var(--text);
-      border: 1px solid var(--line-strong); border-radius: 8px;
-      padding: 6px 12px; font-size: 13px; cursor: pointer;
-    }
-    .refresh-btn:hover { border-color: var(--accent); }
-    .refresh-btn svg { width: 13px; height: 13px; }
-    .refresh-btn.spinning svg { animation: spin .9s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    main { padding: 0 28px 40px; }
-
-    /* ---- tabs ---- */
-    .tabs {
-      display: inline-flex; gap: 4px; padding: 4px;
-      background: var(--panel); border: 1px solid var(--line);
-      border-radius: 10px; margin-bottom: 16px;
-    }
-    .tab {
-      appearance: none; border: 0; cursor: pointer;
-      background: transparent; color: var(--muted);
-      font: inherit; font-size: 14px; font-weight: 600;
-      padding: 7px 22px; border-radius: 7px;
-    }
-    .tab:hover { color: var(--text); }
-    .tab.active { background: var(--line-strong); color: var(--text); }
-
-    .board { display: grid; gap: 14px; }
-    .board[hidden] { display: none; }
-
-    /* ---- status chips ---- */
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 7px;
-      border: 1px solid var(--line); border-radius: 999px;
-      background: var(--panel); padding: 5px 13px;
-      font-size: 13px; color: var(--text); white-space: nowrap;
-    }
-    .chip b { font-weight: 600; }
-    .chip .dim { color: var(--muted); }
-    .chip.ok    { border-color: rgba(61,214,140,.45);  background: rgba(61,214,140,.08); }
-    .chip.warn  { border-color: rgba(245,193,92,.45);  background: rgba(245,193,92,.08); }
-    .chip.bad   { border-color: rgba(255,107,122,.5);  background: rgba(255,107,122,.09); }
-    .chip.muted { opacity: .75; }
-    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
-    .dot.pulse { animation: pulse 1.6s ease-in-out infinite; }
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(61,214,140,.5); }
-      55%      { box-shadow: 0 0 0 6px rgba(61,214,140,0); }
-    }
-
-    /* ---- cards / grids ---- */
-    .kpis {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
-      gap: 12px;
-    }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px 16px;
-    }
-    .card > .label { color: var(--muted); font-size: 12px; letter-spacing: .04em; }
-    .value {
-      font-size: 26px; font-weight: 700; margin-top: 4px;
-      font-variant-numeric: tabular-nums; line-height: 1.15;
-    }
-    .value.bad { color: var(--bad); }
-    .value.warn { color: var(--warn); }
-    .grid2 { display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; }
-    @media (max-width: 960px) { .grid2 { grid-template-columns: 1fr; } }
-
-    .meta { color: var(--muted); font-size: 13px; display: grid; gap: 7px; margin-top: 10px; }
-    .meta b { color: var(--text); font-weight: 600; }
-    .meta .abort { color: var(--bad); }
-
-    .bar {
-      height: 8px; background: var(--bar); border-radius: 99px; overflow: hidden;
-    }
-    .bar > span {
-      display: block; height: 100%; width: 0;
-      background: linear-gradient(90deg, var(--accent), var(--ok));
-      border-radius: 99px; transition: width .4s ease;
-    }
-    .bar-row { margin-top: 14px; }
-    .bar-label { color: var(--muted); font-size: 12.5px; margin-top: 7px; font-variant-numeric: tabular-nums; }
-
-    /* ---- table ---- */
-    .card .table-head {
-      display: flex; align-items: baseline; justify-content: space-between;
-      margin-bottom: 6px;
-    }
-    .table-note { color: var(--faint); font-size: 12px; }
-    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-    th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); }
-    tbody tr:last-child td { border-bottom: 0; }
-    th { color: var(--muted); font-size: 12px; font-weight: 600; }
-    td.num, th.num { text-align: right; }
-    tbody tr:hover td { background: rgba(110,168,254,.04); }
-    tr.current td { background: rgba(110,168,254,.08); }
-    tr.current td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-    .dist-id { color: var(--faint); font-size: 12px; margin-left: 5px; }
-    td .bar { min-width: 90px; }
-    .pct-text { color: var(--muted); font-size: 12px; margin-top: 3px; }
-    .empty { color: var(--muted); text-align: center; padding: 22px 0; }
-
-    /* ---- banner ---- */
-    .banner {
-      border: 1px solid rgba(255,107,122,.45);
-      background: rgba(255,107,122,.09);
-      color: var(--bad); border-radius: 10px;
-      padding: 9px 14px; font-size: 13px;
-    }
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>房源归档看板</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c2e;--line:#2a3853;--text:#eef3ff;--muted:#9baac4;--blue:#8db8ff;--green:#53dba2;--amber:#f4c16b;--red:#ff8995}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 "Segoe UI","Microsoft YaHei",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}a{color:var(--blue)}:focus-visible{outline:2px solid var(--blue);outline-offset:3px}header,main{max-width:1600px;margin:auto;padding:24px 28px}header{display:flex;justify-content:space-between;gap:16px;align-items:center;padding-bottom:12px}h1{font-size:24px;margin:0}h2{font-size:17px;margin:0 0 14px}h3{font-size:14px;margin:0 0 10px}p{margin:8px 0}.muted,small{color:var(--muted)}.head-right{text-align:right}.button,.tab,.sort{border:1px solid var(--line);color:var(--text);background:var(--panel);border-radius:8px;padding:7px 13px}.button:hover,.tab:hover{border-color:var(--blue)}.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}.tab[aria-selected=true]{background:#294974;border-color:#5e8cc8}.summary{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.badge{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--muted);font-size:12px}.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}.notice{padding:12px 15px;border:1px solid var(--line);border-left:3px solid var(--amber);background:#1d2436;border-radius:8px;margin-bottom:16px}.notice.bad{border-left-color:var(--red)}.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px}.metric{display:block;width:100%;text-align:left;color:var(--text)}button.metric:hover{border-color:var(--blue)}.label{color:var(--muted);font-size:12px}.number{font-size:27px;font-weight:700;line-height:1.3;font-variant-numeric:tabular-nums;margin-top:7px}.number.bad{color:var(--red)}.two{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-bottom:16px}.row{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.progress{height:7px;background:#29344b;border-radius:5px;overflow:hidden;margin:13px 0 7px}.progress span{display:block;height:100%;background:linear-gradient(90deg,#82aeff,#53dba2)}.meta{display:grid;gap:7px}.table-scroll{overflow:auto;max-width:100%}table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;white-space:nowrap}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{font-size:12px;color:var(--muted);font-weight:500}tfoot{font-weight:600}tbody tr:hover{background:#1c2940}.mobile-hint{display:none}.current{background:#1e304b}.sort{border:0;background:none;padding:3px;color:inherit}.filter{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 10px;color:var(--text);max-width:190px}details{margin-top:14px}summary{cursor:pointer;color:var(--blue)}.empty{padding:35px;text-align:center;color:var(--muted)}.trend{display:flex;align-items:flex-end;gap:10px;height:105px;margin-top:16px}.day{flex:1;text-align:center;min-width:0;font-size:11px;color:var(--muted)}.day .column{display:block;background:#658dc9;border-radius:4px 4px 0 0;min-height:1px;max-width:65px;margin:0 auto 5px}.footer{color:var(--muted);font-size:12px;margin:18px 0}.issue-id{white-space:normal;word-break:break-all;max-width:200px}.chips{display:flex;gap:8px;flex-wrap:wrap}dialog{color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:14px;width:min(1100px,95vw);max-height:86vh;padding:22px}dialog::backdrop{background:#040814b8}.dialog-head{position:sticky;top:-22px;background:var(--panel);padding:8px 0;z-index:1}.dialog-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}.nowrap{white-space:nowrap}
+@media(max-width:760px){.mobile-hint{display:block;margin:8px 0}header{align-items:flex-start}header,main{padding:16px}.two{grid-template-columns:1fr}.head-right small{display:none}.number{font-size:24px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}.tab{padding:7px 11px}h1{font-size:21px}.table-scroll table{min-width:880px}dialog .table-scroll table{min-width:800px}}
+@media(prefers-reduced-motion:no-preference){.progress span{transition:width .25s}}
+</style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>房源归档看板</h1>
-      <div class="sub">租赁 / 买卖归档实时状态 · 每 15 秒自动刷新</div>
-    </div>
-    <div class="head-right">
-      <span id="updated">尚未刷新</span>
-      <span id="clock"></span>
-      <button class="refresh-btn" id="refresh-btn" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
-        </svg>
-        刷新
-      </button>
-    </div>
-  </header>
-
-  <main>
-    <nav class="tabs" role="tablist">
-      <button class="tab active" type="button" data-tab="rental" role="tab">租赁</button>
-      <button class="tab" type="button" data-tab="sale" role="tab">买卖</button>
-    </nav>
-
-    <!-- ============ 租赁 ============ -->
-    <section class="board" id="board-rental">
-      <div class="banner" data-err hidden></div>
-      <div class="chips">
-        <span data-html="session"></span>
-        <span data-html="thread"></span>
-        <span data-html="window"></span>
-        <span data-html="cap"></span>
-      </div>
-      <section class="kpis">
-        <article class="card"><div class="label">已入库</div><div class="value" data-text="total"></div></article>
-        <article class="card"><div class="label">已补详情</div><div class="value" data-text="complete"></div></article>
-        <article class="card"><div class="label">待补详情</div><div class="value" data-text="pending"></div></article>
-        <article class="card"><div class="label">跳过</div><div class="value" data-text="skipped"></div></article>
-        <article class="card"><div class="label">失败</div><div class="value" data-val="failed"></div></article>
-        <article class="card"><div class="label">今日请求</div><div class="value" data-text="request_count"></div></article>
-        <article class="card"><div class="label">今日详情</div><div class="value" data-text="detail_count"></div></article>
-      </section>
-      <section class="grid2">
-        <article class="card">
-          <div class="label">当前进度</div>
-          <div class="meta" data-html="now"></div>
-          <div class="bar-row">
-            <div class="bar"><span data-width="overall"></span></div>
-            <div class="bar-label" data-text="overall-label"></div>
-          </div>
-        </article>
-        <article class="card">
-          <div class="label">本轮 / 窗口</div>
-          <div class="meta" data-html="run"></div>
-        </article>
-      </section>
-      <article class="card">
-        <div class="table-head">
-          <span class="label">分行政区</span>
-          <span class="table-note">完成率 =（已补详情 + 跳过）/ 入库</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>区</th>
-              <th class="num">入库</th>
-              <th class="num">详情完成</th>
-              <th class="num">待补</th>
-              <th class="num">跳过</th>
-              <th class="num">失败</th>
-              <th>完成率</th>
-            </tr>
-          </thead>
-          <tbody data-districts></tbody>
-        </table>
-      </article>
-    </section>
-
-    <!-- ============ 买卖 ============ -->
-    <section class="board" id="board-sale" hidden>
-      <div class="banner" data-err hidden></div>
-      <div class="chips">
-        <span data-html="session"></span>
-        <span data-html="thread"></span>
-        <span data-html="window"></span>
-        <span data-html="cap"></span>
-      </div>
-      <section class="kpis">
-        <article class="card"><div class="label">已入库</div><div class="value" data-text="total"></div></article>
-        <article class="card"><div class="label">已补详情</div><div class="value" data-text="complete"></div></article>
-        <article class="card"><div class="label">待补详情</div><div class="value" data-text="pending"></div></article>
-        <article class="card"><div class="label">跳过</div><div class="value" data-text="skipped"></div></article>
-        <article class="card"><div class="label">失败</div><div class="value" data-val="failed"></div></article>
-        <article class="card"><div class="label">今日请求</div><div class="value" data-text="request_count"></div></article>
-        <article class="card"><div class="label">今日详情</div><div class="value" data-text="detail_count"></div></article>
-      </section>
-      <section class="grid2">
-        <article class="card">
-          <div class="label">当前进度</div>
-          <div class="meta" data-html="now"></div>
-          <div class="bar-row">
-            <div class="bar"><span data-width="overall"></span></div>
-            <div class="bar-label" data-text="overall-label"></div>
-          </div>
-        </article>
-        <article class="card">
-          <div class="label">本轮 / 窗口</div>
-          <div class="meta" data-html="run"></div>
-        </article>
-      </section>
-      <article class="card">
-        <div class="table-head">
-          <span class="label">分行政区</span>
-          <span class="table-note">完成率 =（已补详情 + 跳过）/ 入库</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>区</th>
-              <th class="num">入库</th>
-              <th class="num">详情完成</th>
-              <th class="num">待补</th>
-              <th class="num">跳过</th>
-              <th class="num">失败</th>
-              <th>完成率</th>
-            </tr>
-          </thead>
-          <tbody data-districts></tbody>
-        </table>
-      </article>
-    </section>
-  </main>
-
-  <script>
-    const POLL_MS = 15000;
-
-    const BOARDS = [
-      { key: "rental", url: "/api/v1/archive/rental/status", band: "租金档" },
-      { key: "sale",   url: "/api/v1/archive/sale/status",   band: "总价档（万元）" },
-    ];
-
-    const fmt = (n) => Number(n || 0).toLocaleString("zh-CN");
-    const capLabel = (n) => (n > 0 ? fmt(n) : "不限制");
-
-    function pct(part, whole) {
-      if (!whole) return 0;
-      return Math.max(0, Math.min(100, Math.round((part / whole) * 100)));
-    }
-
-    function pad(n) { return String(n).padStart(2, "0"); }
-
-    function formatTs(value) {
-      if (!value) return "";
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return value;
-      return (d.getMonth() + 1) + "-" + pad(d.getDate()) + " " +
-        pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
-    }
-
-    function dot(color, pulse) {
-      return '<span class="dot' + (pulse ? " pulse" : "") + '" style="color:var(--' + color + ')"></span>';
-    }
-
-    function loginLink() {
-      return ' <a href="/login" style="text-decoration:none;font-weight:600">前往扫码登录 →</a>';
-    }
-
-    function sessionChip(s) {
-      const state = s.connection_state;
-      if (state === "ready")
-        return '<span class="chip ok">' + dot("ok") + 'CRM 会话 <b>正常</b></span>';
-      if (state === "expiring")
-        return '<span class="chip warn">' + dot("warn") + 'CRM 会话 <b>即将过期</b></span>';
-      if (state === "auth_required")
-        return '<span class="chip bad">' + dot("bad") + '<b>需扫码</b>' + loginLink() + '</span>';
-      return '<span class="chip warn">' + dot("warn") + 'CRM 会话 <b>' +
-        (state || "未知") + "</b></span>";
-    }
-
-    function threadChip(s) {
-      if (!s.enabled)
-        return '<span class="chip muted">' + dot("faint") + '归档 <b>已停用</b></span>';
-      if (s.running)
-        return '<span class="chip ok">' + dot("ok", true) + '归档线程 <b>运行中</b></span>';
-      if (s.within_window)
-        return '<span class="chip warn">' + dot("warn") + '归档线程 <b>等待中</b></span>';
-      return '<span class="chip muted">' + dot("faint") + '归档线程 <b>窗口外暂停</b></span>';
-    }
-
-    function windowChip(s) {
-      const cls = s.within_window ? "ok" : "muted";
-      const text = s.within_window ? "窗口内" : "窗口外";
-      return '<span class="chip ' + cls + '">' + dot(s.within_window ? "ok" : "faint") +
-        '运行窗口 <b>' + s.window_start + "–" + s.window_end + "</b> " +
-        '<span class="dim">' + text + "</span></span>";
-    }
-
-    function nowHtml(s, bandLabel) {
-      const c = s.cursor || {};
-      const extra = c.extra_filters || {};
-      const extraLabel = Object.keys(extra).length
-        ? " · 附加 " + Object.entries(extra).map(([k, v]) => k + "=" + v).join(",")
-        : "";
-      const pendingUnits = c.pending_units_count
-        ? " · 本区待切单元 <b>" + fmt(c.pending_units_count) + "</b>"
-        : "";
-      const crawled = s.districts || [];
-      const knownOrdinal = crawled.findIndex((d) => d.district_id === c.district_id) + 1;
-      const ordinal = knownOrdinal > 0 ? knownOrdinal : (c.district_index || 0) + 1;
-      return [
-        "当前区 <b>" + (c.district_name || "—") + "</b> " + (c.district_id || "") +
-          "（共 " + crawled.length + " 区，游标 " + ordinal + "/" + crawled.length + "）",
-        bandLabel + " <b>" + (c.price_band || "未切分") + "</b>" + extraLabel +
-          " · 第 <b>" + (c.page || 1) + "</b> 页" + pendingUnits,
-        "本页已见 <b>" + fmt(c.seen_count) + "</b> · 待补详情队列 <b>" +
-          fmt(c.pending_detail_count) + "</b>",
-        c.unit_total != null
-          ? "本单元 CRM total <b>" + fmt(c.unit_total) + "</b>"
-          : "本单元 CRM total 尚未探测",
-      ].map((line) => "<div>" + line + "</div>").join("");
-    }
-
-    function runHtml(s) {
-      const run = s.last_run;
-      const runLine = run
-        ? ("最近一轮 <b>#" + run.id + "</b> 状态 <b>" + run.status + "</b>" +
-           (run.price_band ? " · " + run.price_band : "") +
-           "<br>页 " + fmt(run.pages_done) + " · 见到 " + fmt(run.items_seen) +
-           " · 请求 " + fmt(run.request_count) + " · 详情 " + fmt(run.detail_count) +
-           "<br>开始 " + formatTs(run.started_at) +
-           (run.finished_at ? " · 结束 " + formatTs(run.finished_at) : "") +
-           (run.abort_reason ? '<br><span class="abort">中止原因：' + run.abort_reason + "</span>" : ""))
-        : "还没有跑完的轮次";
-      return [
-        "上海日 <b>" + ((s.counters && s.counters.local_date) || "—") + "</b>",
-        "日封顶 请求 <b>" + capLabel(s.daily_request_cap) + "</b> / 详情 <b>" +
-          capLabel(s.daily_detail_cap) + "</b>",
-        runLine,
-      ].map((line) => "<div>" + line + "</div>").join("");
-    }
-
-    function districtsHtml(s) {
-      const currentId = (s.cursor || {}).district_id;
-      const rows = s.districts || [];
-      if (!rows.length) {
-        return '<tr><td colspan="7" class="empty">库里还没有房源</td></tr>';
-      }
-      return rows.map((d) => {
-        const p = pct(d.complete + d.skipped, d.total);
-        const current = d.district_id === currentId;
-        return "<tr" + (current ? ' class="current"' : "") + ">" +
-          "<td>" + d.district_name + '<span class="dist-id">' + d.district_id + "</span></td>" +
-          "<td class='num'>" + fmt(d.total) + "</td>" +
-          "<td class='num'>" + fmt(d.complete) + "</td>" +
-          "<td class='num'>" + fmt(d.pending) + "</td>" +
-          "<td class='num'>" + fmt(d.skipped) + "</td>" +
-          "<td class='num'>" + (d.failed ? '<span style="color:var(--bad)">' + fmt(d.failed) + "</span>" : "0") + "</td>" +
-          "<td><div class='bar'><span style='width:" + p + "%'></span></div>" +
-          "<div class='pct-text'>" + p + "%</div></td>" +
-          "</tr>";
-      }).join("");
-    }
-
-    // The chip wrappers themselves carry data-html; their whole content is
-    // rebuilt on each refresh, so setHtml keeps using the same hook element.
-    function renderBoard(board, s) {
-      const root = document.getElementById("board-" + board.key);
-      const setHtml = (name, value) => {
-        const el = root.querySelector("[data-html='" + name + "']");
-        if (el) el.innerHTML = value;
-      };
-      const setText = (name, value) => {
-        const el = root.querySelector("[data-text='" + name + "']");
-        if (el) el.textContent = value;
-      };
-
-      root.querySelector("[data-err]").hidden = true;
-
-      setHtml("session", sessionChip(s));
-      setHtml("thread", threadChip(s));
-      setHtml("window", windowChip(s));
-      setHtml("cap", '<span class="chip muted"><span class="dim">日封顶</span> 请求 <b>' +
-        capLabel(s.daily_request_cap) + "</b> <span class='dim'>/</span> 详情 <b>" +
-        capLabel(s.daily_detail_cap) + "</b></span>");
-
-      setText("total", fmt(s.listing_total));
-      setText("complete", fmt(s.listing_complete));
-      setText("pending", fmt(s.listing_pending));
-      setText("skipped", fmt(s.listing_skipped));
-      const failedEl = root.querySelector("[data-val='failed']");
-      failedEl.textContent = fmt(s.listing_failed);
-      failedEl.className = "value" + (s.listing_failed > 0 ? " bad" : "");
-      setText("request_count", fmt(s.counters.request_count));
-      setText("detail_count", fmt(s.counters.detail_count));
-
-      setHtml("now", nowHtml(s, board.band));
-
-      const localized = (s.listing_complete || 0) + (s.listing_skipped || 0);
-      const overall = pct(localized, s.listing_total);
-      root.querySelector("[data-width='overall']").style.width = overall + "%";
-      setText("overall-label",
-        "库内完成 " + fmt(localized) + " / " + fmt(s.listing_total) +
-        "（" + overall + "%；完成含跳过的不支持类型）");
-
-      setHtml("run", runHtml(s));
-      root.querySelector("[data-districts]").innerHTML = districtsHtml(s);
-    }
-
-    function showBoardError(board, message) {
-      const el = document.getElementById("board-" + board.key).querySelector("[data-err]");
-      el.hidden = false;
-      el.textContent = message;
-    }
-
-    const inflight = { rental: false, sale: false };
-
-    async function refreshBoard(board) {
-      if (inflight[board.key]) return;
-      inflight[board.key] = true;
-      try {
-        const res = await fetch(board.url, { headers: { Accept: "application/json" } });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        renderBoard(board, await res.json());
-        markUpdated();
-      } catch (e) {
-        showBoardError(board, "无法读取" + (board.key === "sale" ? "买卖" : "租赁") +
-          "归档状态：接口超时或返回错误（" + e.message + "），将继续自动重试");
-      } finally {
-        inflight[board.key] = false;
-      }
-    }
-
-    function refreshAll() {
-      const btn = document.getElementById("refresh-btn");
-      btn.classList.add("spinning");
-      Promise.allSettled(BOARDS.map(refreshBoard)).finally(() => {
-        btn.classList.remove("spinning");
-      });
-    }
-
-    function markUpdated() {
-      document.getElementById("updated").textContent =
-        "更新于 " + new Date().toLocaleTimeString("zh-CN", { hour12: false });
-    }
-
-    // ---- tabs ----
-    function activateTab(key, push) {
-      document.querySelectorAll(".tab").forEach((t) =>
-        t.classList.toggle("active", t.dataset.tab === key));
-      document.getElementById("board-rental").hidden = key !== "rental";
-      document.getElementById("board-sale").hidden = key !== "sale";
-      if (push) history.replaceState(null, "", "#" + key);
-    }
-
-    document.querySelectorAll(".tab").forEach((t) => {
-      t.addEventListener("click", () => activateTab(t.dataset.tab, true));
-    });
-    window.addEventListener("hashchange", () => {
-      const key = location.hash === "#sale" ? "sale" : "rental";
-      activateTab(key, false);
-    });
-
-    // ---- clock ----
-    setInterval(() => {
-      document.getElementById("clock").textContent =
-        new Date().toLocaleString("zh-CN", { hour12: false });
-    }, 1000);
-
-    document.getElementById("refresh-btn").addEventListener("click", refreshAll);
-
-    // Skip polling while the tab is hidden; refresh immediately when it comes back.
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refreshAll();
-    });
-
-    activateTab(location.hash === "#sale" ? "sale" : "rental", false);
-    refreshAll();
-    setInterval(() => { if (!document.hidden) refreshAll(); }, POLL_MS);
-  </script>
+<header><div><h1>房源归档看板</h1><div class="muted">租赁 · 买卖 · 视觉识别</div></div><div class="head-right"><button class="button" id="refresh" type="button">刷新</button><br><small id="clock"></small></div></header>
+<main>
+<nav class="tabs" role="tablist" aria-label="归档业务">
+<button class="tab" role="tab" id="tab-overview" data-tab="overview" type="button">总览</button>
+<button class="tab" role="tab" id="tab-rental" data-tab="rental" type="button">租赁</button>
+<button class="tab" role="tab" id="tab-sale" data-tab="sale" type="button">买卖</button>
+<button class="tab" role="tab" id="tab-vision" data-tab="vision" type="button">视觉识别</button>
+</nav>
+<div id="health" class="summary" aria-label="各业务状态"></div>
+<div style="height:18px"></div>
+<section id="content" role="tabpanel" tabindex="0"></section>
+<p class="footer">业务日期和运行时间统一使用北京时间。页面统计仅反映已归档记录，不能用于确认全市扫描已完成。</p>
+</main>
+<dialog id="issues" aria-labelledby="issues-title"><div class="dialog-head row"><h2 id="issues-title"></h2><button class="button" id="close-issues" type="button" aria-label="关闭记录">关闭</button></div><div id="issues-content" aria-live="polite"></div></dialog>
+<script>
+"use strict";
+const KEYS=["rental","sale","vision"],NAMES={rental:"租赁",sale:"买卖",vision:"视觉识别"};
+const ENDPOINTS={rental:"/api/v1/archive/rental/dashboard",sale:"/api/v1/archive/sale/dashboard",vision:"/api/v1/archive/vision/status"};
+const state=Object.fromEntries(KEYS.map(k=>[k,{data:null,error:null,updated:0,lastAttempt:0,loading:false,samples:[]}]));
+const ui={rental:{search:"",sort:"district_name",asc:true},sale:{search:"",sort:"district_name",asc:true}};
+let active=["overview",...KEYS].includes(location.hash.slice(1))?location.hash.slice(1):"overview";
+let drawer=null,drawerController=null;
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=v=>v===null||v===undefined?"—":Number(v).toLocaleString("zh-CN");
+const time=v=>{if(!v)return"未知";const d=new Date(v);return Number.isNaN(+d)?"未知":d.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai",hour12:false});};
+function percentage(part,total){if(!(Number(total)>0)||part==null)return"—";if(Number(part)>=Number(total))return"100%";return(Math.floor(Math.max(0,Number(part))/Number(total)*10000)/100).toFixed(2)+"%";}
+const width=(p,t)=>Number(t)>0?Math.max(0,Math.min(100,Number(p)/Number(t)*100)):0;
+const reasonNames={disabled:"归档已停用",auth_required:"需要登录",outside_window:"运行窗口外等待",request_cap:"请求额度已用完",thread_stopped:"线程未启动",no_recent_progress:"长时间未发现进展"};
+const visionNames={running:"正在处理",idle:"等待下一批",paused_storage:"磁盘不足暂停",stale:"心跳已过期",unknown:"状态未知",stopped:"已停止",error:"服务异常"};
+function healthLabel(k){const s=state[k];if(s.error)return"读取失败 · 保留上次数据";if(!s.data)return"正在读取";if(Date.now()-s.updated>90000)return"数据陈旧";if(k==="vision")return visionNames[s.data.worker_state]||"未知";const a=s.data.dashboard?.activity||{};return reasonNames[a.reason]||(a.state==="alive_with_recent_progress"?"线程存活 · 最近有进展":"进展待确认");}
+function severity(k){const s=state[k];if(s.error)return"bad";if(!s.data)return"warn";if(Date.now()-s.updated>90000)return"warn";if(k==="vision")return["running","idle"].includes(s.data.worker_state)?"good":["paused_storage","error"].includes(s.data.worker_state)?"bad":"warn";const a=s.data.dashboard?.activity||{};return a.state==="alive_with_recent_progress"?"good":a.state==="inactive"?"":a.state==="attention"?"bad":"warn";}
+function card(label,value,note="",extra=""){return'<article class="card"><div class="label">'+esc(label)+'</div><div class="number '+extra+'">'+fmt(value)+'</div>'+(note?'<small>'+esc(note)+'</small>':"")+"</article>";}
+function issueCard(biz,status,label,value){return'<button type="button" class="card metric" data-issues="'+biz+'" data-status="'+status+'"><span class="label">'+esc(label)+'</span><div class="number '+(value>0&&status==="failed"?"bad":"")+'">'+fmt(value)+'</div><small>查看记录 →</small></button>';}
+function freshness(s){const d=s.data?.dashboard;return(s.error?'<div class="notice bad">'+esc(s.error)+'；保留最近一次成功数据。</div>':"")+'<p class="muted">统计时间：'+esc(time(d?.computed_at||s.data?.computed_at))+' · 最近读取：'+esc(time(s.updated))+(s.error?" · 数据陈旧":"")+"</p>";}
+function trend(rows){if(!rows?.length)return'<p class="muted">暂无历史计数</p>';const max=Math.max(1,...rows.map(r=>r.detail_count));return'<div class="trend">'+rows.map(r=>'<div class="day" title="'+esc(r.local_date+"：详情处理 "+r.detail_count+"；请求 "+r.request_count)+'"><span>'+fmt(r.detail_count)+'</span><span class="column" style="height:'+Math.round(r.detail_count/max*65)+'px"></span>'+esc(r.local_date.slice(5))+"</div>").join("")+"</div>";}
+function rates(s){const a=s.samples;if(a.length<3)return null;const end=a[a.length-1],start=a.find(x=>end.t-x.t>=60000);if(!start||end.n<start.n)return null;return(end.n-start.n)/(end.t-start.t)*60000;}
+function overview(){const ready=["rental","sale"].every(k=>state[k].data?.dashboard?.available);const ts=["rental","sale"].map(k=>state[k].data?.dashboard?.totals);
+const sum=key=>ready?ts.reduce((v,t)=>v+(t?.[key]||0),0):null;
+return'<h2>当前数据概览</h2><div class="grid">'+card("业务归档记录数",sum("total"),"租赁与买卖分别计数，未按物理房源去重")+card("标记在架",sum("active"))+card("在架详情新鲜",sum("active_fresh"),"按各业务详情有效期计算")+card("在架详情待更新",ready?sum("active_stale")+sum("active_pending"):null,"过期详情 + 尚未补全")+'</div><div class="two">'+["rental","sale"].map(k=>{const s=state[k],t=s.data?.dashboard?.totals;return'<article class="card"><div class="row"><h2>'+NAMES[k]+'</h2><button class="button" data-open="'+k+'" type="button">查看业务 →</button></div><p class="'+severity(k)+'">'+esc(healthLabel(k))+'</p><p>在架 '+fmt(t?.active)+' · 非在架 '+fmt(t?.inactive)+'</p><p>详情失败（全库） <b class="'+(t?.failed?"bad":"")+'">'+fmt(t?.failed)+'</b> · 待补（全库） '+fmt(t?.pending)+'</p>'+freshness(s)+'</article>';}).join("")+'</div><article class="card"><div class="row"><h2>视觉识别</h2><button class="button" data-open="vision" type="button">查看视觉状态 →</button></div><p class="'+severity("vision")+'">'+esc(healthLabel("vision"))+'</p><p class="muted">独立观察识图服务心跳、缓存复用与模型调用。全库待识别数量未确认时保留未知。</p></article>';}
+function business(k){const s=state[k],data=s.data;if(!data)return'<div class="empty">'+(s.error?esc(s.error):"正在加载归档数据…")+'</div>';const d=data.dashboard||{},t=d.totals||{},a=d.activity||{},c=data.cursor||{},u=ui[k];const date=data.counters?.local_date||"未知";
+let rows=(d.districts||[]).filter(r=>(r.district_name||"").includes(u.search));rows.sort((x,y)=>{const v=u.sort==="district_name"?String(x[u.sort]||"").localeCompare(String(y[u.sort]||""),"zh-CN"):Number(x[u.sort]||0)-Number(y[u.sort]||0);return u.asc?v:-v;});
+const columns=[["district_name","行政区"],["total","累计"],["active","在架"],["active_fresh","详情新鲜"],["active_stale","过期"],["active_pending","待补"],["failed","失败（全库）"]];
+const rate=rates(s),backlog=(t.active_stale||0)+(t.active_pending||0);
+const eta=rate>0&&d.available?Math.ceil(backlog/rate)+" 分钟处理时间（按当前已知积压估算）":"采样不足或速率为零，暂无法估算";
+const totals=Object.fromEntries(columns.slice(1).map(([key])=>[key,rows.reduce((n,r)=>n+Number(r[key]||0),0)]));
+return'<h2>'+NAMES[k]+'归档</h2>'+freshness(s)+(!d.available?'<div class="notice">归档源库尚未建立，统计不可用。</div>':"")+
+'<div class="grid">'+card("标记在架",t.active)+card("在架详情新鲜",t.active_fresh,"有效期 "+(d.ttl_days??"—")+" 天")+card("在架详情过期",t.active_stale,"含完成但缺少有效采集时间的记录")+card("在架待补详情",t.active_pending)+issueCard(k,"failed","详情失败（全库）",t.failed)+issueCard(k,"skipped_unsupported","跳过（全库）",t.skipped)+'</div>'+
+'<div class="two"><article class="card"><h2>当前任务</h2><p class="'+severity(k)+'">'+esc(healthLabel(k))+'</p><div class="meta"><div>当前行政区 <b>'+esc(c.district_name||"未知")+'</b> · '+(a.current_action==="detail_backfill"?"补全详情":"扫描列表")+'</div><div>最近游标进展 '+esc(time(a.last_progress_at))+'</div><div>最近详情成功 '+esc(time(a.last_success_at))+'</div><div>运行窗口 '+esc(data.window_start)+'–'+esc(data.window_end)+'（北京时间）</div>'+(a.detail_cap_reached?'<div class="warn">详情额度已用完，列表扫描仍可继续。</div>':"")+'</div><details><summary>查看运行详情</summary><p>价格分段 '+esc(c.price_band||"尚未切分")+' · 第 '+fmt(c.page)+' 页 · 当前队列 '+fmt(c.pending_detail_count)+'</p><p>业务日 '+esc(date)+' · 今日请求 '+fmt(data.counters?.request_count)+' · 今日成功详情 '+fmt(data.counters?.detail_count)+'</p><p>最近轮次状态 '+esc(data.last_run?.status||"未知")+(data.last_run?.abort_reason?' · 原因 '+esc(data.last_run.abort_reason):"")+'</p></details></article>'+
+'<article class="card"><h2>库内详情完整度</h2><div class="progress"><span style="width:'+width(t.complete,t.total)+'%"></span></div><p>详情成功率 <b>'+percentage(t.complete,t.total)+'</b> · '+fmt(t.complete)+' / '+fmt(t.total)+'</p><p>已处理率（含跳过） '+percentage((t.complete||0)+(t.skipped||0),t.total)+'</p><p class="muted">累计入库 '+fmt(t.total)+' · 非在架 '+fmt(t.inactive)+'。此比例不代表全市扫描覆盖。</p><p>近期成功详情速率 '+(rate===null?"采样中":rate.toFixed(1)+" 套/分钟")+'</p><small>'+esc(eta)+'；不包含新增任务、窗口外等待及限额影响。</small></article></div>'+
+'<article class="card"><div class="row"><h2>行政区明细</h2><label class="muted">筛选区名 <input class="filter" data-filter="'+k+'" aria-label="筛选行政区" value="'+esc(u.search)+'" placeholder="输入区名"></label></div><small class="mobile-hint">左右滑动查看全部列</small><div class="table-scroll"><table><thead><tr>'+columns.map(([key,label])=>'<th aria-sort="'+(u.sort===key?(u.asc?"ascending":"descending"):"none")+'"><button class="sort" data-sort="'+key+'" data-biz="'+k+'" type="button">'+label+(u.sort===key?(u.asc?" ↑":" ↓"):"")+'</button></th>').join("")+'<th>详情成功率</th><th>本轮扫描</th></tr></thead><tbody>'+rows.map(r=>'<tr'+(r.district_id===c.district_id?' class="current"':"")+'><td>'+esc(r.district_name)+'</td>'+columns.slice(1).map(([key])=>'<td'+(key==="failed"&&r[key]?' class="bad"':"")+'>'+fmt(r[key])+'</td>').join("")+'<td>'+percentage(r.complete,r.total)+'</td><td>'+(r.scan_state==="scanning"?"当前区":"未知")+'</td></tr>').join("")+'</tbody><tfoot><tr><td>'+(u.search?"筛选合计":"合计")+'</td>'+columns.slice(1).map(([key])=>'<td>'+fmt(totals[key])+'</td>').join("")+'<td>'+percentage(rows.reduce((n,r)=>n+Number(r.complete||0),0),totals.total)+'</td><td>不推断</td></tr></tfoot></table></div><small>'+esc(d.coverage_note||"")+'</small></article><article class="card" style="margin-top:16px"><h2>近7天成功详情处理量</h2><small>包含已有房源的详情刷新，不代表新增入库量。</small>'+trend(d.history)+'</article>';}
+function vision(){const s=state.vision,d=s.data;if(!d)return'<div class="empty">'+esc(s.error||"正在读取视觉状态…")+'</div>';const m=d.metrics||{},h=d.heartbeat||{};return'<h2>视觉识别</h2>'+freshness(s)+'<div class="notice"><b class="'+severity("vision")+'">'+esc(healthLabel("vision"))+'</b> · 心跳 '+esc(time(h.updated_at))+'<br>'+esc(d.coverage_reason)+'</div><div class="grid">'+card("最近批次实际模型调用",m.model_calls,"逻辑调用次数；不包含缓存命中")+card("URL 缓存命中",m.url_cache_hit)+card("SHA256 内容复用",m.sha_cache_hit)+card("模型平均调用耗时",m.average_model_seconds==null?null:Number(m.average_model_seconds.toFixed(2)),"秒；包含等待及重试")+card("磁盘可用 GiB",h.disk_free_gib)+card("上游实报 Token",m.total_tokens,"未返回用量时显示未知")+'</div><article class="card"><h2>最近批次</h2><p>统计于 '+esc(time(m.computed_at))+' · 成功 '+fmt(m.success)+' · 未提取有效文字 '+fmt(m.miss)+' · 错误 '+fmt(m.error)+' · 冷却 '+fmt(m.cooldown)+'</p><p>HTTP 尝试 '+fmt(m.http_attempts)+' · 返回用量的响应 '+fmt(m.usage_responses)+' · 输入 Token '+fmt(m.prompt_tokens)+' · 输出 Token '+fmt(m.completion_tokens)+'</p><small>批次待处理标记不作为全库队列数；Token 只汇总实际返回的用量，可能覆盖部分调用。</small></article><div class="two" style="margin-top:16px">'+["rental","sale"].map(k=>{const b=d.businesses?.[k]||{},v=b.stored_status_counts||{},im=b.linked_image_status_counts||{};return'<article class="card"><h2>'+NAMES[k]+'识别结果快照</h2><p>源库标记在架 '+fmt(b.source_active)+' 套 · 已存储房源汇总 '+fmt(b.stored_listing_results)+' 套</p><p>已存储汇总：已汇总 '+fmt(b.stored_listing_results==null?null:(v.ready||0))+' · 部分结果 '+fmt(b.stored_listing_results==null?null:(v.partial||0))+' · 待重算 '+fmt(b.stored_listing_results==null?null:(v.stale||0))+'</p><p>当前规则版本匹配 '+fmt(b.current_version_results)+' 套 · 尚无汇总记录 '+fmt(b.source_without_summary)+' 套</p><p>关联图片观测：有效 '+fmt(im.ok??0)+' · 无有效文字 '+fmt(im.miss??0)+' · 错误 '+fmt(im.error??0)+'</p><small>'+esc(d.validity_note)+'</small></article>';}).join("")+'</div>';}
+function render(){const focus=document.activeElement;const filter=focus?.dataset?.filter;const pos=filter?focus.selectionStart:null;document.querySelectorAll("[data-tab]").forEach(b=>{const chosen=b.dataset.tab===active;b.setAttribute("aria-selected",String(chosen));b.setAttribute("tabindex",chosen?"0":"-1");b.setAttribute("aria-controls","content");});document.getElementById("content").setAttribute("aria-labelledby","tab-"+active);document.getElementById("health").innerHTML=KEYS.map(k=>'<span class="badge '+severity(k)+'">'+NAMES[k]+'：'+esc(healthLabel(k))+'</span>').join("");document.getElementById("content").innerHTML=active==="overview"?overview():active==="vision"?vision():business(active);document.getElementById("refresh").disabled=KEYS.some(k=>state[k].loading);if(filter){const el=document.querySelector('[data-filter="'+filter+'"]');if(el){el.focus();el.setSelectionRange(pos,pos);}}}
+function activate(key,push=true){if(!["overview",...KEYS].includes(key))return;active=key;if(push)history.replaceState(null,"","#"+key);render();refresh(false);}
+async function load(k){const s=state[k];if(s.loading)return;s.loading=true;s.lastAttempt=Date.now();const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);render();try{const r=await fetch(ENDPOINTS[k],{signal:controller.signal,cache:"no-store",headers:{Accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);const data=await r.json();if(k!=="vision"&&(!data.dashboard||!data.counters))throw new Error("数据结构不完整");if(k==="vision"&&!("worker_state" in data))throw new Error("数据结构不完整");s.data=data;s.updated=Date.now();s.error=null;if(k!=="vision"){const sample={t:performance.now(),n:Number(data.counters.detail_count),day:data.counters.local_date};const last=s.samples.at(-1);if(last&&(sample.day!==last.day||sample.n<last.n))s.samples=[];s.samples.push(sample);s.samples=s.samples.filter(x=>sample.t-x.t<=300000);}}catch(e){s.error=e.name==="AbortError"?"请求超时":("读取失败（"+e.message+"）");}finally{clearTimeout(timer);s.loading=false;render();}}
+function refresh(force){if(document.hidden&&!force)return;return Promise.allSettled(KEYS.filter(k=>force||!state[k].updated||active==="overview"||active===k||Date.now()-state[k].lastAttempt>=60000).map(load));}
+function drawIssues(error=null){const x=drawer;if(!x)return;document.getElementById("issues-title").textContent=NAMES[x.biz]+" · "+(x.status==="failed"?"失败记录":"跳过记录");const d=x.data;document.getElementById("issues-content").innerHTML=(error?'<div class="notice bad">'+esc(error)+'</div>':"")+(x.loading?'<p class="muted">正在读取…</p>':"")+(d?'<p class="muted">共 '+fmt(d.total)+' 条 · 第 '+x.page+' 页</p><div class="table-scroll"><table><thead><tr><th>房源编号</th><th>行政区</th><th>尝试时间（北京时间）</th><th>错误码 / 原因</th><th>关联日志</th></tr></thead><tbody>'+d.items.map(r=>'<tr><td class="issue-id">'+esc(r.listing_id)+'</td><td>'+esc(r.district_id)+'</td><td>'+esc(time(r.attempted_at))+'</td><td>'+esc(r.error_code)+'<br><small>'+esc(r.summary)+'</small></td><td>'+fmt(r.log_id)+'</td></tr>').join("")+'</tbody></table></div>'+(!d.items.length?'<p class="empty">暂无对应记录</p>':"")+'<div class="dialog-actions"><button class="button" data-issue-page="-1" type="button" '+(x.page<=1||x.loading?"disabled":"")+'>上一页</button><button class="button" data-issue-page="1" type="button" '+(x.page*20>=d.total||x.loading?"disabled":"")+'>下一页</button></div>':"");}
+async function loadIssues(){if(!drawer)return;drawerController?.abort();const x=drawer,requestId=(x.requestId||0)+1,controller=new AbortController();x.requestId=requestId;drawerController=controller;x.loading=true;drawIssues();const timer=setTimeout(()=>controller.abort(),12000);try{const r=await fetch("/api/v1/archive/"+x.biz+"/issues?status="+encodeURIComponent(x.status)+"&page="+x.page+"&page_size=20",{signal:controller.signal,cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);const data=await r.json();if(drawer!==x||x.requestId!==requestId)return;x.data=data;x.loading=false;drawIssues();}catch(e){if(drawer!==x||x.requestId!==requestId)return;x.loading=false;drawIssues(e.name==="AbortError"?"读取超时，请稍后重试":"读取失败："+e.message);}finally{clearTimeout(timer);}}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.tab)activate(b.dataset.tab);if(b.dataset.open)activate(b.dataset.open);if(b.dataset.sort){const u=ui[b.dataset.biz];u.asc=u.sort===b.dataset.sort?!u.asc:false;u.sort=b.dataset.sort;render();}if(b.dataset.issues){drawer={biz:b.dataset.issues,status:b.dataset.status,page:1,data:null};document.getElementById("issues").showModal();loadIssues();}if(b.dataset.issuePage&&drawer){drawer.page+=Number(b.dataset.issuePage);loadIssues();}});
+document.addEventListener("input",e=>{if(e.target.dataset.filter){ui[e.target.dataset.filter].search=e.target.value;render();}});
+document.querySelector(".tabs").addEventListener("keydown",e=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(e.key))return;const keys=["overview",...KEYS],n=keys.indexOf(active);const next=e.key==="Home"?keys[0]:e.key==="End"?keys.at(-1):keys[(n+(e.key==="ArrowRight"?1:keys.length-1))%keys.length];e.preventDefault();activate(next);document.getElementById("tab-"+next).focus();});
+document.getElementById("refresh").addEventListener("click",()=>refresh(true));
+document.getElementById("close-issues").addEventListener("click",()=>document.getElementById("issues").close());
+document.getElementById("issues").addEventListener("close",()=>{drawer=null;drawerController?.abort();});
+window.addEventListener("hashchange",()=>activate(location.hash.slice(1)||"overview",false));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh(true);});
+function clock(){document.getElementById("clock").textContent=time(Date.now())+" 北京时间";}
+clock();setInterval(clock,1000);render();refresh(true);setInterval(()=>refresh(false),15000);
+window.ArchiveDashboard={percentage};
+</script>
 </body>
 </html>

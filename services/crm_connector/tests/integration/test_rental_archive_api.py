@@ -147,8 +147,8 @@ def test_dashboard_page_is_served(tmp_path) -> None:
     assert "房源归档看板" in response.text
     assert "rental" in response.text
     assert "sale" in response.text
-    assert "/api/v1/archive/rental/status" in response.text
-    assert "/api/v1/archive/sale/status" in response.text
+    assert "/api/v1/archive/rental/dashboard" in response.text
+    assert "/api/v1/archive/sale/dashboard" in response.text
 
 
 def test_tick_localizes_a_listing_without_sensitive_fields(tmp_path) -> None:

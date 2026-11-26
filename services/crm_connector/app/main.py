@@ -146,6 +146,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             allow_headers=["Authorization", "Content-Type"],
         )
     app.include_router(router)
+    from app.api.archive_dashboard import router as dashboard_router
+    app.include_router(dashboard_router)
     static_dir = Path(__file__).resolve().parent / "static"
     dashboard = static_dir / "archive.html"
     login_page = static_dir / "login.html"
