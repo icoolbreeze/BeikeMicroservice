@@ -1,0 +1,111 @@
+{
+ "meta": {
+  "date": "2026-11-23",
+  "viewpoint": "beike-server (viewpoint A)",
+  "mode": "post_correction_single_account_read_only",
+  "supersedes": "minimal-round-2026-11-23.json G1 and G5 POST-as-GET attempts",
+  "redaction": "status/business-code/field-names/lengths/sha256/booleans only; no token, cookie value, phone, id number, name, address, listing text or raw body retained",
+  "retry_policy": "none; exactly one POST per endpoint",
+  "principal_len": 16
+ },
+ "corrections": {
+  "C1_own_customers_search": {
+   "http": 200,
+   "business_code": "0",
+   "errno": null,
+   "success": true,
+   "envelope_keys": [
+    "code",
+    "data",
+    "message",
+    "requestId",
+    "success",
+    "timestamp"
+   ],
+   "data_keys": [
+    "customers",
+    "totalCount"
+   ],
+   "data_shape": {
+    "totalCount": "int",
+    "customers": {
+     "list_len": 1,
+     "item_shape": {
+      "customerId": "int",
+      "name": "str",
+      "avatar": "str"
+     }
+    }
+   },
+   "row_count": 1,
+   "row_keys": [
+    "avatar",
+    "customerId",
+    "name"
+   ],
+   "contains_self_principal": false,
+   "body_len": 234,
+   "body_sha256": "5066a0bb2583b324c780237c73a43f7a74c8f4aac9071674bf5851c37aacba55"
+  },
+  "C2_batch_for_type2": {
+   "http": 400,
+   "business_code": "INVALID_PARAM",
+   "errno": null,
+   "success": false,
+   "envelope_keys": [
+    "code",
+    "data",
+    "message",
+    "requestId",
+    "success",
+    "timestamp"
+   ],
+   "data_keys": null,
+   "data_shape": "NoneType",
+   "row_count": null,
+   "row_keys": null,
+   "contains_self_principal": false,
+   "body_len": 168,
+   "body_sha256": "a8d172676fecd3f7f2babd35091b24a0d540e0cbc3ea5cf4d070dfcb9f46f338"
+  },
+  "C3_notes_houses_history": {
+   "http": 400,
+   "business_code": "INVALID_PARAM",
+   "errno": null,
+   "success": false,
+   "envelope_keys": [
+    "code",
+    "data",
+    "message",
+    "requestId",
+    "success",
+    "timestamp"
+   ],
+   "data_keys": null,
+   "data_shape": "NoneType",
+   "row_count": null,
+   "row_keys": null,
+   "contains_self_principal": false,
+   "body_len": 161,
+   "body_sha256": "33b1bfd390ded17d565915d956ccca3dd72e509d094863270c8e68d5710bbf9d"
+  }
+ },
+ "request_ledger": [
+  {
+   "item": "C1_own_customers_search",
+   "method": "POST",
+   "target": "https://wandou.ke.com/api/v2/notes/customers/search"
+  },
+  {
+   "item": "C2_batch_for_type2",
+   "method": "POST",
+   "target": "https://wandou.ke.com/api/v2/house/resource/batch_for_type2"
+  },
+  {
+   "item": "C3_notes_houses_history",
+   "method": "POST",
+   "target": "https://wandou.ke.com/api/v2/notes/houses/history"
+  }
+ ],
+ "request_total": 3
+}

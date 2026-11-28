@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "date": "2026-11-23",
+    "viewpoint": "beike-server isolated browser",
+    "principal_len": 16,
+    "redaction": "status/booleans/header attrs only"
+  },
+  "csrf": {
+    "cross_site_no_custom_header": {
+      "title": "cs:err",
+      "document_origin": "https://evil.example",
+      "observed": [
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        }
+      ],
+      "cookie_samesite_applied": "Lax",
+      "cookies_sent_note": "Absent SameSite is Lax. Cross-site POST should not include these cookies."
+    },
+    "same_site_with_header": {
+      "title": "房源列表 - 普租",
+      "document_origin": "https://lease-pz.link.lianjia.com",
+      "observed": [
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        }
+      ]
+    }
+  },
+  "postmessage": {
+    "synthetic_unknown_type": {
+      "runtime_signals": {
+        "console_markers": [
+          "[error-handler]接口请求失败: {errno: 401, errmsg: 未登录或登录已过期, details: undefined, code: 401, data: null}",
+          "检查登录态失败: {errno: 401, errmsg: 未登录或登录已过期, details: undefined, code: 401, data: null}",
+          "警告: 未设置ucid(用户唯一标识), 无法统计新增用户数",
+          "initPublicKey prod",
+          "WebSocket connection to 'ws://127.0.0.1:31234/report' failed: Error in connection establishment: net::ERR_CONNECTION_REF"
+        ],
+        "title_unchanged": false,
+        "url_unchanged": false
+      },
+      "document_origin": "https://login.ke.com",
+      "static_basis": "uo() requires c.origin===formBaseUrl/petBaseUrl origin AND contentWindow match"
+    }
+  },
+  "xss_write": "skipped"
+}

@@ -1,0 +1,34 @@
+﻿============ /api/v1/uc/users/search
+${t}`,query:{removeReason:n}}),Qr=(e,t)=>g({method:"delete",url:`/api/v2/knowledge-bases/permissions/${e}/members/batch`,payload:t}),Yr=(e,t)=>g({method:"post",url:`/api/v2/knowledge-bases/permissions/${e}/members/batch`,payload:t}),Di=e=>g({method:"get",url:"/api/v1/uc/users/search",query:e}),Zr=e=>g({method:"get",url:"/api/v1/uc/users/batch",query:e}),Mi=e=>g({method:"get",url:"/api/v1/uc/org/tree",query:e}),Ui=e=>g({method:"get",url:"/api/v1/uc/org/sear
+----------------------------------------
+============ /api/v1/uc/users/page-search
+t",url:"/api/v1/uc/users/batch",query:e}),Mi=e=>g({method:"get",url:"/api/v1/uc/org/tree",query:e}),Ui=e=>g({method:"get",url:"/api/v1/uc/org/search",query:e}),eo=e=>g({method:"get",url:"/api/v1/uc/org/all-names",query:{orgCode:e}}),Li=e=>g({method:"get",url:"/api/v1/uc/users/page-search",query:e});function to(e={}){const t={pageNo:e.pageNo??1,pageSize:e.pageSize??10};if(!e.type)return t;if(t.type=e.type,e.type==="AUDIO"){const n=(e.templateId??[]).filter(
+----------------------------------------
+============ /api/v1/uc/users/batch
+l:`/api/v2/knowledge-bases/permissions/${e}/members/batch`,payload:t}),Yr=(e,t)=>g({method:"post",url:`/api/v2/knowledge-bases/permissions/${e}/members/batch`,payload:t}),Di=e=>g({method:"get",url:"/api/v1/uc/users/search",query:e}),Zr=e=>g({method:"get",url:"/api/v1/uc/users/batch",query:e}),Mi=e=>g({method:"get",url:"/api/v1/uc/org/tree",query:e}),Ui=e=>g({method:"get",url:"/api/v1/uc/org/search",query:e}),eo=e=>g({method:"get",url:"/api/v1/uc/org/all-na
+----------------------------------------
+============ /api/v1/uc/org/search
+e-bases/permissions/${e}/members/batch`,payload:t}),Di=e=>g({method:"get",url:"/api/v1/uc/users/search",query:e}),Zr=e=>g({method:"get",url:"/api/v1/uc/users/batch",query:e}),Mi=e=>g({method:"get",url:"/api/v1/uc/org/tree",query:e}),Ui=e=>g({method:"get",url:"/api/v1/uc/org/search",query:e}),eo=e=>g({method:"get",url:"/api/v1/uc/org/all-names",query:{orgCode:e}}),Li=e=>g({method:"get",url:"/api/v1/uc/users/page-search",query:e});function to(e={}){const t={
+----------------------------------------
+============ /api/v3/notes/list
+.orientation??void 0,totalPrice:en(e.totalPrice??("price"in e?e.price:void 0)),unitPrice:en(e.unitPrice)}}const zi=e=>g({method:"get",url:`/api/v2/notes/detail/${e}`}),Bi=e=>g({method:"get",url:`/api/v2/notes/detail-v2/${e}`}),qi=(e={})=>g({method:"post",url:"/api/v3/notes/list",payload:to(e)}),Vi=()=>g({method:"get",url:"/api/v2/notes/statistics"}),Hi=(e,t)=>{const n=new FormData;return n.append("file",e),be.post("/api/v2/note-files/upload",n,{headers:{"C
+----------------------------------------
+============ /api/v2/notes/detail-v2/
+rea"in e?e.buildArea:void 0)),floor:e.floor??void 0,orientation:e.orientation??void 0,totalPrice:en(e.totalPrice??("price"in e?e.price:void 0)),unitPrice:en(e.unitPrice)}}const zi=e=>g({method:"get",url:`/api/v2/notes/detail/${e}`}),Bi=e=>g({method:"get",url:`/api/v2/notes/detail-v2/${e}`}),qi=(e={})=>g({method:"post",url:"/api/v3/notes/list",payload:to(e)}),Vi=()=>g({method:"get",url:"/api/v2/notes/statistics"}),Hi=(e,t)=>{const n=new FormData;return n.ap
+----------------------------------------
+============ /api/v2/notes/houses/history
+;const s=await g({method:"post",url:"/api/v2/notes/customers/search",payload:r}),u=s.customers??[];return{totalCount:s.totalCount??u.length,pageNo:s.pageNo??t,pageSize:s.pageSize??n,customers:u.map(ro)}}async function bc(e){const t=await g({method:"post",url:"/api/v2/notes/houses/history",payload:{noteId:e}}),n=new Set;return(t??[]).reduce((r,a)=>{if(a.houseId===null||a.houseId===void 0||a.houseDelType!==0&&a.houseDelType!==1&&a.houseDelType!==2&&a.houseDe
+----------------------------------------
+============ /api/v3/aschat/sessions
+g"})}function Zc(){return g({method:"post",url:"/api/v3/aschat/inspirations",payload:{position_type:"AGENT"},hideErrorMessage:!0})}function ed(e){return g({method:"put",payload:e,url:"/api/v3/aschat/config"})}function td(e){return g({method:"get",query:e,url:"/api/v3/aschat/sessions"})}function nd(e){return g({method:"post",payload:e??{},timeout:3e4,url:"/api/v3/aschat/sessions"})}function $o(e){return g({method:"post",payload:e,url:"/api/v3/aschat/cancel"
+----------------------------------------
+pe:"AGENT"},hideErrorMessage:!0})}function ed(e){return g({method:"put",payload:e,url:"/api/v3/aschat/config"})}function td(e){return g({method:"get",query:e,url:"/api/v3/aschat/sessions"})}function nd(e){return g({method:"post",payload:e??{},timeout:3e4,url:"/api/v3/aschat/sessions"})}function $o(e){return g({method:"post",payload:e,url:"/api/v3/aschat/cancel"})}function rd(e,t){return g({method:"get",query:t,url:`/api/v3/aschat/sessions/${e}/records`})}f
+----------------------------------------
+============ /api/v2/notes/statistics
+price:void 0)),unitPrice:en(e.unitPrice)}}const zi=e=>g({method:"get",url:`/api/v2/notes/detail/${e}`}),Bi=e=>g({method:"get",url:`/api/v2/notes/detail-v2/${e}`}),qi=(e={})=>g({method:"post",url:"/api/v3/notes/list",payload:to(e)}),Vi=()=>g({method:"get",url:"/api/v2/notes/statistics"}),Hi=(e,t)=>{const n=new FormData;return n.append("file",e),be.post("/api/v2/note-files/upload",n,{headers:{"Content-Type":"multipart/form-data"},timeout:12e4,signal:t==null?
+----------------------------------------
+============ /api/v2/knowledge-bases/permissions/
+catch(r){Pr(r)==="NOTE_ALREADY_BOUND"?t.skippedNoteIds.push(n):t.failedNotes.push({noteId:n,reason:r instanceof Error?r.message:"添加失败"})}})),t},_i=e=>g({method:"post",url:"/api/v1/knowledge-base/content/ignore-failure",payload:e}),Ki=()=>g({method:"post",url:"/api/v2/knowledge-bases/permissions/has-open-subscribe"}),Xr=(e,t)=>g({method:"get",url:`/api/v2/knowledge-bases/permissions/${e}/members`,query:t}),Wr=(e,t,n)=>g({method:"put",url:`/api/v2/knowledge-
+----------------------------------------
+:n,reason:r instanceof Error?r.message:"添加失败"})}})),t},_i=e=>g({method:"post",url:"/api/v1/knowledge-base/content/ignore-failure",payload:e}),Ki=()=>g({method:"post",url:"/api/v2/knowledge-bases/permissions/has-open-subscribe"}),Xr=(e,t)=>g({method:"get",url:`/api/v2/knowledge-bases/permissions/${e}/members`,query:t}),Wr=(e,t,n)=>g({method:"put",url:`/api/v2/knowledge-bases/permissions/${e}/members/${t}/role`,payload:n}),Jr=(e,t,n="MANUAL")=>g({method:"del
+----------------------------------------

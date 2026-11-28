@@ -1,0 +1,2143 @@
+{
+  "generated_at_utc": "2026-11-27T18:08:32.021593+00:00",
+  "total_targets": 89,
+  "max_workers": 4,
+  "timeout_sec": 10.0,
+  "baseline_probe": {
+    "host": "family.ke.com",
+    "name": "员工门户基线探活",
+    "priority": "BASELINE",
+    "entry_url": "https://family.ke.com/home/portal",
+    "final_url": "https://family.ke.com/home/portal",
+    "http_status": 200,
+    "title": "贝壳+",
+    "verdict": "spa_shell_needs_browser",
+    "identity_match": false,
+    "cas_callback_seen": false,
+    "issued_cookie_names": [
+      "family_front_token",
+      "lianjia_ssid"
+    ],
+    "redirect_hosts": [
+      "family.ke.com"
+    ],
+    "html_bytes": 2214,
+    "error": null,
+    "elapsed_seconds": 1.85
+  },
+  "verdict_counts": {
+    "accessible_verified_or_page": 47,
+    "spa_shell_needs_browser": 25,
+    "login_required": 7,
+    "unreachable_or_error": 7,
+    "denied_403": 3
+  },
+  "by_priority": {
+    "P1": {
+      "accessible_verified_or_page": 23,
+      "spa_shell_needs_browser": 18,
+      "login_required": 3,
+      "unreachable_or_error": 2,
+      "denied_403": 1
+    },
+    "P2": {
+      "denied_403": 2,
+      "accessible_verified_or_page": 24,
+      "spa_shell_needs_browser": 7,
+      "unreachable_or_error": 5,
+      "login_required": 4
+    }
+  },
+  "enter_2b2_count": 72,
+  "enter_2b2_hosts": [
+    "recruit.ke.com",
+    "renshi.ehr.lianjia.com",
+    "okr.ke.com",
+    "ones.ke.com",
+    "report.ke.com",
+    "bpm.ke.com",
+    "bpm-m.ke.com",
+    "finops.ke.com",
+    "bfa.ke.com",
+    "pay.ke.com",
+    "rpm.ke.com",
+    "caigou.ke.com",
+    "budget-control.ke.com",
+    "zichan.ke.com",
+    "mzichan.ke.com",
+    "its.ke.com",
+    "its.lianjia.com",
+    "new-meeting.ke.com",
+    "meeting-assistant.ke.com",
+    "wen.ke.com",
+    "yes-or-no.ke.com",
+    "profile.ke.com",
+    "profile-h5.ke.com",
+    "inrecruit.ke.com",
+    "spi.ke.com",
+    "codin.ke.com",
+    "chip.ke.com",
+    "mdm.ke.com",
+    "kepler.ke.com",
+    "shandian.lianjia.com",
+    "sis.lianjia.com",
+    "legal-compliance.ke.com",
+    "m-legal.ke.com",
+    "contract.ke.com",
+    "case-legal.ke.com",
+    "company-legal.ke.com",
+    "legal-lawyer-library.ke.com",
+    "vprivacy.ke.com",
+    "mknow.ke.com",
+    "homeworld.ke.com",
+    "homeworld-front.ke.com",
+    "apollo.portal.life.ke.com",
+    "cloud.intra.ke.com",
+    "easy.intra.lianjia.com",
+    "compass.ke.com",
+    "risk-platform.ke.com",
+    "workflow.lianjia.com",
+    "fssc.lianjia.com",
+    "xinchou-data.ke.com",
+    "cb.ke.com",
+    "salary-middle.ke.com",
+    "salary-monitor.ke.com",
+    "salary-tax.ke.com",
+    "shebao.ke.com",
+    "ganbu.ke.com",
+    "leader.ke.com",
+    "nltx.ke.com",
+    "hrlearn.ke.com",
+    "resume-agc.ke.com",
+    "vm.ke.com",
+    "vote-admin.ke.com",
+    "admin-huaqiao.ke.com",
+    "admin-study.ke.com",
+    "admin-sunshine.ke.com",
+    "be-admin.ke.com",
+    "esghub.ke.com",
+    "gongyi.ke.com",
+    "jingyingshe-admin.ke.com",
+    "kehome-cms.ke.com",
+    "lcm.ke.com",
+    "m-intelligencecampus-hq.ke.com",
+    "mcg.ke.com"
+  ],
+  "tunnel_cleanup": {
+    "started": true,
+    "terminated": true,
+    "port_released": true,
+    "return_code": 1
+  },
+  "results": [
+    {
+      "host": "recruit.ke.com",
+      "name": "招聘/入职 / 入职管理系统",
+      "priority": "P1",
+      "entry_url": "https://recruit.ke.com/",
+      "final_url": "https://recruit.ke.com/application-zhaopin-datacenter",
+      "http_status": 200,
+      "title": "贝壳招聘",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "lianjia_token_zhaopin"
+      ],
+      "redirect_hosts": [
+        "recruit.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 3580,
+      "error": null,
+      "elapsed_seconds": 5.9
+    },
+    {
+      "host": "renshi.ehr.lianjia.com",
+      "name": "LinkHR / 个人电子档案",
+      "priority": "P1",
+      "entry_url": "http://renshi.ehr.lianjia.com/",
+      "final_url": "http://renshi.ehr.lianjia.com/",
+      "http_status": 200,
+      "title": "",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "ehrs",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "renshi.ehr.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 156,
+      "error": null,
+      "elapsed_seconds": 3.64
+    },
+    {
+      "host": "okr.ke.com",
+      "name": "OKR",
+      "priority": "P1",
+      "entry_url": "https://okr.ke.com/p/okr",
+      "final_url": "https://okr.ke.com/p/okr",
+      "http_status": 200,
+      "title": "贝壳OKR",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "okr_ke_com",
+        "x-tenant-id"
+      ],
+      "redirect_hosts": [
+        "okr.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 4493,
+      "error": null,
+      "elapsed_seconds": 4.48
+    },
+    {
+      "host": "ones.ke.com",
+      "name": "KeOnes 项目管理",
+      "priority": "P1",
+      "entry_url": "http://ones.ke.com/",
+      "final_url": "https://ones.ke.com/",
+      "http_status": 200,
+      "title": "KeOnes",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "ones_ke_token"
+      ],
+      "redirect_hosts": [
+        "ones.ke.com"
+      ],
+      "html_bytes": 972,
+      "error": null,
+      "elapsed_seconds": 3.09
+    },
+    {
+      "host": "report.ke.com",
+      "name": "小贝汇报",
+      "priority": "P1",
+      "entry_url": "https://report.ke.com/",
+      "final_url": "https://report.ke.com/",
+      "http_status": 200,
+      "title": "小贝汇报",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "login_ucid",
+        "report_ke_com"
+      ],
+      "redirect_hosts": [
+        "report.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 5045,
+      "error": null,
+      "elapsed_seconds": 2.84
+    },
+    {
+      "host": "bpm.ke.com",
+      "name": "HR 权限申请/礼品申报",
+      "priority": "P1",
+      "entry_url": "https://bpm.ke.com/portal/r/w?cmd=com.actionsoft.apps.workbench_mobile_process_start&groupId=obj_1ca3700b12884bbcadd04da70bb8d0b2&processDefId=obj_ddc46144c54d4d66ad3e6a7ae65a057f",
+      "final_url": "https://bpm.ke.com/portal/r/w?cmd=com.actionsoft.apps.workbench_mobile_process_start&groupId=obj_1ca3700b12884bbcadd04da70bb8d0b2&processDefId=obj_ddc46144c54d4d66ad3e6a7ae65a057f",
+      "http_status": 200,
+      "title": "暂时无法访问",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "AWSSESSIONID",
+        "aws_uid",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "bpm.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 6965,
+      "error": null,
+      "elapsed_seconds": 3.93
+    },
+    {
+      "host": "bpm-m.ke.com",
+      "name": "离职申请",
+      "priority": "P1",
+      "entry_url": "https://bpm-m.ke.com/portal/r/w?cmd=com.actionsoft.apps.workbench_mobile_process_start&groupId=obj_395fd2a3ea4d4f8f840a30c67f1e33b5&processDefId=obj_b37027b10dc54826aafeb952727664f3",
+      "final_url": "https://bpm.ke.com/portal/r/w?cmd=com.actionsoft.apps.workbench_mobile_process_start&groupId=obj_395fd2a3ea4d4f8f840a30c67f1e33b5&processDefId=obj_b37027b10dc54826aafeb952727664f3",
+      "http_status": 200,
+      "title": "暂时无法访问",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "AWSSESSIONID",
+        "aws_uid",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "bpm-m.ke.com",
+        "login.ke.com",
+        "bpm.ke.com"
+      ],
+      "html_bytes": 6965,
+      "error": null,
+      "elapsed_seconds": 2.47
+    },
+    {
+      "host": "finops.ke.com",
+      "name": "贝壳费控平台",
+      "priority": "P1",
+      "entry_url": "https://finops.ke.com/",
+      "final_url": "https://finops.ke.com/ecs_console/index.html",
+      "http_status": 200,
+      "title": "加载中",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "finops.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 19983,
+      "error": null,
+      "elapsed_seconds": 2.45
+    },
+    {
+      "host": "bfa.ke.com",
+      "name": "财务+",
+      "priority": "P1",
+      "entry_url": "https://bfa.ke.com/home",
+      "final_url": "https://bfa.ke.com/",
+      "http_status": 200,
+      "title": "商业化",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "koin_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "bfa.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2824,
+      "error": null,
+      "elapsed_seconds": 3.02
+    },
+    {
+      "host": "pay.ke.com",
+      "name": "Kepay",
+      "priority": "P1",
+      "entry_url": "https://pay.ke.com/",
+      "final_url": "https://pay.ke.com/",
+      "http_status": 200,
+      "title": "贝壳Pay",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "pay.ke.com"
+      ],
+      "html_bytes": 812,
+      "error": null,
+      "elapsed_seconds": 0.72
+    },
+    {
+      "host": "rpm.ke.com",
+      "name": "报账平台",
+      "priority": "P1",
+      "entry_url": "https://rpm.ke.com/",
+      "final_url": "https://rpm.ke.com/ecs_console/index.html",
+      "http_status": 200,
+      "title": "加载中",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "agentic_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "rpm.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 25854,
+      "error": null,
+      "elapsed_seconds": 2.55
+    },
+    {
+      "host": "caigou.ke.com",
+      "name": "采购系统",
+      "priority": "P1",
+      "entry_url": "http://caigou.ke.com/",
+      "final_url": "https://caigou.ke.com/mall/",
+      "http_status": 200,
+      "title": "",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "POTATO",
+        "language",
+        "lianjia_ssid",
+        "loginWay"
+      ],
+      "redirect_hosts": [
+        "caigou.ke.com"
+      ],
+      "html_bytes": 901,
+      "error": null,
+      "elapsed_seconds": 1.43
+    },
+    {
+      "host": "budget-control.ke.com",
+      "name": "预算",
+      "priority": "P1",
+      "entry_url": "http://budget-control.ke.com/",
+      "final_url": "http://budget-control.ke.com/",
+      "http_status": 200,
+      "title": "预算管控系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "budget_control",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "budget-control.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1097,
+      "error": null,
+      "elapsed_seconds": 1.97
+    },
+    {
+      "host": "zichan.ke.com",
+      "name": "资产 2.0",
+      "priority": "P1",
+      "entry_url": "https://zichan.ke.com/",
+      "final_url": "https://zichan.ke.com/",
+      "http_status": 200,
+      "title": "资产管理平台",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "zichan"
+      ],
+      "redirect_hosts": [
+        "zichan.ke.com"
+      ],
+      "html_bytes": 1539,
+      "error": null,
+      "elapsed_seconds": 0.57
+    },
+    {
+      "host": "mzichan.ke.com",
+      "name": "我的资产/资产申请",
+      "priority": "P1",
+      "entry_url": "https://mzichan.ke.com/asset/list",
+      "final_url": "https://mzichan.ke.com/asset/list",
+      "http_status": 200,
+      "title": "贝壳资产",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "zichan_m"
+      ],
+      "redirect_hosts": [
+        "mzichan.ke.com"
+      ],
+      "html_bytes": 1433,
+      "error": null,
+      "elapsed_seconds": 0.4
+    },
+    {
+      "host": "mail.ke.com",
+      "name": "贝壳邮箱 / 网页邮箱",
+      "priority": "P1",
+      "entry_url": "https://mail.ke.com/",
+      "final_url": "https://mail.ke.com/owa/auth/logon.aspx?url=https%3A%2F%2Fmail.ke.com%2Fowa%2F&reason=0",
+      "http_status": 200,
+      "title": "Outlook",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "mail.ke.com"
+      ],
+      "html_bytes": 28781,
+      "error": null,
+      "elapsed_seconds": 1.48
+    },
+    {
+      "host": "owa.lianjia.com",
+      "name": "邮箱",
+      "priority": "P1",
+      "entry_url": "https://owa.lianjia.com/",
+      "final_url": "https://owa.lianjia.com/owa/auth/logon.aspx?url=https%3A%2F%2Fowa.lianjia.com%2Fowa%2F&reason=0",
+      "http_status": 200,
+      "title": "Outlook",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "owa.lianjia.com"
+      ],
+      "html_bytes": 28789,
+      "error": null,
+      "elapsed_seconds": 1.29
+    },
+    {
+      "host": "its.ke.com",
+      "name": "IT 服务、视频会议",
+      "priority": "P1",
+      "entry_url": "https://its.ke.com/article/articledetail?cid=9&aid=80",
+      "final_url": "https://its.ke.com/article/articledetail?cid=9&aid=80",
+      "http_status": 200,
+      "title": "IT门户",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "its_ke_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "its.ke.com"
+      ],
+      "html_bytes": 3651,
+      "error": null,
+      "elapsed_seconds": 0.6
+    },
+    {
+      "host": "its.lianjia.com",
+      "name": "软件下载",
+      "priority": "P1",
+      "entry_url": "https://its.lianjia.com/software/windows",
+      "final_url": "https://its.lianjia.com/software/windows",
+      "http_status": 200,
+      "title": "IT门户",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "its_ke_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "its.lianjia.com"
+      ],
+      "html_bytes": 3593,
+      "error": null,
+      "elapsed_seconds": 0.66
+    },
+    {
+      "host": "wiki.lianjia.com",
+      "name": "WIKI",
+      "priority": "P1",
+      "entry_url": "https://wiki.lianjia.com/",
+      "final_url": "https://wiki.lianjia.com/login.action?ticket=[REDACTED]",
+      "http_status": 200,
+      "title": "登录 - 贝壳",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "wiki.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 37736,
+      "error": null,
+      "elapsed_seconds": 1.73
+    },
+    {
+      "host": "yunpan.lianjia.com",
+      "name": "贝壳云盘",
+      "priority": "P1",
+      "entry_url": "https://yunpan.lianjia.com/",
+      "final_url": "https://yunpan.lianjia.com/",
+      "http_status": 302,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "yunpan_lianjia_token"
+      ],
+      "redirect_hosts": [
+        "yunpan.lianjia.com"
+      ],
+      "html_bytes": 0,
+      "error": null,
+      "elapsed_seconds": 0.61
+    },
+    {
+      "host": "new-meeting.ke.com",
+      "name": "会议室预定",
+      "priority": "P1",
+      "entry_url": "https://new-meeting.ke.com/reserve",
+      "final_url": "https://new-meeting.ke.com/reserve",
+      "http_status": 200,
+      "title": "会议系统",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "new-meeting.ke.com"
+      ],
+      "html_bytes": 5505,
+      "error": null,
+      "elapsed_seconds": 0.49
+    },
+    {
+      "host": "meeting-assistant.ke.com",
+      "name": "会议室系统",
+      "priority": "P1",
+      "entry_url": "https://meeting-assistant.ke.com/qw-room",
+      "final_url": "https://meeting-assistant.ke.com/qw-room",
+      "http_status": 200,
+      "title": "",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid",
+        "meeting_assistant_token"
+      ],
+      "redirect_hosts": [
+        "meeting-assistant.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1410,
+      "error": null,
+      "elapsed_seconds": 2.58
+    },
+    {
+      "host": "wen.ke.com",
+      "name": "贝壳问卷",
+      "priority": "P1",
+      "entry_url": "https://wen.ke.com/home/create",
+      "final_url": "https://wen.ke.com/home/create",
+      "http_status": 200,
+      "title": "贝壳问卷",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "wenjuan_ke_com"
+      ],
+      "redirect_hosts": [
+        "wen.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2663,
+      "error": null,
+      "elapsed_seconds": 2.72
+    },
+    {
+      "host": "ketalk.ke.com",
+      "name": "贝壳圈",
+      "priority": "P1",
+      "entry_url": "https://ketalk.ke.com/",
+      "final_url": "https://ketalk.ke.com/?ticket=[REDACTED]",
+      "http_status": 403,
+      "title": "",
+      "verdict": "denied_403",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "ketalk.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 80,
+      "error": null,
+      "elapsed_seconds": 1.97
+    },
+    {
+      "host": "yes-or-no.ke.com",
+      "name": "Yes or No 员工交流",
+      "priority": "P1",
+      "entry_url": "https://yes-or-no.ke.com/p/posts",
+      "final_url": "https://yes-or-no.ke.com/p/posts",
+      "http_status": 200,
+      "title": "Yes or No",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "yes-or-no-token"
+      ],
+      "redirect_hosts": [
+        "yes-or-no.ke.com"
+      ],
+      "html_bytes": 3524,
+      "error": null,
+      "elapsed_seconds": 0.53
+    },
+    {
+      "host": "profile.ke.com",
+      "name": "人才管理",
+      "priority": "P1",
+      "entry_url": "https://profile.ke.com/talent",
+      "final_url": "https://profile.ke.com/talent",
+      "http_status": 200,
+      "title": "贝壳人才管理系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "profile_pc_token"
+      ],
+      "redirect_hosts": [
+        "profile.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 988,
+      "error": null,
+      "elapsed_seconds": 2.94
+    },
+    {
+      "host": "profile-h5.ke.com",
+      "name": "人才标准",
+      "priority": "P1",
+      "entry_url": "https://profile-h5.ke.com/talent/development-channel",
+      "final_url": "https://profile-h5.ke.com/talent/development-channel",
+      "http_status": 200,
+      "title": "贝壳人才管理系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "profile_pc_token"
+      ],
+      "redirect_hosts": [
+        "profile-h5.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 988,
+      "error": null,
+      "elapsed_seconds": 2.0
+    },
+    {
+      "host": "inrecruit.ke.com",
+      "name": "内部活水",
+      "priority": "P1",
+      "entry_url": "https://inrecruit.ke.com/",
+      "final_url": "https://inrecruit.ke.com/",
+      "http_status": 200,
+      "title": "活水计划",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "inrecruit.ke.com"
+      ],
+      "html_bytes": 2696,
+      "error": null,
+      "elapsed_seconds": 0.5
+    },
+    {
+      "host": "spi.ke.com",
+      "name": "运营绩效系统",
+      "priority": "P1",
+      "entry_url": "https://spi.ke.com/",
+      "final_url": "https://spi.ke.com/",
+      "http_status": 200,
+      "title": "运营绩效",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "spi_ke_com"
+      ],
+      "redirect_hosts": [
+        "spi.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 7032,
+      "error": null,
+      "elapsed_seconds": 2.79
+    },
+    {
+      "host": "codin.ke.com",
+      "name": "CHO 驾驶舱",
+      "priority": "P1",
+      "entry_url": "https://codin.ke.com/portal/3956/49460",
+      "final_url": "https://codin.ke.com/portal/3956/49460",
+      "http_status": 200,
+      "title": "奥丁数据分析平台",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "odin_token"
+      ],
+      "redirect_hosts": [
+        "codin.ke.com"
+      ],
+      "html_bytes": 561,
+      "error": null,
+      "elapsed_seconds": 1.01
+    },
+    {
+      "host": "chip.ke.com",
+      "name": "电子合同下载校验",
+      "priority": "P1",
+      "entry_url": "https://chip.ke.com/hr/verify?type=contract&d=%7B%22tip%22%3A%22%E8%AF%B7%E6%82%A8%E5%A6%A5%E5%96%84%E4%BF%9D%E7%AE%A1%E7%94%B5%E5%AD%90%E5%90%88%E5%90%8C%EF%BC%8C%E5%A6%82%E6%9C%89%E7%96%91%E9%97%AE%E5%8F%AF%E8%81%94%E7%B3%BBHR%E5%92%A8%E8%AF%A2%22%2C%22title%22%3A%22%E7%94%B5%E5%AD%90%E5%90%88%E5%90%8C%22%2C%22originUrl%22%3A%22https%3A%2F%2Ffamily.ke.com%2FmyInfo%2Fprofile%23contractInfo%22%7D",
+      "final_url": "https://chip.ke.com/hr/verify?type=contract&d=%7B%22tip%22%3A%22%E8%AF%B7%E6%82%A8%E5%A6%A5%E5%96%84%E4%BF%9D%E7%AE%A1%E7%94%B5%E5%AD%90%E5%90%88%E5%90%8C%EF%BC%8C%E5%A6%82%E6%9C%89%E7%96%91%E9%97%AE%E5%8F%AF%E8%81%94%E7%B3%BBHR%E5%92%A8%E8%AF%A2%22%2C%22title%22%3A%22%E7%94%B5%E5%AD%90%E5%90%88%E5%90%8C%22%2C%22originUrl%22%3A%22https%3A%2F%2Ffamily.ke.com%2FmyInfo%2Fprofile%23contractInfo%22%7D",
+      "http_status": 200,
+      "title": "人事",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "chip_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "chip.ke.com"
+      ],
+      "html_bytes": 2322,
+      "error": null,
+      "elapsed_seconds": 0.55
+    },
+    {
+      "host": "mdm.ke.com",
+      "name": "主数据管理平台 MDM",
+      "priority": "P1",
+      "entry_url": "https://mdm.ke.com/",
+      "final_url": "https://mdm.ke.com/",
+      "http_status": 200,
+      "title": "主数据管理平台",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "mdm.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2354,
+      "error": null,
+      "elapsed_seconds": 3.27
+    },
+    {
+      "host": "kepler.ke.com",
+      "name": "税务平台",
+      "priority": "P1",
+      "entry_url": "https://kepler.ke.com/",
+      "final_url": "https://kepler.ke.com/",
+      "http_status": 200,
+      "title": "税务平台",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "kepler_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "kepler.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 3789,
+      "error": null,
+      "elapsed_seconds": 2.66
+    },
+    {
+      "host": "shandian.lianjia.com",
+      "name": "闪店",
+      "priority": "P1",
+      "entry_url": "http://shandian.lianjia.com/",
+      "final_url": "https://shandian.lianjia.com/",
+      "http_status": 200,
+      "title": "闪店",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "store_link_token"
+      ],
+      "redirect_hosts": [
+        "shandian.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 13257,
+      "error": null,
+      "elapsed_seconds": 3.66
+    },
+    {
+      "host": "sis.lianjia.com",
+      "name": "SIS 门店损益",
+      "priority": "P1",
+      "entry_url": "https://sis.lianjia.com/",
+      "final_url": "http://sis.lianjia.com/",
+      "http_status": 200,
+      "title": "集团SIS-门店损益",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "sis.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1887,
+      "error": null,
+      "elapsed_seconds": 2.09
+    },
+    {
+      "host": "legal-compliance.ke.com",
+      "name": "合规工作台",
+      "priority": "P1",
+      "entry_url": "https://legal-compliance.ke.com/",
+      "final_url": "https://legal-compliance.ke.com/",
+      "http_status": 200,
+      "title": "合规工作台",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "sso_login_token_compliance"
+      ],
+      "redirect_hosts": [
+        "legal-compliance.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 918,
+      "error": null,
+      "elapsed_seconds": 3.18
+    },
+    {
+      "host": "m-legal.ke.com",
+      "name": "合同管理",
+      "priority": "P1",
+      "entry_url": "https://m-legal.ke.com/#/contract",
+      "final_url": "https://m-legal.ke.com/",
+      "http_status": 200,
+      "title": "法螺系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "investfinance_sid",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "m-legal.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2550,
+      "error": null,
+      "elapsed_seconds": 3.12
+    },
+    {
+      "host": "contract.ke.com",
+      "name": "合同管理",
+      "priority": "P1",
+      "entry_url": "https://contract.ke.com/",
+      "final_url": "https://contract.ke.com/",
+      "http_status": 200,
+      "title": "合同管理",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "contract_manage_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "contract.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2823,
+      "error": null,
+      "elapsed_seconds": 2.83
+    },
+    {
+      "host": "case-legal.ke.com",
+      "name": "诉讼管理",
+      "priority": "P1",
+      "entry_url": "http://case-legal.ke.com/index",
+      "final_url": "https://case-legal.ke.com/index",
+      "http_status": 200,
+      "title": "贝壳诉讼管理",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "case-legal.ke.com"
+      ],
+      "html_bytes": 9956,
+      "error": null,
+      "elapsed_seconds": 0.72
+    },
+    {
+      "host": "company-legal.ke.com",
+      "name": "股权管理",
+      "priority": "P1",
+      "entry_url": "https://company-legal.ke.com/companyManage",
+      "final_url": "https://company-legal.ke.com/companyManage",
+      "http_status": 200,
+      "title": "股权管理系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "legalsupplier_sid",
+        "lianjia_ssid",
+        "lsm_token",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "company-legal.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1254,
+      "error": null,
+      "elapsed_seconds": 4.42
+    },
+    {
+      "host": "legal-lawyer-library.ke.com",
+      "name": "律师库",
+      "priority": "P1",
+      "entry_url": "http://legal-lawyer-library.ke.com/",
+      "final_url": "http://legal-lawyer-library.ke.com/",
+      "http_status": 200,
+      "title": "律师库系统",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "legal-lawyer-library.ke.com"
+      ],
+      "html_bytes": 6999,
+      "error": null,
+      "elapsed_seconds": 0.34
+    },
+    {
+      "host": "vprivacy.ke.com",
+      "name": "数据合规",
+      "priority": "P1",
+      "entry_url": "https://vprivacy.ke.com/#/ServiceHall/index",
+      "final_url": "https://vprivacy.ke.com/",
+      "http_status": 200,
+      "title": "",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "vprivacy.ke.com"
+      ],
+      "html_bytes": 19506,
+      "error": null,
+      "elapsed_seconds": 1.14
+    },
+    {
+      "host": "mknow.ke.com",
+      "name": "违纪通报",
+      "priority": "P1",
+      "entry_url": "https://mknow.ke.com/#/?nodeId=28981&scene=lianjiebeike",
+      "final_url": "https://mknow.ke.com/",
+      "http_status": 200,
+      "title": "知识目录",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "mknow.ke.com"
+      ],
+      "html_bytes": 3605,
+      "error": null,
+      "elapsed_seconds": 0.6
+    },
+    {
+      "host": "homeworld.ke.com",
+      "name": "行政服务",
+      "priority": "P1",
+      "entry_url": "https://homeworld.ke.com/",
+      "final_url": "https://homeworld.ke.com/",
+      "http_status": 200,
+      "title": "行政服务平台",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "homeworld_ke_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "homeworld.ke.com"
+      ],
+      "html_bytes": 2559,
+      "error": null,
+      "elapsed_seconds": 1.14
+    },
+    {
+      "host": "homeworld-front.ke.com",
+      "name": "日常用品申请/公司菜单",
+      "priority": "P1",
+      "entry_url": "https://homeworld-front.ke.com/showmenu",
+      "final_url": "https://homeworld-front.ke.com/showmenu",
+      "http_status": 200,
+      "title": "行政服务",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "homeworld_front_ke_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "homeworld-front.ke.com"
+      ],
+      "html_bytes": 2858,
+      "error": null,
+      "elapsed_seconds": 0.66
+    },
+    {
+      "host": "zjjg.homelink.com.cn",
+      "name": "理房通",
+      "priority": "P1",
+      "entry_url": "http://zjjg.homelink.com.cn/escrow/login.html",
+      "final_url": "http://zjjg.homelink.com.cn/escrow/login.html",
+      "http_status": null,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "zjjg.homelink.com.cn"
+      ],
+      "html_bytes": 0,
+      "error": "RemoteProtocolError: Server disconnected without sending a response.",
+      "elapsed_seconds": 3.29
+    },
+    {
+      "host": "admin.uc.lianjia.com",
+      "name": "UC 权限",
+      "priority": "P2",
+      "entry_url": "http://admin.uc.lianjia.com/",
+      "final_url": "http://admin.uc.lianjia.com/noauth",
+      "http_status": 200,
+      "title": "链家网-UC",
+      "verdict": "denied_403",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "UCPJSESSIONID",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "admin.uc.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2951,
+      "error": null,
+      "elapsed_seconds": 2.45
+    },
+    {
+      "host": "apollo.portal.life.ke.com",
+      "name": "Apollo 配置中心",
+      "priority": "P2",
+      "entry_url": "http://apollo.portal.life.ke.com/",
+      "final_url": "http://apollo.portal.life.ke.com/",
+      "http_status": 200,
+      "title": "{{'Common.Title' | translate }}",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "jt_apollo_login_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "apollo.portal.life.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 16199,
+      "error": null,
+      "elapsed_seconds": 1.41
+    },
+    {
+      "host": "cloud.intra.ke.com",
+      "name": "贝壳云、产品树",
+      "priority": "P2",
+      "entry_url": "https://cloud.intra.ke.com/home",
+      "final_url": "https://cloud.intra.ke.com/home",
+      "http_status": 200,
+      "title": "贝壳云平台",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "EGG_SESS",
+        "cloud_console_token_egg",
+        "cloud_console_token_egg.sig",
+        "cloud_console_user_session",
+        "cloud_console_user_session.sig",
+        "lianjia_ssid",
+        "session",
+        "session.sig"
+      ],
+      "redirect_hosts": [
+        "cloud.intra.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 3039,
+      "error": null,
+      "elapsed_seconds": 4.42
+    },
+    {
+      "host": "easy.intra.lianjia.com",
+      "name": "链家网 EASY",
+      "priority": "P2",
+      "entry_url": "http://easy.intra.lianjia.com/",
+      "final_url": "http://easy.intra.lianjia.com/?ticket=[REDACTED]",
+      "http_status": 200,
+      "title": "链家网EASY",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "sre_login"
+      ],
+      "redirect_hosts": [
+        "easy.intra.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 20286,
+      "error": null,
+      "elapsed_seconds": 1.49
+    },
+    {
+      "host": "compass.ke.com",
+      "name": "埋点平台 / 罗盘",
+      "priority": "P2",
+      "entry_url": "http://compass.ke.com/",
+      "final_url": "http://compass.ke.com/",
+      "http_status": 200,
+      "title": "罗盘",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "compass.ke.com"
+      ],
+      "html_bytes": 1477,
+      "error": null,
+      "elapsed_seconds": 0.28
+    },
+    {
+      "host": "design.ke.com",
+      "name": "KeDesign",
+      "priority": "P2",
+      "entry_url": "http://design.ke.com/page/home",
+      "final_url": "http://design.ke.com/page/home",
+      "http_status": 404,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "design.ke.com"
+      ],
+      "html_bytes": 36,
+      "error": null,
+      "elapsed_seconds": 0.32
+    },
+    {
+      "host": "dawei.ke.com",
+      "name": "知产管理 / 专利系统",
+      "priority": "P2",
+      "entry_url": "https://dawei.ke.com/",
+      "final_url": "https://dawei.ke.com/login.html?ReturnUrl=%2F",
+      "http_status": 200,
+      "title": "大为Innojet知识产权协同创新管理系统",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "dawei.ke.com"
+      ],
+      "html_bytes": 11085,
+      "error": null,
+      "elapsed_seconds": 1.93
+    },
+    {
+      "host": "risk-platform.ke.com",
+      "name": "风控平台",
+      "priority": "P2",
+      "entry_url": "https://risk-platform.ke.com/personal",
+      "final_url": "https://risk-platform.ke.com/personal",
+      "http_status": 200,
+      "title": "",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "risk-platform.ke.com"
+      ],
+      "html_bytes": 1161,
+      "error": null,
+      "elapsed_seconds": 1.03
+    },
+    {
+      "host": "weapons.ke.com",
+      "name": "落兵台",
+      "priority": "P2",
+      "entry_url": "http://weapons.ke.com/group/75428",
+      "final_url": "https://weapons.ke.com/login?gotoURL=%2Flogin%3FgotoURL%3D%2Flogin%3FgotoURL%3D%2Fgroup%2F75428&ticket=[REDACTED]&ticket=[REDACTED]&ticket=[REDACTED]",
+      "http_status": 302,
+      "title": "",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "weapons.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 0,
+      "error": "redirect_loop",
+      "elapsed_seconds": 4.92
+    },
+    {
+      "host": "workflow.lianjia.com",
+      "name": "通用审批流",
+      "priority": "P2",
+      "entry_url": "http://workflow.lianjia.com/",
+      "final_url": "http://workflow.lianjia.com/index",
+      "http_status": 200,
+      "title": "流程定义列表",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "workflow.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1395,
+      "error": null,
+      "elapsed_seconds": 3.02
+    },
+    {
+      "host": "fssc.lianjia.com",
+      "name": "老费控",
+      "priority": "P2",
+      "entry_url": "http://fssc.lianjia.com/",
+      "final_url": "http://fssc.lianjia.com/;jsessionid=[REDACTED]",
+      "http_status": 200,
+      "title": "",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "fssc.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 109,
+      "error": null,
+      "elapsed_seconds": 1.52
+    },
+    {
+      "host": "hecapp.homelink.com.cn",
+      "name": "AFA 爱发",
+      "priority": "P2",
+      "entry_url": "http://hecapp.homelink.com.cn/",
+      "final_url": "http://hecapp.homelink.com.cn/",
+      "http_status": 200,
+      "title": "链家集团费用报销管理系统",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "route"
+      ],
+      "redirect_hosts": [
+        "hecapp.homelink.com.cn"
+      ],
+      "html_bytes": 10664,
+      "error": null,
+      "elapsed_seconds": 0.4
+    },
+    {
+      "host": "ireport.lianjia.com",
+      "name": "数据收集平台",
+      "priority": "P2",
+      "entry_url": "http://ireport.lianjia.com/",
+      "final_url": "http://ireport.lianjia.com/401",
+      "http_status": 200,
+      "title": "数据收集平台",
+      "verdict": "denied_403",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "ireport_servers",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "ireport.lianjia.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 4554,
+      "error": null,
+      "elapsed_seconds": 1.86
+    },
+    {
+      "host": "xinchou-data.ke.com",
+      "name": "薪酬预处理平台",
+      "priority": "P2",
+      "entry_url": "https://xinchou-data.ke.com/",
+      "final_url": "https://xinchou-data.ke.com/",
+      "http_status": 200,
+      "title": "薪酬数据预处理平台",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "prep_token"
+      ],
+      "redirect_hosts": [
+        "xinchou-data.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 19476,
+      "error": null,
+      "elapsed_seconds": 2.44
+    },
+    {
+      "host": "cb.ke.com",
+      "name": "基薪管理",
+      "priority": "P2",
+      "entry_url": "https://cb.ke.com/",
+      "final_url": "https://cb.ke.com/",
+      "http_status": 200,
+      "title": "基础薪酬",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "salary_middle_token"
+      ],
+      "redirect_hosts": [
+        "cb.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 6905,
+      "error": null,
+      "elapsed_seconds": 2.5
+    },
+    {
+      "host": "salary-middle.ke.com",
+      "name": "薪酬中心",
+      "priority": "P2",
+      "entry_url": "https://salary-middle.ke.com/",
+      "final_url": "https://salary-middle.ke.com/",
+      "http_status": 200,
+      "title": "薪酬中心",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "salary_middle_token"
+      ],
+      "redirect_hosts": [
+        "salary-middle.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 17792,
+      "error": null,
+      "elapsed_seconds": 2.57
+    },
+    {
+      "host": "salary-monitor.ke.com",
+      "name": "服务监控",
+      "priority": "P2",
+      "entry_url": "https://salary-monitor.ke.com/",
+      "final_url": "https://salary-monitor.ke.com/",
+      "http_status": 200,
+      "title": "服务监控",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "salary_monitor_token"
+      ],
+      "redirect_hosts": [
+        "salary-monitor.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2819,
+      "error": null,
+      "elapsed_seconds": 2.41
+    },
+    {
+      "host": "salary-tax.ke.com",
+      "name": "税友平台",
+      "priority": "P2",
+      "entry_url": "https://salary-tax.ke.com/",
+      "final_url": "https://salary-tax.ke.com/",
+      "http_status": 200,
+      "title": "税友中心",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "salary_middle_token"
+      ],
+      "redirect_hosts": [
+        "salary-tax.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 20923,
+      "error": null,
+      "elapsed_seconds": 2.32
+    },
+    {
+      "host": "shebao.ke.com",
+      "name": "社保系统",
+      "priority": "P2",
+      "entry_url": "https://shebao.ke.com/",
+      "final_url": "https://shebao.ke.com/",
+      "http_status": 200,
+      "title": "社保公积金管理系统",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "shebao.ke.com"
+      ],
+      "html_bytes": 5716,
+      "error": null,
+      "elapsed_seconds": 0.61
+    },
+    {
+      "host": "ganbu.ke.com",
+      "name": "干部画像",
+      "priority": "P2",
+      "entry_url": "https://ganbu.ke.com/",
+      "final_url": "https://ganbu.ke.com/",
+      "http_status": 200,
+      "title": "干部档案",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "lianjia_token"
+      ],
+      "redirect_hosts": [
+        "ganbu.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1677,
+      "error": null,
+      "elapsed_seconds": 1.98
+    },
+    {
+      "host": "leader.ke.com",
+      "name": "管理者工作台",
+      "priority": "P2",
+      "entry_url": "https://leader.ke.com/",
+      "final_url": "https://leader.ke.com/",
+      "http_status": 200,
+      "title": "hobber -- with ♥︎ by ke-fe",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "leader_ke_com",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "leader.ke.com"
+      ],
+      "html_bytes": 1986,
+      "error": null,
+      "elapsed_seconds": 0.56
+    },
+    {
+      "host": "nltx.ke.com",
+      "name": "职级平台",
+      "priority": "P2",
+      "entry_url": "https://nltx.ke.com/pageo/integral-detail",
+      "final_url": "https://nltx.ke.com/pageo/integral-detail",
+      "http_status": 200,
+      "title": "积分职级",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "agent_score_system_sid",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "nltx.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1252,
+      "error": null,
+      "elapsed_seconds": 3.35
+    },
+    {
+      "host": "pm.ke.com",
+      "name": "人月系统",
+      "priority": "P2",
+      "entry_url": "https://pm.ke.com/",
+      "final_url": "https://pm.ke.com/",
+      "http_status": null,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "pm.ke.com"
+      ],
+      "html_bytes": 0,
+      "error": "ConnectError: [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)",
+      "elapsed_seconds": 0.11
+    },
+    {
+      "host": "hrlearn.ke.com",
+      "name": "HR价值流",
+      "priority": "P2",
+      "entry_url": "http://hrlearn.ke.com/home",
+      "final_url": "http://hrlearn.ke.com/home",
+      "http_status": 200,
+      "title": "HR 门户",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "ehrPortalToken",
+        "ehrportal_sid",
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "redirect_hosts": [
+        "hrlearn.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1179,
+      "error": null,
+      "elapsed_seconds": 2.13
+    },
+    {
+      "host": "recruit-ops.ke.com",
+      "name": "招聘调研系统",
+      "priority": "P2",
+      "entry_url": "http://recruit-ops.ke.com/intelligence-library",
+      "final_url": "http://recruit-ops.ke.com/intelligence-library",
+      "http_status": null,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "recruit-ops.ke.com"
+      ],
+      "html_bytes": 0,
+      "error": "ProtocolError: Malformed reply",
+      "elapsed_seconds": 133.9
+    },
+    {
+      "host": "resume-agc.ke.com",
+      "name": "聘多多",
+      "priority": "P2",
+      "entry_url": "https://resume-agc.ke.com/talent/candidateList",
+      "final_url": "https://resume-agc.ke.com/talent/candidateList",
+      "http_status": 200,
+      "title": "聘多多",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "ke_dk_u_id",
+        "ke_dk_u_name",
+        "ke_do_dk_u_id",
+        "lianjia_ssid",
+        "mag_ke_com"
+      ],
+      "redirect_hosts": [
+        "resume-agc.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2564,
+      "error": null,
+      "elapsed_seconds": 2.79
+    },
+    {
+      "host": "solicitude.hr.lianjia.com",
+      "name": "员工关怀",
+      "priority": "P2",
+      "entry_url": "http://solicitude.hr.lianjia.com/",
+      "final_url": "http://solicitude.hr.lianjia.com/",
+      "http_status": 404,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "solicitude.hr.lianjia.com"
+      ],
+      "html_bytes": 36,
+      "error": null,
+      "elapsed_seconds": 0.34
+    },
+    {
+      "host": "vm.ke.com",
+      "name": "价值观评分",
+      "priority": "P2",
+      "entry_url": "https://vm.ke.com/",
+      "final_url": "https://vm.ke.com/",
+      "http_status": 200,
+      "title": "价值观评分",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "mcg_ke_lianjia_token"
+      ],
+      "redirect_hosts": [
+        "vm.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2555,
+      "error": null,
+      "elapsed_seconds": 2.25
+    },
+    {
+      "host": "vote-admin.ke.com",
+      "name": "荣誉评选系统",
+      "priority": "P2",
+      "entry_url": "https://vote-admin.ke.com/pc/values/activityList",
+      "final_url": "https://vote-admin.ke.com/pc/values/activityList",
+      "http_status": 200,
+      "title": "荣誉系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "cg_ke_com",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "vote-admin.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2848,
+      "error": null,
+      "elapsed_seconds": 3.29
+    },
+    {
+      "host": "zhidao.ke.com",
+      "name": "贝经堂",
+      "priority": "P2",
+      "entry_url": "https://zhidao.ke.com/",
+      "final_url": "https://zlogin.ke.com/login?site=https%3A%2F%2Fzhidao.ke.com%2F",
+      "http_status": 200,
+      "title": "登录",
+      "verdict": "login_required",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "device_id",
+        "lianjia_ssid",
+        "login_ticket",
+        "zd_tgt"
+      ],
+      "redirect_hosts": [
+        "zhidao.ke.com",
+        "zlogin.ke.com"
+      ],
+      "html_bytes": 1574,
+      "error": null,
+      "elapsed_seconds": 1.44
+    },
+    {
+      "host": "admin-huaqiao.ke.com",
+      "name": "花桥学堂",
+      "priority": "P2",
+      "entry_url": "https://admin-huaqiao.ke.com/",
+      "final_url": "https://admin-huaqiao.ke.com/",
+      "http_status": 200,
+      "title": "花桥学堂CMS",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "huaqiao_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "admin-huaqiao.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2714,
+      "error": null,
+      "elapsed_seconds": 2.5
+    },
+    {
+      "host": "admin-study.ke.com",
+      "name": "贝好学管理端",
+      "priority": "P2",
+      "entry_url": "https://admin-study.ke.com/",
+      "final_url": "https://admin-study.ke.com/",
+      "http_status": 200,
+      "title": "贝好学",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "renovation-token"
+      ],
+      "redirect_hosts": [
+        "admin-study.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 743,
+      "error": null,
+      "elapsed_seconds": 2.07
+    },
+    {
+      "host": "admin-sunshine.ke.com",
+      "name": "阳光贝壳",
+      "priority": "P2",
+      "entry_url": "https://admin-sunshine.ke.com/web/#/login",
+      "final_url": "https://admin-sunshine.ke.com/web/",
+      "http_status": 200,
+      "title": "贝壳管理系统",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "admin-sunshine.ke.com"
+      ],
+      "html_bytes": 1031,
+      "error": null,
+      "elapsed_seconds": 0.68
+    },
+    {
+      "host": "be-admin.ke.com",
+      "name": "新经纪榜样",
+      "priority": "P2",
+      "entry_url": "https://be-admin.ke.com/pc/example/activitylist",
+      "final_url": "https://be-admin.ke.com/pc/example/activitylist",
+      "http_status": 200,
+      "title": "新经纪榜样",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "cg_ke_com",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "be-admin.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2555,
+      "error": null,
+      "elapsed_seconds": 2.4
+    },
+    {
+      "host": "esghub.ke.com",
+      "name": "碳管理",
+      "priority": "P2",
+      "entry_url": "https://esghub.ke.com/hub/beke/request",
+      "final_url": "https://esghub.ke.com/hub/beke/request",
+      "http_status": 200,
+      "title": "ESGhub",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "esghub.ke.com"
+      ],
+      "html_bytes": 4343,
+      "error": null,
+      "elapsed_seconds": 0.59
+    },
+    {
+      "host": "gongwei.ke.com",
+      "name": "工位系统",
+      "priority": "P2",
+      "entry_url": "https://gongwei.ke.com/#/no-access",
+      "final_url": "https://gongwei.ke.com/",
+      "http_status": 404,
+      "title": "",
+      "verdict": "unreachable_or_error",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [],
+      "redirect_hosts": [
+        "gongwei.ke.com"
+      ],
+      "html_bytes": 48,
+      "error": null,
+      "elapsed_seconds": 0.58
+    },
+    {
+      "host": "gongyi.ke.com",
+      "name": "贝壳公益",
+      "priority": "P2",
+      "entry_url": "https://gongyi.ke.com/web/pc/dataKanban",
+      "final_url": "https://gongyi.ke.com/web/pc/dataKanban",
+      "http_status": 200,
+      "title": "贝壳公益",
+      "verdict": "spa_shell_needs_browser",
+      "identity_match": false,
+      "cas_callback_seen": false,
+      "issued_cookie_names": [
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "gongyi.ke.com"
+      ],
+      "html_bytes": 17699,
+      "error": null,
+      "elapsed_seconds": 0.77
+    },
+    {
+      "host": "jingyingshe-admin.ke.com",
+      "name": "精英社",
+      "priority": "P2",
+      "entry_url": "https://jingyingshe-admin.ke.com/",
+      "final_url": "https://jingyingshe-admin.ke.com/",
+      "http_status": 200,
+      "title": "精英社",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "cg_ke_com",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "jingyingshe-admin.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2809,
+      "error": null,
+      "elapsed_seconds": 2.51
+    },
+    {
+      "host": "kehome-cms.ke.com",
+      "name": "贝壳之家",
+      "priority": "P2",
+      "entry_url": "https://kehome-cms.ke.com/columnManagement/columnList",
+      "final_url": "https://kehome-cms.ke.com/columnManagement/columnList",
+      "http_status": 200,
+      "title": "企业社会发展中心",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "gzdc-csdp-token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "kehome-cms.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 2464,
+      "error": null,
+      "elapsed_seconds": 2.57
+    },
+    {
+      "host": "lcm.ke.com",
+      "name": "预实管理",
+      "priority": "P2",
+      "entry_url": "https://lcm.ke.com/",
+      "final_url": "https://lcm.ke.com/",
+      "http_status": 200,
+      "title": "预实管理系统",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": true,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "JSESSIONID",
+        "lianjia_ssid",
+        "rememberMe",
+        "salary_budget_actual_sid"
+      ],
+      "redirect_hosts": [
+        "lcm.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 13897,
+      "error": null,
+      "elapsed_seconds": 3.84
+    },
+    {
+      "host": "m-intelligencecampus-hq.ke.com",
+      "name": "老左图书馆",
+      "priority": "P2",
+      "entry_url": "https://m-intelligencecampus-hq.ke.com/LibraryBooking/bookingIndex",
+      "final_url": "https://m-intelligencecampus-hq.ke.com/LibraryBooking/bookingIndex",
+      "http_status": 200,
+      "title": "花桥",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "huaqiao_token",
+        "lianjia_ssid"
+      ],
+      "redirect_hosts": [
+        "m-intelligencecampus-hq.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 1674,
+      "error": null,
+      "elapsed_seconds": 2.1
+    },
+    {
+      "host": "mcg.ke.com",
+      "name": "CG文化圈",
+      "priority": "P2",
+      "entry_url": "https://mcg.ke.com/",
+      "final_url": "https://mcg.ke.com/",
+      "http_status": 200,
+      "title": "mcg_ke",
+      "verdict": "accessible_verified_or_page",
+      "identity_match": false,
+      "cas_callback_seen": true,
+      "issued_cookie_names": [
+        "lianjia_ssid",
+        "mcg_ke_lianjia_token"
+      ],
+      "redirect_hosts": [
+        "mcg.ke.com",
+        "login.ke.com"
+      ],
+      "html_bytes": 4396,
+      "error": null,
+      "elapsed_seconds": 2.25
+    }
+  ]
+}

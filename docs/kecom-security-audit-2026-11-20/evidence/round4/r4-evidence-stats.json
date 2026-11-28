@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "mode": "r4_evidence_stats",
+    "network_requests": 0,
+    "evidence_files_scanned": 44,
+    "records_total": 255,
+    "scope_limitation": "仅统计含 item+http/transport_error 字段的台账条目；非 request_ledger 结构的历史证据未被识别，records_total 是可解析子集而非全证据库请求量（一/二/三期台账口径合计已超过 300 条）。",
+    "sampling_caveat": "样本为单端点单次、无重试、跨 15+ 主机的低频探针，且含大量 401/404/400/传输错误，0 个 429 不构成全站限流缺失的强证据；熔断缺失强证据以 M4 五路并发突发与 KE-01 翻页为准。",
+    "unknown_host_records": 23
+  },
+  "status_counter": {
+    "200": 147,
+    "401": 38,
+    "404": 18,
+    "400": 14,
+    "206": 9,
+    "None": 8,
+    "302": 6,
+    "403": 6,
+    "204": 4,
+    "201": 2,
+    "500": 2,
+    "422": 1
+  },
+  "http_429_count": 0,
+  "rate_limit_header_observations": [],
+  "rate_limit_header_total": 0,
+  "host_request_top": [
+    [
+      "app-moma.ke.com",
+      135
+    ],
+    [
+      "wandou.ke.com",
+      39
+    ],
+    [
+      "prd-assistant-backend.ke.com",
+      27
+    ],
+    [
+      "?",
+      23
+    ],
+    [
+      "ods.lianjia.com",
+      5
+    ],
+    [
+      "lease-pz.link.lianjia.com",
+      4
+    ],
+    [
+      "s1.ljcdn.com",
+      4
+    ],
+    [
+      "login.ke.com",
+      3
+    ],
+    [
+      "moma.ke.com",
+      3
+    ],
+    [
+      "file.ljcdn.com",
+      3
+    ],
+    [
+      "smart-mo.ke.com",
+      2
+    ],
+    [
+      "wxwork.ke.com",
+      1
+    ],
+    [
+      "moma-data.ke.com",
+      1
+    ],
+    [
+      "flow-forge.ke.com",
+      1
+    ],
+    [
+      "linkspace.ke.com",
+      1
+    ]
+  ],
+  "host_http200_top": [
+    [
+      "app-moma.ke.com",
+      73
+    ],
+    [
+      "prd-assistant-backend.ke.com",
+      22
+    ],
+    [
+      "wandou.ke.com",
+      21
+    ],
+    [
+      "?",
+      15
+    ],
+    [
+      "s1.ljcdn.com",
+      4
+    ],
+    [
+      "moma.ke.com",
+      3
+    ],
+    [
+      "file.ljcdn.com",
+      3
+    ],
+    [
+      "smart-mo.ke.com",
+      2
+    ],
+    [
+      "login.ke.com",
+      2
+    ],
+    [
+      "lease-pz.link.lianjia.com",
+      2
+    ]
+  ],
+  "admin_route_metadata": [
+    {
+      "path": "customer-sms-whitelist",
+      "title": "访客人员管理",
+      "description": "访客短信登录手机号 Redis 白名单"
+    },
+    {
+      "path": "security-gray",
+      "title": "安全评估灰度",
+      "description": "外网自动开通:kill_switch + ucid 白名单 + 尾号灰度"
+    },
+    {
+      "path": "app-blacklist",
+      "title": "应用黑名单(nginx 拦截)",
+      "description": "写 Redis HASH,nginx access_by_lua_block 读并按请求头值 401 拦截"
+    },
+    {
+      "path": "falcon-gateway-acl",
+      "title": "Falcon网关访问控制",
+      "description": "Falcon 网关接口访问控制（deny/audit + enforce 开关）；Redis：falcon:acl:*"
+    },
+    {
+      "path": "metric-block",
+      "title": "指标禁用",
+      "description": "禁用指定指标 ID，拒绝对外提供数据；Redis：moma_data:metric:blocked_ids"
+    },
+    {
+      "path": "chat-api-ratelimit",
+      "title": "反爬策略灰度",
+      "description": "反爬策略灰度与轻应用接口限流：反爬灰度(owner ucid)、工具接口评审、Supabase 上限白名单、接口默认策略"
+    }
+  ],
+  "admin_redis_keys": [
+    "falcon:acl:*",
+    "hive_sync_fast_mode:gray:*",
+    "moma_data:metric:blocked_ids",
+    "moma_data:table_rows:rate_limit:*",
+    "odin_portal:tool_admin:ucids",
+    "slice_total_limit:whitelist:*"
+  ],
+  "conclusion_hint": "可解析子集（非全量）内 0 个 HTTP 429、0 个限流响应头；受低频单次采样口径限制，仅作弱旁证，熔断缺失的强证据为 M4 并发突发（KE-30）与 KE-01 翻页；本轮静态观测到客户端 SDK 限流实现与管理面配置，生产强制态待覆盖矩阵实测或服务端白盒核实。"
+}

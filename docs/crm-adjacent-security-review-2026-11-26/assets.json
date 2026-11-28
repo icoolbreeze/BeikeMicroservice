@@ -1,0 +1,117 @@
+[
+  {
+    "name": "客服中心／业绩争议",
+    "host": "helper.ke.com",
+    "url": "https://helper.ke.com/"
+  },
+  {
+    "name": "商铺写字楼（新版房源列表）",
+    "host": "listing-de.ke.com",
+    "url": "https://listing-de.ke.com/pc/de/list"
+  },
+  {
+    "name": "AI门户",
+    "host": "letsai.ke.com",
+    "url": "https://letsai.ke.com/"
+  },
+  {
+    "name": "二手自然商机展位",
+    "host": "naturaloppty.ke.com",
+    "url": "https://naturaloppty.ke.com/"
+  },
+  {
+    "name": "工作台首页",
+    "host": "shouye.link.lianjia.com",
+    "url": "http://shouye.link.lianjia.com/shou/index"
+  },
+  {
+    "name": "共享池（旧客源入口）",
+    "host": "ke.link.lianjia.com",
+    "url": "https://ke.link.lianjia.com/customer/sharePool/page/list"
+  },
+  {
+    "name": "管理驾驶舱",
+    "host": "odin.ke.com",
+    "url": "https://odin.ke.com/portal/1809"
+  },
+  {
+    "name": "积分提佣",
+    "host": "8.lianjia.com",
+    "url": "http://8.lianjia.com/"
+  },
+  {
+    "name": "金贝展位推广平台",
+    "host": "brand.ke.com",
+    "url": "https://brand.ke.com/"
+  },
+  {
+    "name": "考勤",
+    "host": "kaoqin.hr.ke.com",
+    "url": "http://kaoqin.hr.ke.com/"
+  },
+  {
+    "name": "客户端通知中心／IM",
+    "host": "kemcc.ke.com",
+    "url": "https://kemcc.ke.com/noticeCenter"
+  },
+  {
+    "name": "客源",
+    "host": "ke.deyoulife.com",
+    "url": "https://ke.deyoulife.com/customer-infrastructure/customer/page/allCustomer"
+  },
+  {
+    "name": "培训",
+    "host": "study.ke.com",
+    "url": "https://study.ke.com/"
+  },
+  {
+    "name": "签约",
+    "host": "hetong.link.lianjia.com",
+    "url": "https://hetong.link.lianjia.com//index"
+  },
+  {
+    "name": "商圈房源聚焦",
+    "host": "newhouse-cps.ke.com",
+    "url": "https://newhouse-cps.ke.com/grid/focus/admineActivity"
+  },
+  {
+    "name": "我的潜在客户 / 客户公海",
+    "host": "clue.a.ke.com",
+    "url": "https://clue.a.ke.com/page/potential/customer/list"
+  },
+  {
+    "name": "消息",
+    "host": "xiaoxi.link.lianjia.com",
+    "url": "https://xiaoxi.link.lianjia.com//trend/index"
+  },
+  {
+    "name": "新房",
+    "host": "link.fang.lianjia.com",
+    "url": "https://link.fang.lianjia.com/map"
+  },
+  {
+    "name": "薪酬",
+    "host": "xinchou.ke.com",
+    "url": "https://xinchou.ke.com/"
+  },
+  {
+    "name": "员工门户／个人档案",
+    "host": "family.ke.com",
+    "url": "https://family.ke.com/myInfo/profile"
+  },
+  {
+    "name": "展位管理后台",
+    "host": "liulian.ke.com",
+    "url": "http://liulian.ke.com/static/buy/commentExpo"
+  },
+  {
+    "name": "A+客户端认证服务",
+    "host": "saas.a.ke.com",
+    "url": "http://saas.a.ke.com/"
+  },
+  {
+    "name": "HR门户",
+    "host": "hr.ke.com",
+    "url": "http://hr.ke.com/"
+  }
+]

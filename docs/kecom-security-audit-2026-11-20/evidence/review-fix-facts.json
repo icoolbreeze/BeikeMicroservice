@@ -1,0 +1,153 @@
+{
+ "verify_token_prod_empty": {
+  "http": 422,
+  "errno": null,
+  "detail": "[{'type': 'missing', 'loc': ['body', 'token'], 'msg': 'Field required', 'input': {}, 'url'"
+ },
+ "verify_token_prod_garbage": {
+  "http": 200,
+  "errno": 1,
+  "detail": "token 格式非法，应为 <jwt>|<chat_id>"
+ },
+ "verify_token_staging_empty": {
+  "http": 422,
+  "errno": null,
+  "detail": "[{'type': 'missing', 'loc': ['body', 'token'], 'msg': 'Field required', 'input': {}, 'url'"
+ },
+ "verify_token_staging_garbage": {
+  "http": 200,
+  "errno": 1,
+  "detail": "token 格式非法，应为 <jwt>|<chat_id>"
+ },
+ "lease_chain_hosts": [
+  "lease-pz.link.lianjia.com"
+ ],
+ "house_chain_hosts": [
+  "house.link.lianjia.com",
+  "house.link.lianjia.com",
+  "house.link.lianjia.com",
+  "house.link.lianjia.com"
+ ],
+ "moma_chain_hosts": [
+  "prd-assistant-backend.ke.com"
+ ],
+ "cookie_attribute_matrix": {
+  "csrfSecret": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "puzu_lease_token": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "puzu_lease_token_secure": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "UCID": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "UCID_secure": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "Lianjia_curWorkCity": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "Lianjia_BUcid": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "Lianjia_u_info": {
+   "path": "/",
+   "secure": true,
+   "httponly": true
+  },
+  "lianjia_ssid": {
+   "expires": "Mon, 23-Nov-26 06:20:30 GMT",
+   "max-age": "1800",
+   "domain": ".ke.com",
+   "path": "/"
+  },
+  "lianjia_uuid": {
+   "expires": "Thu, 20-Nov-36 05:50:28 GMT",
+   "max-age": "315360000",
+   "domain": ".lianjia.com",
+   "path": "/"
+  },
+  "HOUSEJSESSIONID": {
+   "path": "/",
+   "samesite": "lax"
+  },
+  "rememberMe": {
+   "path": "/",
+   "max-age": "0",
+   "expires": "Sun, 22-Nov-2026 05:50:28 GMT",
+   "samesite": "lax"
+  },
+  "login_ucid": {
+   "max-age": "403200",
+   "expires": "Fri, 27-Nov-2026 21:50:29 GMT",
+   "domain": "lianjia.com",
+   "path": "/"
+  },
+  "saas_token": {
+   "domain": "lianjia.com",
+   "path": "/"
+  }
+ },
+ "cors_house_with_session": {
+  "http": 200,
+  "acao": "",
+  "acac": "",
+  "vary": "Accept-Encoding",
+  "body": {
+   "non_json_len": 65536
+  }
+ },
+ "cors_lease_with_session": {
+  "http": 200,
+  "acao": "https://evil.example",
+  "acac": "true",
+  "vary": "Accept-Encoding",
+  "body": {
+   "code": 100000
+  }
+ },
+ "cors_trusteeship_with_session": {
+  "http": 200,
+  "acao": "https://evil.example",
+  "acac": "true",
+  "vary": "Accept-Encoding",
+  "body": {
+   "non_json_len": 3215
+  }
+ },
+ "cors_moma_with_session": {
+  "http": 200,
+  "acao": "",
+  "acac": "",
+  "vary": "Accept-Encoding",
+  "body": {
+   "code": 0
+  }
+ },
+ "cors_wandou_with_token": {
+  "http": 200,
+  "acao": "",
+  "acac": "",
+  "vary": "Accept-Encoding",
+  "body": {
+   "code": "0"
+  }
+ }
+}

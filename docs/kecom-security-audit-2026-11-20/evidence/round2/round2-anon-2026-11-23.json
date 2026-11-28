@@ -1,0 +1,2405 @@
+{
+  "meta": {
+    "evidence_file": "round2-anon-2026-11-23.json",
+    "module": "M1/M3/M4/M5-anonymous",
+    "generated_at_utc": "2026-11-23T17:58:30+00:00",
+    "viewpoint": "office-workstation (viewpoint B; anonymous + public app-signature plane)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 55,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "KE21-anon-prompts-select",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.294,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 47,
+      "body_sha256": "f3447f2ecec54cc98f5040d9cebccb3138e17f681ecb9bd4940dfd2bca1d152d",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-anon-admins-select-id",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.277,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 47,
+      "body_sha256": "0d5f765eef08ac8c3a020c9ab4aa5b99ffd0370a8c17e3bf6c048653002c3be8",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-anon-admins-select-hash",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 25,
+            "sha256_16": "75984038236ed43b"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.236,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "149",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 149,
+      "body_sha256": "36848815b66c84dd40f927839c3a517edc8a22c2aee2967e29080ff095b44e0c",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-anon-usage-logs",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.234,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 47,
+      "body_sha256": "bb4423df6c9eecb02dd3da66f66fdfc37f9ca9c852bda6dd645b7143ce137d56",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-no-apikey-prompts",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.243,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "96",
+        "www-authenticate": "Key",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 96,
+      "body_sha256": "96edd250b437ebc835b2dd66c6dce9e917ef5964787ec814e6951593782cedd9",
+      "json": true,
+      "top_keys": [
+        "message",
+        "request_id"
+      ],
+      "text_message": "No API key found in request",
+      "data_shape": null
+    },
+    {
+      "item": "KE21-anon-rpc-usage-overview",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview_with_filter",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 400,
+      "elapsed_s": 3.251,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "100",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 100,
+      "body_sha256": "78387feff5f1123d9a3c0e3e11e262d2df5d67e8b396050b9510dee5717b38d1",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "57014",
+      "text_message": "canceling statement due to statement timeout",
+      "data_shape": null
+    },
+    {
+      "item": "KE21-anon-patch-admins-zero-match",
+      "method": "PATCH",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "id",
+            "len": 39,
+            "sha256_16": "8d53c36daa62f423"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.252,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 2,
+      "body_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-anon-delete-prompts-zero-match",
+      "method": "DELETE",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "id",
+            "len": 39,
+            "sha256_16": "8d53c36daa62f423"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.248,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 2,
+      "body_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-anon-insert-prompts-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 400,
+      "elapsed_s": 0.229,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "133",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 133,
+      "body_sha256": "88e54d9ef6a9494651aadf410a79d3e79b9142b11d1aa3e7de6ede863828805a",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "PGRST204",
+      "text_message": "Could not find the 'creator_email' column of 'prompts' in the schema cache",
+      "data_shape": null
+    },
+    {
+      "item": "KE21-password-debug-spa-route",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/admin/password-debug",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 302,
+      "elapsed_s": 0.184,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html",
+        "cache-control": "no-cache, no-store, must-revalidate, max-age=0"
+      },
+      "body_len": 489,
+      "body_sha256": "29e4e1e55236fe217b05670e79480f73b9d9f1825973b038f4e6598f51c31901",
+      "json": false,
+      "head_ascii": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n<html>\r\n<head><script src=\"https://s1.ljcdn.com/risk-control/static/"
+    },
+    {
+      "item": "KE21-password-debug-falcon-route",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/admin/password-debug",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.187,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "22",
+        "cache-control": "no-store"
+      },
+      "body_len": 22,
+      "body_sha256": "37ec4665a8102d115ffd1ac20dae94c98b4dac64b0c1a68228aa2a531caeb35d",
+      "json": true,
+      "top_keys": [
+        "detail"
+      ],
+      "text_detail": "Not Found",
+      "data_shape": null
+    },
+    {
+      "item": "KE22-valid-signature-baseline",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.281,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "21",
+        "cache-control": "no-store"
+      },
+      "body_len": 21,
+      "body_sha256": "78acb4e4c4a6a35ea697f56a1493a4cc60525f9ad214cb99662951402e239e0d",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "KE22-no-signature",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.192,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "缺少签名头",
+      "data_shape": null
+    },
+    {
+      "item": "KE22-fallback-marker",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.182,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "30",
+        "cache-control": "no-store"
+      },
+      "body_len": 30,
+      "body_sha256": "9a3d53663cf19af38ff23dcabfd59e5f1833aa2217e95da71bc5aa59f4270001",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "签名验证失败",
+      "data_shape": null
+    },
+    {
+      "item": "KE22-stale-timestamp",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.189,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "e048b42e0cb6cb8f1f5d10bbd25d3c0d0ca4a8e85db5d23c500f2add7dee235d",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "签名已过期",
+      "data_shape": null
+    },
+    {
+      "item": "KE22-nonce-replay-1",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.191,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "21",
+        "cache-control": "no-store"
+      },
+      "body_len": 21,
+      "body_sha256": "78acb4e4c4a6a35ea697f56a1493a4cc60525f9ad214cb99662951402e239e0d",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "KE22-nonce-replay-2",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.207,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "21",
+        "cache-control": "no-store"
+      },
+      "body_len": 21,
+      "body_sha256": "78acb4e4c4a6a35ea697f56a1493a4cc60525f9ad214cb99662951402e239e0d",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "KE22-unsigned-query-tamper",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "query",
+            "len": 26,
+            "sha256_16": "cf941e683b81001d"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.257,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "21",
+        "cache-control": "no-store"
+      },
+      "body_len": 21,
+      "body_sha256": "78acb4e4c4a6a35ea697f56a1493a4cc60525f9ad214cb99662951402e239e0d",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "KE25-decrypt-anon-with-envelope-key",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.183,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "296",
+        "vary": "Origin"
+      },
+      "body_len": 296,
+      "body_sha256": "a65abb98803309d1e35b1c516b131fbb48e5b11558f128e1dc67c6a735b11bb9",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE25-decrypt-anon-no-envelope-key",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.176,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "296",
+        "vary": "Origin"
+      },
+      "body_len": 296,
+      "body_sha256": "109e27af024b08a71ae9678a8ce509631bde535b0cdd4e4cea3b2f64248d22fe",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE26-anon-html-to-pdf-gate",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-pdf",
+        "query_param_names": [
+          "chat_id",
+          "url"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "url",
+            "len": 23,
+            "sha256_16": "95bd8950c21c1294"
+          },
+          {
+            "name": "chat_id",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.172,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE26-anon-html-to-pdf-shared-gate",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-pdf/shared",
+        "query_param_names": [
+          "share_token",
+          "url"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 13,
+            "sha256_16": "5d100e7ef885fa13"
+          },
+          {
+            "name": "url",
+            "len": 23,
+            "sha256_16": "95bd8950c21c1294"
+          }
+        ]
+      },
+      "http": 403,
+      "elapsed_s": 0.192,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "43"
+      },
+      "body_len": 43,
+      "body_sha256": "21892766c9c8a8215a9a6362ae457d3db504e93289502ac7fe9650d20160e3e6",
+      "json": true,
+      "top_keys": [
+        "detail"
+      ],
+      "text_detail": "分享链接无效或已过期",
+      "data_shape": null
+    },
+    {
+      "item": "KE26-anon-html-to-image-gate",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.191,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE26-anon-custom-mcp-gate",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/connector/custom-mcp/test",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.19,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE26-anon-groovy-gate",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/platform-api/test-groovy-filter",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.18,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "INJ-postgrest-order-baseline",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "limit",
+          "order",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "order",
+            "len": 6,
+            "sha256_16": "d322e5d2a9db3ddc"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.243,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 47,
+      "body_sha256": "e71a27e5a061f578a823b329c62515f900590328c6d0da77145a68acb3215c4f",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "INJ-postgrest-order-sqli",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "limit",
+          "order",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "order",
+            "len": 17,
+            "sha256_16": "9a7c65b12b1c9e25"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 400,
+      "elapsed_s": 0.221,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "178",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 178,
+      "body_sha256": "ca11fdec383d53fbad4cb5163d3f1f188c24eb644f8736da19d7609d9393dbc7",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "PGRST100",
+      "text_message": "\"failed to parse order (id.asc,(select 1))\" (line 1, column 8)",
+      "data_shape": null
+    },
+    {
+      "item": "INJ-postgrest-filter-quote",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "id",
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "id",
+            "len": 5,
+            "sha256_16": "2ba84432b40594fd"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 400,
+      "elapsed_s": 0.239,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "98",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 98,
+      "body_sha256": "093f093562fb43280f01c932fb47294b377658d4ffef0738e2a17c326c0c9e4c",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "22P02",
+      "text_message": "invalid input syntax for type uuid: \"1'\"",
+      "data_shape": null
+    },
+    {
+      "item": "INJ-postgrest-bool-true",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "id",
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "id",
+            "len": 25,
+            "sha256_16": "91d406a0db32c490"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 400,
+      "elapsed_s": 0.249,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "118",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 118,
+      "body_sha256": "dafa927e282c9ff5c2b34a008d548051e3859823a6099266875b603782dfceab",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "22P02",
+      "text_message": "invalid input syntax for type uuid: \"1?or=(id.eq.1,id.eq.2)\"",
+      "data_shape": null
+    },
+    {
+      "item": "INJ-sug-baseline",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.193,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "21",
+        "cache-control": "no-store"
+      },
+      "body_len": 21,
+      "body_sha256": "78acb4e4c4a6a35ea697f56a1493a4cc60525f9ad214cb99662951402e239e0d",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "INJ-sug-single-quote",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 2,
+            "sha256_16": "a80c8a675a0e6f40"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.273,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "21",
+        "cache-control": "no-store"
+      },
+      "body_len": 21,
+      "body_sha256": "78acb4e4c4a6a35ea697f56a1493a4cc60525f9ad214cb99662951402e239e0d",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "INJ-sug-ssti-marker",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 7,
+            "sha256_16": "d095461aa3182fe4"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.26,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "163",
+        "cache-control": "no-store"
+      },
+      "body_len": 163,
+      "body_sha256": "044032b8d12a3fa3502f909c37bfa8a232312089eaebc979de83792070614365",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "INJ-sug-bool-pair",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 12,
+            "sha256_16": "bb3a54f2b42649fb"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.27,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "175",
+        "cache-control": "no-store"
+      },
+      "body_len": 175,
+      "body_sha256": "6a651d497f6e48ebd5f5a9b293a6e812b8e71cd374ee594bd1af6dfe0c616f86",
+      "json": true,
+      "top_keys": [
+        "list",
+        "total"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "INJ-html-image-ssti-anon",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.184,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "INJ-upload-dothtml",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.225,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "160"
+      },
+      "body_len": 160,
+      "body_sha256": "ecd63083a1b0f37726ec691809766b4cb33d5cc3c3c91df2e8bc5f17a1cac71f",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "U001",
+      "biz_success": false,
+      "text_message": "未登录或登录已失效",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "INJ-upload-svg",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.215,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "160"
+      },
+      "body_len": 160,
+      "body_sha256": "2a53d05a412c575738de3d740dbef4b761692935f1f180e9e418d05bcf0cc66b",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "U001",
+      "biz_success": false,
+      "text_message": "未登录或登录已失效",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "INJ-upload-double-ext",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.21,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "160"
+      },
+      "body_len": 160,
+      "body_sha256": "aea74b37fc443068f1291afbe8bc7f6ff01e8223a44cbbd35b0024e920f0cdd5",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "U001",
+      "biz_success": false,
+      "text_message": "未登录或登录已失效",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "INJ-upload-traversal",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.218,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "160"
+      },
+      "body_len": 160,
+      "body_sha256": "72d324d2c913ffd6c756afdf3fabf05d04104d868f473a5edba9bb456cf47d8e",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "U001",
+      "biz_success": false,
+      "text_message": "未登录或登录已失效",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "HOST-wxwork-root",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wxwork.ke.com",
+        "path": "/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.198,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 104,
+      "body_sha256": "64efc4b10b17123be3ceacbc855f46055ea08d7ac1ea63d681af6238b9e0b6ad",
+      "json": true,
+      "top_keys": [
+        "error",
+        "message",
+        "path",
+        "status",
+        "timestamp"
+      ],
+      "biz_status": 404,
+      "text_message": "No message available",
+      "text_error": "Not Found",
+      "data_shape": null
+    },
+    {
+      "item": "HOST-smartmo-root",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "smart-mo.ke.com",
+        "path": "/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.195,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": "1209",
+        "vary": "Accept-Encoding",
+        "content-disposition": "inline; filename=\"index.html\""
+      },
+      "body_len": 1209,
+      "body_sha256": "67805433354cbdaf87ec2ed1d1156115052e48b71a42094795fb596c3b388f03",
+      "json": false,
+      "head_ascii": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=devic"
+    },
+    {
+      "item": "HOST-smartmo-xiaomo-user",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "smart-mo.ke.com",
+        "path": "/xiaomo-user",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.191,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": "1209",
+        "vary": "Accept-Encoding",
+        "content-disposition": "inline; filename=\"index.html\""
+      },
+      "body_len": 1209,
+      "body_sha256": "67805433354cbdaf87ec2ed1d1156115052e48b71a42094795fb596c3b388f03",
+      "json": false,
+      "head_ascii": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=devic"
+    },
+    {
+      "item": "HOST-moma-data",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "moma-data.ke.com",
+        "path": "/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.004,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "HOST-flow-forge",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "flow-forge.ke.com",
+        "path": "/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.014,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "HOST-linkspace",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "linkspace.ke.com",
+        "path": "/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.006,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "HOST-feishu-connector",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/feishu_connector",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.202,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-methods": "*",
+        "access-control-allow-headers": "*",
+        "vary": "Origin"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CORS-lease-pz",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "lease-pz.link.lianjia.com",
+        "path": "/api/houseList/search/pc/list",
+        "query_param_names": [
+          "clientOsType",
+          "pageIndex",
+          "pageSize",
+          "relationRange",
+          "sceneCode"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "pageIndex",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "pageSize",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "relationRange",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "sceneCode",
+            "len": 16,
+            "sha256_16": "24235ff4babf1209"
+          },
+          {
+            "name": "clientOsType",
+            "len": 1,
+            "sha256_16": "4e07408562bedb8b"
+          }
+        ]
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.171,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "CORS-trusteeship",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "trusteeship.link.lianjia.com",
+        "path": "/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.148,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "CORS-bms-lease",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "bms.lease.ke.com",
+        "path": "/api/config/operation/retrieve/config",
+        "query_param_names": [
+          "channelType"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "channelType",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.192,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "CORS-house-link",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "house.link.lianjia.com",
+        "path": "/search/searchQueryNew",
+        "query_param_names": [
+          "currentPage",
+          "pageSize"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "currentPage",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "pageSize",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.188,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "CORS-wandou",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v1/users/me",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 302,
+      "elapsed_s": 0.227,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-length": "0",
+        "x-content-type-options": "nosniff",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "x-frame-options": "SAMEORIGIN"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "CORS-moma-backend",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.183,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-methods": "*",
+        "access-control-allow-headers": "*",
+        "vary": "Origin"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CORS-app-moma",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/city/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.233,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "29458",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true"
+      },
+      "body_len": 29458,
+      "body_sha256": "c9fcfc343f1a7d597057bac051f2bef97596e4246a05dcca144d6551b396c885",
+      "json": true,
+      "top_keys": [
+        "cities"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "CORS-lease-pz-preflight",
+      "method": "OPTIONS",
+      "url": {
+        "scheme": "https",
+        "host": "lease-pz.link.lianjia.com",
+        "path": "/api/houseList/search/pc/list",
+        "query_param_names": [
+          "clientOsType",
+          "pageIndex",
+          "pageSize",
+          "relationRange",
+          "sceneCode"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "pageIndex",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "pageSize",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "relationRange",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "sceneCode",
+            "len": 16,
+            "sha256_16": "24235ff4babf1209"
+          },
+          {
+            "name": "clientOsType",
+            "len": 1,
+            "sha256_16": "4e07408562bedb8b"
+          }
+        ]
+      },
+      "http": null,
+      "transport_error": "URLError",
+      "error_detail": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)>",
+      "elapsed_s": 5.003,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "Origin",
+        "User-Agent"
+      ]
+    },
+    {
+      "item": "SSE-wandou-aschat-config",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/aschat/config",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.223,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "160"
+      },
+      "body_len": 160,
+      "body_sha256": "18c039426e81a98338909491e50b6edf8f38c9ada8c0ec48e93aa2e257af87cb",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "U001",
+      "biz_success": false,
+      "text_message": "未登录或登录已失效",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "SSE-moma-chat-stream",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/chats/1/stream",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.177,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    }
+  ],
+  "findings": {
+    "anon_jwt_claims_shape": {
+      "iss": "supabase-platform",
+      "role": "anon",
+      "exp": 3676759359
+    },
+    "KE21_canary_cleanup": {
+      "attempted": false
+    }
+  }
+}

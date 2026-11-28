@@ -1,0 +1,59 @@
+[
+  {
+    "name": "Moma主站",
+    "target": "https://moma.ke.com/nchat",
+    "final": "https://moma.ke.com/nchat",
+    "title": "MOMA-首页",
+    "identity_proofs": [
+      {
+        "url": "https://prd-assistant-backend.ke.com/api/user/info",
+        "status": 200,
+        "code": 0,
+        "identity_match": true,
+        "data_keys": [
+          "user_info",
+          "is_authenticated",
+          "invite_code",
+          "broker_assistant_shell_only"
+        ]
+      }
+    ],
+    "input_types": [
+      "file"
+    ],
+    "app_session_present": true
+  },
+  {
+    "name": "豌豆",
+    "target": "https://wandou.ke.com/chat",
+    "final": "https://wandou.ke.com/chat",
+    "title": "豌豆 PC",
+    "identity_proofs": [],
+    "input_types": [
+      "file"
+    ],
+    "direct_identity": {
+      "status": 200,
+      "code": "0",
+      "success": true,
+      "identity_match": true
+    },
+    "business_read": {
+      "path": "/api/v2/house/resource/default/search",
+      "status": 200,
+      "code": "0",
+      "success": true,
+      "row_count": 1
+    },
+    "app_session_present": false
+  },
+  {
+    "name": "Moma文案App",
+    "target": "https://app-moma.ke.com/60758c5d-5f65-47aa-8238-645d8caaffb1/#/",
+    "final": "https://app-moma.ke.com/60758c5d-5f65-47aa-8238-645d8caaffb1/",
+    "title": "视频号/小红书文案生成器 - 贝壳房源AI新媒体文案工具",
+    "identity_proofs": [],
+    "input_types": [],
+    "app_session_present": false
+  }
+]

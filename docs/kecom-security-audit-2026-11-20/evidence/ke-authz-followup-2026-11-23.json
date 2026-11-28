@@ -1,0 +1,226 @@
+{
+  "meta": {
+    "date": "2026-11-23",
+    "mode": "single-authorized-account-authenticated-follow-up",
+    "targets": [
+      "Moma 文案 App",
+      "Moma 主站",
+      "豌豆 PC"
+    ],
+    "redaction": "只保留状态、业务码、字段名、计数、布尔值和响应摘要；不保留令牌值、Cookie 值、个人资料原值、会话/房源/笔记标识、模型生成文本或客源原文",
+    "cross_account_bola": "not_tested_requires_second_authorized_account",
+    "write_operations": "not_performed",
+    "anonymous_model_generation_requests": 1,
+    "anonymous_model_max_tokens": 1
+  },
+  "wandou_trusteeship_token_audience": {
+    "token_type": "lianjia_trusteeship_token",
+    "identity": {
+      "method": "GET",
+      "path": "/api/v1/users/me",
+      "http": 200,
+      "code": "0",
+      "success": true,
+      "principal_match": true,
+      "data_fields": [
+        "cityCode",
+        "cityName",
+        "name",
+        "positionCode",
+        "positionName",
+        "positionType",
+        "ucid",
+        "userCode"
+      ]
+    },
+    "business_read": {
+      "method": "POST",
+      "path": "/api/v2/notes/customers/search",
+      "request": {
+        "pageNo": 1,
+        "pageSize": 1
+      },
+      "http": 200,
+      "code": "0",
+      "success": true,
+      "row_count": 1,
+      "row_fields": [
+        "avatar",
+        "customerId",
+        "name"
+      ],
+      "raw_customer_data_retained": false
+    },
+    "conclusion": "confirmed_cross_application_token_audience_acceptance_and_business_read",
+    "not_established": "cross_account_object_authorization"
+  },
+  "moma_copy_app": {
+    "public_asset": {
+      "path": "index-lAUyl87S.js",
+      "sha256": "59e28a549d48c5d88a08df54eb2645fdcddbe3f855f25a1204523ff7df59d787",
+      "contains_model_signing_fetch": true,
+      "contains_static_client_api_key": true,
+      "contains_app_id": true,
+      "personal_token_used_by_model_sdk": false
+    },
+    "official_login": {
+      "provider": "cas",
+      "access_token_acquired": true,
+      "expires_in_observed": 3600,
+      "identity_method": "GET",
+      "identity_path": "/falcon/supabase-volc/<APP_ID>/auth/v1/user",
+      "identity_http_with_public_apikey_and_user_bearer": 200,
+      "identity_http_with_public_apikey_only": 401,
+      "principal_match": true,
+      "provider_cas": true
+    },
+    "model_auth_gates": {
+      "anonymous_empty_json_without_signature_http": 401,
+      "app_token_without_application_signature_empty_json_http": 401
+    },
+    "anonymous_model_positive_control": {
+      "method": "POST",
+      "path": "/falcon/ai_endpoints/v1/chat/completions",
+      "credential_source": "current_public_frontend_client_contract",
+      "user_cookie_present": false,
+      "user_bearer_present": false,
+      "request_max_tokens": 1,
+      "http": 200,
+      "choices_count": 1,
+      "nonempty_model_content": true,
+      "model_content_chars": 1,
+      "content_retained": false,
+      "retry_policy": "none"
+    },
+    "app_token_session_isolation": {
+      "to_moma_main_user_info": {
+        "http": 200,
+        "errno": 401,
+        "data_empty": true
+      },
+      "to_wandou_users_me": {
+        "http": 401,
+        "code": "U001",
+        "data_empty": true
+      }
+    }
+  },
+  "moma_main": {
+    "login": {
+      "official_cas": true,
+      "principal_match": true
+    },
+    "own_chat_list": {
+      "http": 200,
+      "errno": 0,
+      "row_count_page_size_1": 1,
+      "principal_match": true
+    },
+    "own_chat_readback": {
+      "http": 200,
+      "errno": 0,
+      "principal_match": true,
+      "raw_chat_id_retained": false
+    },
+    "stream_gate_nil_uuid_empty_json": {
+      "anonymous": {
+        "http": 200,
+        "errno": 401,
+        "content_type": "application/json"
+      },
+      "authenticated": {
+        "http": 422,
+        "content_type": "application/json",
+        "validation_error": true
+      },
+      "model_generation_requested": false,
+      "object": "nonexistent_nil_uuid"
+    },
+    "own_api_keys": {
+      "http": 200,
+      "errno": 0,
+      "list_len": 0
+    },
+    "cookie_attributes_observed": {
+      "prd-assistant-token-prod": {
+        "domain": ".ke.com",
+        "path": "/",
+        "max_age": "0",
+        "samesite": "lax",
+        "httponly": true,
+        "secure_observed": false
+      },
+      "legacy_identity_cookies": {
+        "names": [
+          "_ucid_",
+          "_account_",
+          "_usercode_",
+          "_displayName_"
+        ],
+        "samesite": "lax",
+        "httponly_observed": false,
+        "secure_observed": false
+      }
+    },
+    "plain_http_entry_checks": "anonymous HTTP requests redirected to HTTPS; no authenticated cookie was sent over HTTP"
+  },
+  "wandou_read_endpoint_follow_up": {
+    "search_for_type1": {
+      "sample": "one identifier returned by the already authorized default search",
+      "anonymous": {
+        "http": 401,
+        "code": "U001"
+      },
+      "authenticated": {
+        "http": 200,
+        "code": "0",
+        "list_len": 0,
+        "sample_id_match": false
+      },
+      "coverage": "the SALE sample did not produce a type1 result; other business types remain unknown"
+    },
+    "batch_for_type2": {
+      "anonymous": {
+        "http": 401,
+        "code": "U001"
+      },
+      "authenticated": {
+        "http": 502,
+        "json_body": false
+      },
+      "coverage": "one request only; no stability or availability conclusion"
+    },
+    "notes_houses_history": {
+      "anonymous_empty_parameter": {
+        "http": 401,
+        "code": "U001"
+      },
+      "authenticated_empty_parameter": {
+        "http": 400,
+        "code": "INVALID_PARAM"
+      },
+      "own_note_positive_control": "not_available_current_account",
+      "valid_object_read": "not_tested"
+    }
+  },
+  "cors_negative_controls": {
+    "wandou_users_me_with_session_and_untrusted_origin": {
+      "acao": "",
+      "acac": "",
+      "vary": "Accept-Encoding"
+    },
+    "moma_user_info_with_session_and_untrusted_origin": {
+      "acao": "",
+      "acac": "",
+      "vary": "Accept-Encoding"
+    }
+  },
+  "unresolved": [
+    "A/B 双账号交叉对象授权及跨店、跨城 BOLA",
+    "文案 App 已知私有行的 Supabase 匿名读取与 RLS 有效授权结果",
+    "Moma 主站有效模型请求、用户配额和完整生成链",
+    "文案 App 一小时 access token 到期执行、刷新与吊销",
+    "豌豆 notes/houses/history 的自有有效笔记正对照",
+    "Supabase 写权限、业务写接口 CSRF、注销后的票据吊销"
+  ]
+}

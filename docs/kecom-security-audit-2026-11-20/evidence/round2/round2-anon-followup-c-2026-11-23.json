@@ -1,0 +1,434 @@
+{
+  "meta": {
+    "evidence_file": "round2-anon-followup-c-2026-11-23.json",
+    "module": "M1-KE21/KE25-followup-c",
+    "generated_at_utc": "2026-11-23T18:07:04+00:00",
+    "viewpoint": "office-workstation (viewpoint B; anonymous plane, focused follow-up C)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 7,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "KE21-struct-users",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/users",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 48,
+            "sha256_16": "354e5b0be6da0beb"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "body_len": 308,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "308",
+        "content-range": "0-0/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "user_id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "3bf570ed745a2d74"
+          },
+          "user_name": {
+            "t": "str",
+            "len": 2
+          },
+          "user_email": {
+            "t": "str",
+            "len": 23
+          },
+          "phone": {
+            "t": "str",
+            "len": 14
+          },
+          "ucid": {
+            "t": "str",
+            "len": 16
+          },
+          "org_name": {
+            "t": "str",
+            "len": 49
+          }
+        }
+      }
+    },
+    {
+      "item": "KE21-struct-usage-logs",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 56,
+            "sha256_16": "0c4de991bd6a77aa"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "body_len": 212,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "212",
+        "content-range": "0-0/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "89dbcd965f17d88d"
+          },
+          "user_id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "cf26da300124edb4"
+          },
+          "user_name": {
+            "t": "str",
+            "len": 3
+          },
+          "property_title": {
+            "t": "str",
+            "len": 7
+          },
+          "prompt_template_name": {
+            "t": "str",
+            "len": 12
+          }
+        }
+      }
+    },
+    {
+      "item": "KE21-struct-policy-news",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/policy_news",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 20,
+            "sha256_16": "2aa85033bac4934c"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "body_len": 171,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "171",
+        "content-range": "0-0/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "e242725e77a2f7ce"
+          },
+          "title": {
+            "t": "str",
+            "len": 19
+          },
+          "source": {
+            "t": "str",
+            "len": 11
+          },
+          "city": {
+            "t": "str",
+            "len": 3
+          }
+        }
+      }
+    },
+    {
+      "item": "KE25-rows-list-one-dict",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.208,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "204",
+        "vary": "Origin"
+      },
+      "body_len": 204,
+      "body_sha256": "37fb5a6f773741bb542f65823235d6745071906ec319d28810e21b5a9e71cbd9",
+      "json": true,
+      "top_keys": [
+        "code",
+        "envelope"
+      ],
+      "biz_code": 0,
+      "data_shape": null
+    },
+    {
+      "item": "KE25-rows-list-dict-with-id",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.234,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "264",
+        "vary": "Origin"
+      },
+      "body_len": 264,
+      "body_sha256": "d64559f4fbdf24e7422d947749a7b41c02f2844256817f00551c24333205e632",
+      "json": true,
+      "top_keys": [
+        "code",
+        "envelope"
+      ],
+      "biz_code": 0,
+      "data_shape": null
+    },
+    {
+      "item": "KE25-rows-bad-table",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.186,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "204",
+        "vary": "Origin"
+      },
+      "body_len": 204,
+      "body_sha256": "6d676399970bf4de513b7dce171c20134c5ad08bd447f4ae5d43f6875df5a06a",
+      "json": true,
+      "top_keys": [
+        "code",
+        "envelope"
+      ],
+      "biz_code": 0,
+      "data_shape": null
+    },
+    {
+      "item": "KE25-rows-list-one-dict-no-key",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.189,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "125",
+        "vary": "Origin"
+      },
+      "body_len": 125,
+      "body_sha256": "0cf9707dc0c545f1a65a0bc71a09ee7b319f33aa2a9f0f1f5f8b9817e69d3a74",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data"
+      ],
+      "biz_code": 0,
+      "data_shape": {
+        "list_len": 1,
+        "item_shape": {
+          "content": "str"
+        }
+      }
+    }
+  ],
+  "findings": {
+    "KE21-struct-users": {
+      "http": 200,
+      "body_len": 308,
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "user_id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "3bf570ed745a2d74"
+          },
+          "user_name": {
+            "t": "str",
+            "len": 2
+          },
+          "user_email": {
+            "t": "str",
+            "len": 23
+          },
+          "phone": {
+            "t": "str",
+            "len": 14
+          },
+          "ucid": {
+            "t": "str",
+            "len": 16
+          },
+          "org_name": {
+            "t": "str",
+            "len": 49
+          }
+        }
+      }
+    },
+    "KE21-struct-usage-logs": {
+      "http": 200,
+      "body_len": 212,
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "89dbcd965f17d88d"
+          },
+          "user_id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "cf26da300124edb4"
+          },
+          "user_name": {
+            "t": "str",
+            "len": 3
+          },
+          "property_title": {
+            "t": "str",
+            "len": 7
+          },
+          "prompt_template_name": {
+            "t": "str",
+            "len": 12
+          }
+        }
+      }
+    },
+    "KE21-struct-policy-news": {
+      "http": 200,
+      "body_len": 171,
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "e242725e77a2f7ce"
+          },
+          "title": {
+            "t": "str",
+            "len": 19
+          },
+          "source": {
+            "t": "str",
+            "len": 11
+          },
+          "city": {
+            "t": "str",
+            "len": 3
+          }
+        }
+      }
+    }
+  }
+}

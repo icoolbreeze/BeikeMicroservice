@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "evidence_file": "round2-session-2026-11-23-sms.json",
+    "module": "M1-M5-session-sms",
+    "generated_at_utc": "2026-11-24T05:11:18+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized account, session plane)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 0,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [],
+  "findings": {
+    "principal_len": 16,
+    "phase": "sms",
+    "M5_sms": "skipped: ROUND2_SMS/ROUND2_SMS_PHONE not set; zero requests"
+  }
+}

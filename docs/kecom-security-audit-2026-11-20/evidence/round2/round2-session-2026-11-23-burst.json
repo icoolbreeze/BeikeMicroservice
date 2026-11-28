@@ -1,0 +1,274 @@
+{
+  "meta": {
+    "evidence_file": "round2-session-2026-11-23-burst.json",
+    "module": "M1-M5-session-burst",
+    "generated_at_utc": "2026-11-24T05:10:29+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized account, session plane)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 6,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "M4-llm-burst-3",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/ai_endpoints/v1/chat/completions",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 1.43,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "613",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store"
+      },
+      "body_len": 613,
+      "body_sha256": "931c47b6276084ac32770ba21f9362b37cf68b43cbb214ec42de2f5680beffc9",
+      "json": true,
+      "top_keys": [
+        "choices",
+        "created",
+        "id",
+        "model",
+        "object",
+        "usage"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "M4-llm-burst-1",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/ai_endpoints/v1/chat/completions",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 1.493,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "613",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store"
+      },
+      "body_len": 613,
+      "body_sha256": "025f55ad40cf735ce1fe76baa39362c7f57c8bc437a3fb086448481e93294694",
+      "json": true,
+      "top_keys": [
+        "choices",
+        "created",
+        "id",
+        "model",
+        "object",
+        "usage"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "M4-llm-burst-5",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/ai_endpoints/v1/chat/completions",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 1.565,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "613",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store"
+      },
+      "body_len": 613,
+      "body_sha256": "7f2a5316738456f971bdf014423c629af6adbda519ee9b8df6b50666be86f26d",
+      "json": true,
+      "top_keys": [
+        "choices",
+        "created",
+        "id",
+        "model",
+        "object",
+        "usage"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "M4-llm-burst-4",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/ai_endpoints/v1/chat/completions",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 1.819,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "613",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store"
+      },
+      "body_len": 613,
+      "body_sha256": "493955d04720b05bfc8da5ebee6f61c35497e17acfc3f3ddde85796a8d9aff1e",
+      "json": true,
+      "top_keys": [
+        "choices",
+        "created",
+        "id",
+        "model",
+        "object",
+        "usage"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "M4-llm-burst-2",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/ai_endpoints/v1/chat/completions",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 2.606,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-App-Id",
+        "X-Nonce",
+        "X-Signature",
+        "X-Timestamp"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "613",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store"
+      },
+      "body_len": 613,
+      "body_sha256": "32ffb816e8fb7e3f7c072e1e740b13c1ea9d03aab00a4c8119f4de9a85fbf0ca",
+      "json": true,
+      "top_keys": [
+        "choices",
+        "created",
+        "id",
+        "model",
+        "object",
+        "usage"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "M4-aschat-config-burst-read",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/aschat/config",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.26,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 236,
+      "body_sha256": "f5e29db92782952f03c266727868a94433933005a9041d47beb829d066173474",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "mainSessionId": "int",
+        "webSearchEnabled": "bool",
+        "noteEnabled": "bool",
+        "knowledgeBaseEnabled": "bool"
+      }
+    }
+  ],
+  "findings": {
+    "principal_len": 16,
+    "phase": "burst"
+  }
+}

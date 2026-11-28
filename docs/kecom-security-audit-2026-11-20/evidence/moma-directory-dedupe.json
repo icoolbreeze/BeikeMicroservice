@@ -1,0 +1,45 @@
+{
+  "scope": {
+    "pages": [
+      1,
+      50,
+      100
+    ],
+    "page_size": 100,
+    "query": "a"
+  },
+  "unique_records_after_dedupe": 101,
+  "raw_rows": 300,
+  "duplicate_rate_raw": 0.6633,
+  "per_page_unique_hash_counts": {
+    "1": 100,
+    "50": 100,
+    "100": 100
+  },
+  "pairwise_overlap_counts": {
+    "1&50": 100,
+    "1&100": 99,
+    "50&100": 99
+  },
+  "all_three_pages_intersection": 99,
+  "pagination_stability_page1": {
+    "rerun1_same_set": false,
+    "rerun2_same_set": false
+  },
+  "unique_record_fill": {
+    "mobile": {
+      "count": 28,
+      "rate": 0.2772
+    },
+    "birthday": {
+      "count": 100,
+      "rate": 0.9901
+    },
+    "superior": {
+      "count": 75,
+      "rate": 0.7426
+    }
+  },
+  "interpretation": "raw 27.33% mobile fill is diluted/inflated by 66% duplicate rows; use unique-record rate for exposure math; deep-page overlap suggests fuzzy query pagination instability, so full-directory enumeration requires query-term diversification rather than linear paging",
+  "redaction": "sha256-truncated hashes only; no raw identifiers printed"
+}

@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "evidence_file": "r3-cookie-runtime-2026-11-24.json",
+    "module": "round3-P14-cookie-runtime",
+    "generated_at_utc": "2026-11-24T08:31:23+00:00",
+    "viewpoint": "office-workstation (viewpoint B; round3 anonymous Set-Cookie attributes)",
+    "redaction": "cookie attribute shapes and value length/sha16 only; no raw cookie value",
+    "request_total": 4,
+    "retry_policy": "single attempt per item",
+    "identity_plane": "anonymous; no personal Cookie sent"
+  },
+  "findings": {
+    "anonymous_set_cookie": [
+      {
+        "item": "app-moma-root",
+        "http": 200,
+        "url_path": "/",
+        "set_cookie_shapes": [
+          {
+            "name": "lianjia_ssid",
+            "value_len": 36,
+            "value_sha16": "6ab69f0c14d0957e",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          },
+          {
+            "name": "lianjia_uuid",
+            "value_len": 36,
+            "value_sha16": "700041c09d5c5461",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          }
+        ],
+        "csp_present": false,
+        "x_frame_options": null,
+        "x_content_type_options": null
+      },
+      {
+        "item": "falcon-city-list",
+        "http": 200,
+        "url_path": "/falcon/city/list",
+        "set_cookie_shapes": [
+          {
+            "name": "lianjia_ssid",
+            "value_len": 36,
+            "value_sha16": "d2e0e14687525124",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          },
+          {
+            "name": "lianjia_ssid",
+            "value_len": 36,
+            "value_sha16": "d2e0e14687525124",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          },
+          {
+            "name": "lianjia_uuid",
+            "value_len": 36,
+            "value_sha16": "7be3aaeb64c92ba8",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          }
+        ],
+        "csp_present": false,
+        "x_frame_options": null,
+        "x_content_type_options": null
+      },
+      {
+        "item": "app-b-shell",
+        "http": 200,
+        "url_path": "/shipinshengcheng",
+        "set_cookie_shapes": [
+          {
+            "name": "lianjia_ssid",
+            "value_len": 36,
+            "value_sha16": "b7700947681d84d8",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          },
+          {
+            "name": "lianjia_uuid",
+            "value_len": 36,
+            "value_sha16": "6482c69fb08079a6",
+            "attributes": [
+              "expires",
+              "Max-Age",
+              "domain",
+              "path"
+            ],
+            "has_secure": false,
+            "has_httponly": false,
+            "samesite": null,
+            "domain": ".ke.com"
+          }
+        ],
+        "csp_present": false,
+        "x_frame_options": null,
+        "x_content_type_options": null
+      },
+      {
+        "item": "app-b-postgrest-anon",
+        "http": 401,
+        "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/properties",
+        "set_cookie_shapes": [],
+        "csp_present": false,
+        "x_frame_options": null,
+        "x_content_type_options": null
+      }
+    ]
+  }
+}

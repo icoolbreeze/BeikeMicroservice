@@ -1,0 +1,512 @@
+{
+  "meta": {
+    "evidence_file": "round2-cleanup-probe-2026-11-23.json",
+    "module": "write-round-orphan-cleanup-probe",
+    "viewpoint": "beike-server (viewpoint A; write-round orphan cleanup probe)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; fileIds/urls kept in memory only",
+    "request_total": 11,
+    "new_objects_created": true
+  },
+  "request_ledger": [
+    {
+      "item": "CL-list-notes-default",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/notes/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.311,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 178,
+      "body_sha256": "f2899b4bc479654fe20f31ff6dd8a8967260ecd3eedddd17dfc06cc55e16a876",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "notes": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "total": "int",
+        "pageNo": "int",
+        "pageSize": "int"
+      }
+    },
+    {
+      "item": "CL-list-notes-paged",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/notes/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.303,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 178,
+      "body_sha256": "f0f7f85e9d433ca106a683f6386701dcf3fa04a4fa01fa4017f0900fafd1f450",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "notes": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "total": "int",
+        "pageNo": "int",
+        "pageSize": "int"
+      }
+    },
+    {
+      "item": "CL-notes-statistics",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/statistics",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.312,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 287,
+      "body_sha256": "761a0ef0c74f0b0f8fd0dda68cdaa71f548362d703cbcf11c25b047370e07ecf",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "totalCount": "int",
+        "audioCount": "int",
+        "imageCount": "int",
+        "textCount": "int",
+        "fileCount": "int",
+        "weekNoteCount": "int",
+        "weekAudioCount": "int",
+        "recordingTypeCounts": {},
+        "templateCounts": {
+          "list_len": 0,
+          "item_shape": null
+        }
+      }
+    },
+    {
+      "item": "CL-route-delete-id",
+      "method": "DELETE",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/0",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.225,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 153,
+      "body_sha256": "2ad494a83f93a1d5dc7b0e26853e22ea2040fd7a6ef417c81905cf1c002e9b6b",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "NOT_FOUND",
+      "biz_success": false,
+      "text_message": "接口不存在",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CL-route-post-delete",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/delete",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.249,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 153,
+      "body_sha256": "f293dfbbf4def8bd8fd1a92b43bd220d0957a3f3c87dddd72a1df96f34ad3339",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "NOT_FOUND",
+      "biz_success": false,
+      "text_message": "接口不存在",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CL-route-delete-upload-query",
+      "method": "DELETE",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [
+          "fileId"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "fileId",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 500,
+      "elapsed_s": 0.235,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html",
+        "content-length": "3006",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 3006,
+      "body_sha256": "0730a5f9f2a35ac5edd0e5345b8f3033bee8a053e7143da0f748195a6583ea8a",
+      "json": false,
+      "head_ascii": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"apple-mobile-web-app-title\" content=\""
+    },
+    {
+      "item": "CL-route-options-upload",
+      "method": "OPTIONS",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.217,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-length": "0",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "CL-route-post-remove",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/remove",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.245,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 153,
+      "body_sha256": "46debbf876e88eaac2f8b11cd23e67460539094e452193b37a4ef6afd0c99206",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "NOT_FOUND",
+      "biz_success": false,
+      "text_message": "接口不存在",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CL-upload-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.414,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 649,
+      "body_sha256": "2a2b75b28577f70881806bf7f1f6e85dce5d3fc33b578966148d9327977554f1",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "fileId": "int",
+        "url": "str",
+        "fileName": "str",
+        "fileKey": "str",
+        "fileSize": "int",
+        "contentType": "str"
+      }
+    },
+    {
+      "item": "CL-canary-delete-id",
+      "method": "DELETE",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": {
+          "len": 25,
+          "sha256_16": "f9779f8fdf5ec75e"
+        },
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.297,
+      "note": "redaction fix 2026-11-23: numeric fileId removed from path; raw id kept in memory only per meta.redaction, path retained as hide_path shape {len, sha256_16} (fileId itself: len=6, sha256_16=d6883ddbba19016b)",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 153,
+      "body_sha256": "3fe6ba1efda3f8055390d96c36eafd07d2cf01bb723cbd11ad9c22249dd66e7b",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "NOT_FOUND",
+      "biz_success": false,
+      "text_message": "接口不存在",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CL-canary-post-delete",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/delete",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.221,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 153,
+      "body_sha256": "7e569ccfe3b84dcc59410d17994f8e28a5ab88d7472a235a30189b875098db0c",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "NOT_FOUND",
+      "biz_success": false,
+      "text_message": "接口不存在",
+      "data_shape": "NoneType"
+    }
+  ],
+  "findings": {
+    "principal_len": 16,
+    "delete_route_alive_items": [
+      "CL-route-options-upload"
+    ],
+    "canary_upload_http": 200,
+    "canary_cleanup_outcome": "delete_routes_rejected_canary"
+  }
+}

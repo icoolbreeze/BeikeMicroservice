@@ -1,0 +1,1207 @@
+{
+  "meta": {
+    "evidence_file": "r5-anon-deep-2026-11-24.json",
+    "module": "round5-anon-supabase-deep (T1/T10-T15 anonymous plane)",
+    "generated_at_utc": "2026-11-24T14:28:20+00:00",
+    "viewpoint": "office-workstation (viewpoint B; anonymous plane)",
+    "redaction": "status/business-code/PGRST-code/field-names/lengths/per-run salted hmac16/header-attributes only; no token/cookie/raw value; zero-match writes only; no account created",
+    "request_total": 46,
+    "retry_policy": "single attempt per item"
+  },
+  "findings": {
+    "identity_plane": "anonymous; public anon JWT only, no personal Bearer/Cookie",
+    "app_a_schema": {
+      "table_count": 10,
+      "tables": [
+        "",
+        "admins",
+        "new_buildings",
+        "news_scraping_logs",
+        "policy_news",
+        "prompts",
+        "schema_migrations",
+        "usage_logs",
+        "usage_stats_cache",
+        "users"
+      ],
+      "rpc_count": 14,
+      "rpc_names": [
+        "get_available_cities",
+        "get_city_statistics",
+        "get_city_statistics_with_filter",
+        "get_daily_trend",
+        "get_daily_trend_with_filter",
+        "get_hourly_trend",
+        "get_hourly_trend_with_filter",
+        "get_top_templates",
+        "get_top_templates_with_filter",
+        "get_top_users",
+        "get_top_users_with_filter",
+        "get_usage_overview",
+        "get_usage_overview_with_filter",
+        "sync_usage_logs_city"
+      ],
+      "definitions_count": 9
+    },
+    "app_b_schema": {
+      "table_count": 15,
+      "tables": [
+        "",
+        "_app_ehr_subordinates",
+        "_app_role_grants",
+        "_app_role_storage_rules",
+        "_app_role_table_rules",
+        "_app_roles",
+        "background_music",
+        "background_videos",
+        "generated_videos",
+        "page_visits",
+        "properties",
+        "smart_clip_jobs",
+        "smart_clip_music",
+        "user_cities",
+        "video_upload_cache"
+      ],
+      "rpc_count": 8,
+      "rpc_names": [
+        "_app_current_user_role_ids",
+        "_app_ehr_current_subordinates",
+        "get_active_user_emails",
+        "get_background_music_usage_stats",
+        "get_background_video_usage_stats",
+        "get_city_usage_stats",
+        "get_user_usage_details",
+        "get_visit_stats"
+      ],
+      "definitions_count": 14
+    },
+    "T1_prompts_canary": [
+      {
+        "marker_len": 26,
+        "marker_hmac16": "f6f7fc3535db2cd1",
+        "http": 200,
+        "residual_rows": null
+      }
+    ],
+    "T10_schema_migrations": [
+      {
+        "select": "version",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "body_len": 30
+      },
+      {
+        "select": "version,sql",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "body_len": 1809
+      },
+      {
+        "select": "*",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "body_len": 1888
+      }
+    ],
+    "T14_gotrue_settings": [
+      {
+        "app": "60758c5d",
+        "http": 200,
+        "disable_signup": false,
+        "autoconfirm": null,
+        "external_providers": [
+          "anonymous_users",
+          "apple",
+          "azure",
+          "bitbucket",
+          "bytedance_sso",
+          "coze",
+          "dingtalk",
+          "discord",
+          "email",
+          "facebook",
+          "feishu",
+          "figma",
+          "fly",
+          "github",
+          "gitlab",
+          "google",
+          "kakao",
+          "keycloak",
+          "linkedin",
+          "linkedin_oidc",
+          "notion",
+          "phone",
+          "slack",
+          "slack_oidc",
+          "snapchat",
+          "spotify",
+          "twitch",
+          "twitter",
+          "wechat",
+          "wecom",
+          "workos",
+          "zoom"
+        ],
+        "code": null,
+        "message": null
+      },
+      {
+        "app": "5610092c",
+        "http": 200,
+        "disable_signup": false,
+        "autoconfirm": null,
+        "external_providers": [
+          "anonymous_users",
+          "apple",
+          "azure",
+          "bitbucket",
+          "bytedance_sso",
+          "coze",
+          "dingtalk",
+          "discord",
+          "email",
+          "facebook",
+          "feishu",
+          "figma",
+          "fly",
+          "github",
+          "gitlab",
+          "google",
+          "kakao",
+          "keycloak",
+          "linkedin",
+          "linkedin_oidc",
+          "notion",
+          "phone",
+          "slack",
+          "slack_oidc",
+          "snapchat",
+          "spotify",
+          "twitch",
+          "twitter",
+          "wechat",
+          "wecom",
+          "workos",
+          "zoom"
+        ],
+        "code": null,
+        "message": null
+      }
+    ],
+    "T13_rpc_anon_exec": [
+      {
+        "pool": "A",
+        "rpc": "get_available_cities",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "hint": null,
+        "verdict": "unclassified_http_400"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_city_statistics",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "hint": null,
+        "verdict": "unclassified_http_400"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_city_statistics_with_filter",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "hint": null,
+        "verdict": "unclassified_http_400"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_daily_trend",
+        "http": 404,
+        "code": "PGRST202",
+        "message": "Could not find the function public.get_daily_trend without parameters in the schema cache",
+        "hint": null,
+        "verdict": "blocked_or_absent"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_daily_trend_with_filter",
+        "http": 404,
+        "code": "PGRST202",
+        "message": "Could not find the function public.get_daily_trend_with_filter without parameters in the schema cache",
+        "hint": null,
+        "verdict": "blocked_or_absent"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_hourly_trend",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_hourly_trend_with_filter",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_top_templates",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_top_templates_with_filter",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_top_users",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "hint": null,
+        "verdict": "unclassified_http_400"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_top_users_with_filter",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_usage_overview",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "hint": null,
+        "verdict": "unclassified_http_400"
+      },
+      {
+        "pool": "A",
+        "rpc": "get_usage_overview_with_filter",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "hint": null,
+        "verdict": "unclassified_http_400"
+      },
+      {
+        "pool": "A",
+        "rpc": "sync_usage_logs_city",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "_app_current_user_role_ids",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "_app_ehr_current_subordinates",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "get_active_user_emails",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "get_background_music_usage_stats",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "get_background_video_usage_stats",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "get_city_usage_stats",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "get_user_usage_details",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      },
+      {
+        "pool": "B",
+        "rpc": "get_visit_stats",
+        "http": 200,
+        "code": null,
+        "message": null,
+        "hint": null,
+        "verdict": "anon_reachable"
+      }
+    ],
+    "T11_storage": [
+      {
+        "pool": "A",
+        "list_buckets_http": 200,
+        "code": null,
+        "message": null,
+        "bucket_count": 0
+      },
+      {
+        "pool": "B",
+        "list_buckets_http": 200,
+        "code": null,
+        "message": null,
+        "bucket_count": 0
+      }
+    ],
+    "T12_edge_functions": [
+      {
+        "pool": "A",
+        "root_http": 401,
+        "root_code": null,
+        "root_message": null,
+        "synth_http": 404,
+        "synth_code": 404,
+        "synth_message": null,
+        "www_authenticate": ""
+      },
+      {
+        "pool": "B",
+        "root_http": 401,
+        "root_code": null,
+        "root_message": null,
+        "synth_http": 404,
+        "synth_code": 404,
+        "synth_message": null,
+        "www_authenticate": ""
+      }
+    ],
+    "T15_table_write": [
+      {
+        "pool": "A",
+        "table": "users",
+        "patch_http": 400,
+        "patch_code": "PGRST204",
+        "patch_range": "",
+        "delete_http": 200,
+        "delete_code": null,
+        "delete_range": "*/*",
+        "write_verdict": "unclassified_['200', '400']"
+      },
+      {
+        "pool": "A",
+        "table": "usage_logs",
+        "patch_http": 400,
+        "patch_code": "PGRST204",
+        "patch_range": "",
+        "delete_http": 200,
+        "delete_code": null,
+        "delete_range": "*/*",
+        "write_verdict": "unclassified_['200', '400']"
+      },
+      {
+        "pool": "A",
+        "table": "prompts",
+        "patch_http": 400,
+        "patch_code": "PGRST204",
+        "patch_range": "",
+        "delete_http": 200,
+        "delete_code": null,
+        "delete_range": "*/*",
+        "write_verdict": "unclassified_['200', '400']"
+      },
+      {
+        "pool": "A",
+        "table": "policy_news",
+        "patch_http": 400,
+        "patch_code": "PGRST204",
+        "patch_range": "",
+        "delete_http": 200,
+        "delete_code": null,
+        "delete_range": "*/*",
+        "write_verdict": "unclassified_['200', '400']"
+      },
+      {
+        "pool": "B",
+        "table": "properties",
+        "patch_http": 400,
+        "patch_code": "PGRST204",
+        "patch_range": "",
+        "delete_http": 200,
+        "delete_code": null,
+        "delete_range": "*/*",
+        "write_verdict": "unclassified_['200', '400']"
+      },
+      {
+        "pool": "B",
+        "table": "smart_clip_jobs",
+        "patch_http": 400,
+        "patch_code": "PGRST204",
+        "patch_range": "",
+        "delete_http": 200,
+        "delete_code": null,
+        "delete_range": "*/*",
+        "write_verdict": "unclassified_['200', '400']"
+      }
+    ]
+  },
+  "request_ledger": [
+    {
+      "item": "T1-prompts-canary-readback",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+      "http": 200,
+      "body_len": 168,
+      "content_type": "",
+      "content_range": "0-1/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T10-schema_migrations-select-version",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/schema_migrations",
+      "http": 200,
+      "body_len": 30,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T10-schema_migrations-select-version,sql",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/schema_migrations",
+      "http": 200,
+      "body_len": 1809,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T10-schema_migrations-select-*",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/schema_migrations",
+      "http": 200,
+      "body_len": 1888,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T14-gotrue-settings-60758c5d",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/auth/v1/settings",
+      "http": 200,
+      "body_len": 633,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "disable_signup",
+        "external",
+        "mailer_autoconfirm",
+        "phone_autoconfirm",
+        "saml_enabled",
+        "sms_provider"
+      ],
+      "disable_signup": false,
+      "external_providers": [
+        "anonymous_users",
+        "apple",
+        "azure",
+        "bitbucket",
+        "bytedance_sso",
+        "coze",
+        "dingtalk",
+        "discord",
+        "email",
+        "facebook",
+        "feishu",
+        "figma",
+        "fly",
+        "github",
+        "gitlab",
+        "google",
+        "kakao",
+        "keycloak",
+        "linkedin",
+        "linkedin_oidc",
+        "notion",
+        "phone",
+        "slack",
+        "slack_oidc",
+        "snapchat",
+        "spotify",
+        "twitch",
+        "twitter",
+        "wechat",
+        "wecom",
+        "workos",
+        "zoom"
+      ]
+    },
+    {
+      "item": "T14-gotrue-settings-5610092c",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/auth/v1/settings",
+      "http": 200,
+      "body_len": 633,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "disable_signup",
+        "external",
+        "mailer_autoconfirm",
+        "phone_autoconfirm",
+        "saml_enabled",
+        "sms_provider"
+      ],
+      "disable_signup": false,
+      "external_providers": [
+        "anonymous_users",
+        "apple",
+        "azure",
+        "bitbucket",
+        "bytedance_sso",
+        "coze",
+        "dingtalk",
+        "discord",
+        "email",
+        "facebook",
+        "feishu",
+        "figma",
+        "fly",
+        "github",
+        "gitlab",
+        "google",
+        "kakao",
+        "keycloak",
+        "linkedin",
+        "linkedin_oidc",
+        "notion",
+        "phone",
+        "slack",
+        "slack_oidc",
+        "snapchat",
+        "spotify",
+        "twitch",
+        "twitter",
+        "wechat",
+        "wecom",
+        "workos",
+        "zoom"
+      ]
+    },
+    {
+      "item": "T13-rpc-A-get_available_cities",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_available_cities",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T13-rpc-A-get_city_statistics",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_city_statistics",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T13-rpc-A-get_city_statistics_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_city_statistics_with_filter",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T13-rpc-A-get_daily_trend",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_daily_trend",
+      "http": 404,
+      "body_len": 307,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST202",
+      "message": "Could not find the function public.get_daily_trend without parameters in the schema cache",
+      "hint": null,
+      "details": "Searched for the function public.get_daily_trend without parameters or with a single unnamed json/jsonb parameter, but n"
+    },
+    {
+      "item": "T13-rpc-A-get_daily_trend_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_daily_trend_with_filter",
+      "http": 404,
+      "body_len": 331,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST202",
+      "message": "Could not find the function public.get_daily_trend_with_filter without parameters in the schema cache",
+      "hint": null,
+      "details": "Searched for the function public.get_daily_trend_with_filter without parameters or with a single unnamed json/jsonb para"
+    },
+    {
+      "item": "T13-rpc-A-get_hourly_trend",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_hourly_trend",
+      "http": 200,
+      "body_len": 859,
+      "content_type": "",
+      "content_range": "0-23/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-A-get_hourly_trend_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_hourly_trend_with_filter",
+      "http": 200,
+      "body_len": 859,
+      "content_type": "",
+      "content_range": "0-23/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-A-get_top_templates",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_templates",
+      "http": 200,
+      "body_len": 786,
+      "content_type": "",
+      "content_range": "0-9/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-A-get_top_templates_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_templates_with_filter",
+      "http": 200,
+      "body_len": 786,
+      "content_type": "",
+      "content_range": "0-9/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-A-get_top_users",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_users",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T13-rpc-A-get_top_users_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_users_with_filter",
+      "http": 200,
+      "body_len": 649,
+      "content_type": "",
+      "content_range": "0-9/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-A-get_usage_overview",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T13-rpc-A-get_usage_overview_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview_with_filter",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T13-rpc-A-sync_usage_logs_city",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/sync_usage_logs_city",
+      "http": 200,
+      "body_len": 42,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-_app_current_user_role_ids",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/_app_current_user_role_ids",
+      "http": 200,
+      "body_len": 3,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-_app_ehr_current_subordinates",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/_app_ehr_current_subordinates",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-get_active_user_emails",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/get_active_user_emails",
+      "http": 200,
+      "body_len": 37424,
+      "content_type": "",
+      "content_range": "0-999/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-get_background_music_usage_stats",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/get_background_music_usage_stats",
+      "http": 200,
+      "body_len": 8463,
+      "content_type": "",
+      "content_range": "0-29/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-get_background_video_usage_stats",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/get_background_video_usage_stats",
+      "http": 200,
+      "body_len": 2742,
+      "content_type": "",
+      "content_range": "0-9/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-get_city_usage_stats",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/get_city_usage_stats",
+      "http": 200,
+      "body_len": 296,
+      "content_type": "",
+      "content_range": "0-1/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T13-rpc-B-get_user_usage_details",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/get_user_usage_details",
+      "http": 200,
+      "body_len": 65536,
+      "content_type": "",
+      "content_range": "0-999/*",
+      "www_authenticate": "",
+      "json": false
+    },
+    {
+      "item": "T13-rpc-B-get_visit_stats",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/rpc/get_visit_stats",
+      "http": 200,
+      "body_len": 80,
+      "content_type": "",
+      "content_range": "0-0/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T11-storage-A-list-buckets",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/storage/v1/bucket",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T11-storage-B-list-buckets",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/storage/v1/bucket",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T12-functions-A-root",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/functions/v1/",
+      "http": 401,
+      "body_len": 99,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "json": false
+    },
+    {
+      "item": "T12-functions-A-synthetic",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/functions/v1/r5_nonexistent_function",
+      "http": 404,
+      "body_len": 73,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "error_code",
+        "msg"
+      ],
+      "code": 404,
+      "msg": "function not found"
+    },
+    {
+      "item": "T12-functions-B-root",
+      "method": "GET",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/functions/v1/",
+      "http": 401,
+      "body_len": 99,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "json": false
+    },
+    {
+      "item": "T12-functions-B-synthetic",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/functions/v1/r5_nonexistent_function",
+      "http": 404,
+      "body_len": 73,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "error_code",
+        "msg"
+      ],
+      "code": 404,
+      "msg": "function not found"
+    },
+    {
+      "item": "T15-A-users-zero-patch",
+      "method": "PATCH",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/users",
+      "http": 400,
+      "body_len": 133,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST204",
+      "message": "Could not find the 'r5_probe_unused' column of 'users' in the schema cache",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T15-A-users-zero-delete",
+      "method": "DELETE",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/users",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "*/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T15-A-usage_logs-zero-patch",
+      "method": "PATCH",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+      "http": 400,
+      "body_len": 138,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST204",
+      "message": "Could not find the 'r5_probe_unused' column of 'usage_logs' in the schema cache",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T15-A-usage_logs-zero-delete",
+      "method": "DELETE",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "*/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T15-A-prompts-zero-patch",
+      "method": "PATCH",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+      "http": 400,
+      "body_len": 135,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST204",
+      "message": "Could not find the 'r5_probe_unused' column of 'prompts' in the schema cache",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T15-A-prompts-zero-delete",
+      "method": "DELETE",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "*/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T15-A-policy_news-zero-patch",
+      "method": "PATCH",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/policy_news",
+      "http": 400,
+      "body_len": 139,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST204",
+      "message": "Could not find the 'r5_probe_unused' column of 'policy_news' in the schema cache",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T15-A-policy_news-zero-delete",
+      "method": "DELETE",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/policy_news",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "*/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T15-B-properties-zero-patch",
+      "method": "PATCH",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/properties",
+      "http": 400,
+      "body_len": 138,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST204",
+      "message": "Could not find the 'r5_probe_unused' column of 'properties' in the schema cache",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T15-B-properties-zero-delete",
+      "method": "DELETE",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/properties",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "*/*",
+      "www_authenticate": ""
+    },
+    {
+      "item": "T15-B-smart_clip_jobs-zero-patch",
+      "method": "PATCH",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/smart_clip_jobs",
+      "http": 400,
+      "body_len": 143,
+      "content_type": "",
+      "content_range": "",
+      "www_authenticate": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST204",
+      "message": "Could not find the 'r5_probe_unused' column of 'smart_clip_jobs' in the schema cache",
+      "hint": null,
+      "details": null
+    },
+    {
+      "item": "T15-B-smart_clip_jobs-zero-delete",
+      "method": "DELETE",
+      "url_path": "/falcon/supabase-volc/5610092c-9d28-4bbf-87e3-3c64ce4c9172/rest/v1/smart_clip_jobs",
+      "http": 200,
+      "body_len": 2,
+      "content_type": "",
+      "content_range": "*/*",
+      "www_authenticate": ""
+    }
+  ]
+}

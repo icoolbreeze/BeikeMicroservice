@@ -1,0 +1,217 @@
+{
+  "meta": {
+    "date": "2026-11-23",
+    "mode": "offline-static-verification-round2",
+    "network_requests": 0,
+    "target_javascript_executed": false,
+    "secret_values_emitted": false,
+    "builds_on": "static-verification-2026-11-23.json (39/39 round-1 checks)"
+  },
+  "artifacts": {
+    "moma-copy-index.js": "59e28a549d48c5d88a08df54eb2645fdcddbe3f855f25a1204523ff7df59d787",
+    "moma-main-index.js": "4b450adbe36111c4f6b499321ee480dc9567c0be79d57f72777d82a9463e6daf",
+    "wandou-index.js": "3c36efc3d92463c493c08167b366c2a322adb89c077ac590e129dc86ed7a5804",
+    "moma-Di4whr8o.js": "3d1ce579eb449ae1378bc81fea63b5a8f9673b1087ab5953372438428d7059af",
+    "moma-supabase-amvMNND8.js": "2c106e8c51e4155cffae9322229ae5f6f9629906f7a8d59a960703b412c13e51"
+  },
+  "checks": [
+    {
+      "id": "r2-01-messagecard-raw-innerhtml",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "content.replace(/\\n/g,\"<br>\") -> innerHTML:S.value",
+      "note": "MessageCard 仅做换行替换，无 HTML 消毒，服务端 content 直入 innerHTML"
+    },
+    {
+      "id": "r2-02-msgcenter-raw-innerhtml",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "function et(P){return P?P.replace(/\\n/g,'<br>'):''} -> innerHTML:et(content)",
+      "note": "消息中心详情同样仅换行替换后直入 innerHTML；数据源 /messages 与 /admin/announcements"
+    },
+    {
+      "id": "r2-03-no-sanitizer-copy",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "DOMPurify/dompurify/sanitizeHtml/xss( absent",
+      "note": "应用 bundle 内未发现任何 HTML 消毒库调用"
+    },
+    {
+      "id": "r2-03-no-sanitizer-main",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "DOMPurify/dompurify/sanitizeHtml/xss( absent",
+      "note": "应用 bundle 内未发现任何 HTML 消毒库调用"
+    },
+    {
+      "id": "r2-03-no-sanitizer-wandou",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/wandou-index.js",
+      "marker": "DOMPurify/dompurify/sanitizeHtml/xss( absent",
+      "note": "应用 bundle 内未发现任何 HTML 消毒库调用"
+    },
+    {
+      "id": "r2-04-copy-react-markdown-skip-html",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "react-markdown ... skipHtml:!0",
+      "note": "文案 App Markdown 渲染跳过原始 HTML，阻断内嵌标签（正对照）"
+    },
+    {
+      "id": "r2-05-main-message-listener-origin-check",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "uo(c): c.origin===formBaseUrl.origin && c.source===iframe.contentWindow",
+      "note": "弹窗消息同时校验精确 origin 与 source 窗口引用"
+    },
+    {
+      "id": "r2-06-copy-popup-postmessage-exact-origin",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "window.opener.postMessage(c,t) with t=window.location.origin",
+      "note": ""
+    },
+    {
+      "id": "r2-07-no-app-websocket-main",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "new WebSocket/wss absent in main app bundle",
+      "note": ""
+    },
+    {
+      "id": "r2-07-no-app-websocket-wandou",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/wandou-index.js",
+      "marker": "new WebSocket/wss absent in wandou bundle; SSE used for aschat",
+      "note": ""
+    },
+    {
+      "id": "r2-07b-supabase-realtime-internal-ws-only",
+      "passed": true,
+      "source": "outputs/moma-app-runtime-2026-11-23/moma-supabase-amvMNND8.js",
+      "marker": "wss only inside supabase realtime library (longpoll fallback), no app-level WS contract",
+      "note": "CSWSH 无应用层握手面；仅 Supabase Realtime 库内部实现"
+    },
+    {
+      "id": "r2-08-wandou-sse-run-resume",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/wandou-index.js",
+      "marker": "aschat/run + stream/resume SSE contracts",
+      "note": ""
+    },
+    {
+      "id": "r2-08b-moma-sse-resume",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "moma agent/resume SSE contract",
+      "note": ""
+    },
+    {
+      "id": "r2-09-wandou-upload-contract",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/wandou-index.js",
+      "marker": "POST /api/v2/note-files/upload multipart FormData(file)",
+      "note": ""
+    },
+    {
+      "id": "r2-09b-wandou-capability-omit",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/wandou-index.js",
+      "marker": "metadata/download capability URLs fetched credentials omit no-store",
+      "note": ""
+    },
+    {
+      "id": "r2-10-decrypt-contract",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "POST /supabase-crypto/decrypt envelope contract",
+      "note": ""
+    },
+    {
+      "id": "r2-10b-html-to-pdf",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "get(\"/moma_agent/html-to-pdf\"",
+      "note": ""
+    },
+    {
+      "id": "r2-10c-html-to-pdf-shared",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "get(\"/moma_agent/html-to-pdf/shared\"",
+      "note": ""
+    },
+    {
+      "id": "r2-10d-html-to-image",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "post(\"/moma_agent/html-to-image\"",
+      "note": ""
+    },
+    {
+      "id": "r2-10e-custom-mcp-test",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "post(\"/connector/custom-mcp/test\"",
+      "note": ""
+    },
+    {
+      "id": "r2-10f-groovy-test",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "post(\"/platform-api/test-groovy-filter\"",
+      "note": ""
+    },
+    {
+      "id": "r2-11-hmac-fallback-marker",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "WebCrypto unavailable fallback marker",
+      "note": ""
+    },
+    {
+      "id": "r2-11b-hmac-no-delimiter",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "signature string METHOD+path+ts+nonce without delimiters",
+      "note": ""
+    },
+    {
+      "id": "r2-11c-hmac-public-secret",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "HMAC secret is public JWT header constant",
+      "note": ""
+    },
+    {
+      "id": "r2-12-admin-password-debug-route",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "unguarded /admin/password-debug SPA route",
+      "note": ""
+    },
+    {
+      "id": "r2-12b-admin-hash-direct-access",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-copy-index.js",
+      "marker": "direct admins password_hash select/update from SPA",
+      "note": ""
+    },
+    {
+      "id": "r2-13-messages-api",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "/messages list + detail feeds message center innerHTML sink",
+      "note": ""
+    },
+    {
+      "id": "r2-13b-admin-announcements-api",
+      "passed": true,
+      "source": "outputs/moma-api-surface-2026-11-23/moma-main-index.js",
+      "marker": "admin announcements write API (RBAC gated)",
+      "note": ""
+    }
+  ],
+  "all_checks_passed": true,
+  "check_total": 28
+}

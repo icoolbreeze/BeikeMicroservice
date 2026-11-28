@@ -1,0 +1,15 @@
+{
+  "scanned_files": [
+    "r4-cas-probe-dryrun.json",
+    "r4-evidence-stats.json",
+    "r4-idor-token-probe-dryrun.json",
+    "r4-ratelimit-coverage-dryrun.json",
+    "r4-sms-probe-dryrun.json",
+    "round4-redaction-selfcheck.json",
+    "round4-deep-dive-2026-11-24.md"
+  ],
+  "file_count": 7,
+  "scope_note": "evidence/round4 脱敏台账 + round4-deep-dive 报告；r4-offline-extract.* 已移至 outputs/security-round4-workproduct/",
+  "failures": [],
+  "passed": true
+}

@@ -1,0 +1,455 @@
+{
+  "meta": {
+    "evidence_file": "r5-session-probe2-2026-11-24.json",
+    "module": "round5 sensitive-endpoint structure + POST gate + anon baseline",
+    "generated_at_utc": "2026-11-24T14:39:51+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized employee session)",
+    "redaction": "structure-only (types/lengths/key names); no token/cookie/secret value persisted; empty-body POST starts no load test",
+    "request_total": 11
+  },
+  "findings": {
+    "moma_session_ok": true,
+    "positive_errno0": true,
+    "wechat_access_token": {
+      "http": 200,
+      "body_len": 230,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 0,
+      "errmsg": "操作成功",
+      "data_shape": {
+        "access_token": {
+          "t": "str",
+          "len": 137
+        },
+        "expires_at": {
+          "t": "float"
+        }
+      },
+      "item": "T21-wechat-token-shape"
+    },
+    "iam_credential_422": {
+      "http": 422,
+      "body_len": 141,
+      "content_type": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail_shape": {
+        "list_len": 1,
+        "first": {
+          "type": {
+            "t": "str",
+            "len": 7
+          },
+          "loc": {
+            "list_len": 2,
+            "first": {
+              "t": "str",
+              "len": 5
+            }
+          },
+          "msg": {
+            "t": "str",
+            "len": 14
+          },
+          "input": {
+            "t": "null"
+          },
+          "url": {
+            "t": "str",
+            "len": 42
+          }
+        }
+      },
+      "item": "T21-iam-credential-shape"
+    },
+    "chats_proxy": {
+      "http": 200,
+      "body_len": 50,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 1,
+      "errmsg": "聊天不存在",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "T20-chats-proxy-shape"
+    },
+    "load_test_post_gate": {
+      "http": 422,
+      "body_len": 270,
+      "content_type": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail_shape": {
+        "list_len": 2,
+        "first": {
+          "type": {
+            "t": "str",
+            "len": 7
+          },
+          "loc": {
+            "list_len": 2,
+            "first": {
+              "t": "str",
+              "len": 4
+            }
+          },
+          "msg": {
+            "t": "str",
+            "len": 14
+          },
+          "input": {},
+          "url": {
+            "t": "str",
+            "len": 42
+          }
+        }
+      },
+      "item": "T20-load-test-empty-post"
+    },
+    "anonymous_baseline": [
+      {
+        "path": "/api/internal/auth",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "body_len": 64
+      },
+      {
+        "path": "/api/internal/platform-keys",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "body_len": 64
+      },
+      {
+        "path": "/api/admin/sudo",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "body_len": 64
+      },
+      {
+        "path": "/api/wechat/access-token",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "body_len": 64
+      },
+      {
+        "path": "/api/platform-api/iam-credential",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "body_len": 64
+      },
+      {
+        "path": "/api/load-test/run",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "body_len": 64
+      }
+    ]
+  },
+  "request_ledger": [
+    {
+      "http": 200,
+      "body_len": 540,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 0,
+      "errmsg": "获取用户信息成功",
+      "data_shape": {
+        "user_info": {
+          "name": {
+            "t": "str",
+            "len": 3
+          },
+          "nickName": {
+            "t": "str",
+            "len": 0
+          },
+          "account": {
+            "t": "str",
+            "len": 15
+          },
+          "agentSequenceType": {
+            "t": "int"
+          },
+          "email": {
+            "t": "str",
+            "len": 0
+          },
+          "usercode": {
+            "t": "str",
+            "len": 8
+          },
+          "avatar": {
+            "t": "str",
+            "len": 69
+          },
+          "ucid": {
+            "t": "int"
+          },
+          "secondJobSeqName": {
+            "t": "str",
+            "len": 0
+          },
+          "orgName": {
+            "t": "str",
+            "len": 12
+          },
+          "orgCode": {
+            "t": "str",
+            "len": 13
+          },
+          "location": {
+            "t": "str",
+            "len": 6
+          },
+          "locationName": {
+            "t": "str",
+            "len": 2
+          },
+          "sudo_active": {
+            "t": "bool"
+          },
+          "real_ucid": {
+            "t": "null"
+          }
+        },
+        "is_authenticated": {
+          "t": "bool"
+        },
+        "invite_code": {
+          "t": "str",
+          "len": 0
+        },
+        "broker_assistant_shell_only": {
+          "t": "bool"
+        }
+      },
+      "item": "M2-positive-userinfo"
+    },
+    {
+      "http": 200,
+      "body_len": 230,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 0,
+      "errmsg": "操作成功",
+      "data_shape": {
+        "access_token": {
+          "t": "str",
+          "len": 137
+        },
+        "expires_at": {
+          "t": "float"
+        }
+      },
+      "item": "T21-wechat-token-shape"
+    },
+    {
+      "http": 422,
+      "body_len": 141,
+      "content_type": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail_shape": {
+        "list_len": 1,
+        "first": {
+          "type": {
+            "t": "str",
+            "len": 7
+          },
+          "loc": {
+            "list_len": 2,
+            "first": {
+              "t": "str",
+              "len": 5
+            }
+          },
+          "msg": {
+            "t": "str",
+            "len": 14
+          },
+          "input": {
+            "t": "null"
+          },
+          "url": {
+            "t": "str",
+            "len": 42
+          }
+        }
+      },
+      "item": "T21-iam-credential-shape"
+    },
+    {
+      "http": 200,
+      "body_len": 50,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 1,
+      "errmsg": "聊天不存在",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "T20-chats-proxy-shape"
+    },
+    {
+      "http": 422,
+      "body_len": 270,
+      "content_type": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail_shape": {
+        "list_len": 2,
+        "first": {
+          "type": {
+            "t": "str",
+            "len": 7
+          },
+          "loc": {
+            "list_len": 2,
+            "first": {
+              "t": "str",
+              "len": 4
+            }
+          },
+          "msg": {
+            "t": "str",
+            "len": 14
+          },
+          "input": {},
+          "url": {
+            "t": "str",
+            "len": 42
+          }
+        }
+      },
+      "item": "T20-load-test-empty-post"
+    },
+    {
+      "http": 200,
+      "body_len": 64,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 401,
+      "errmsg": "未登录或登录已过期",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "ANON-base/api/internal/auth"
+    },
+    {
+      "http": 200,
+      "body_len": 64,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 401,
+      "errmsg": "未登录或登录已过期",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "ANON-base/api/internal/platform-keys"
+    },
+    {
+      "http": 200,
+      "body_len": 64,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 401,
+      "errmsg": "未登录或登录已过期",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "ANON-base/api/admin/sudo"
+    },
+    {
+      "http": 200,
+      "body_len": 64,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 401,
+      "errmsg": "未登录或登录已过期",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "ANON-base/api/wechat/access-token"
+    },
+    {
+      "http": 200,
+      "body_len": 64,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 401,
+      "errmsg": "未登录或登录已过期",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "ANON-base/api/platform-api/iam-credential"
+    },
+    {
+      "http": 200,
+      "body_len": 64,
+      "content_type": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 401,
+      "errmsg": "未登录或登录已过期",
+      "data_shape": {
+        "t": "null"
+      },
+      "item": "ANON-base/api/load-test/run"
+    }
+  ]
+}

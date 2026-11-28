@@ -1,0 +1,832 @@
+{
+  "meta": {
+    "evidence_file": "round2-anon-followup-a-2026-11-23.json",
+    "module": "M1-KE21/KE25-focused",
+    "generated_at_utc": "2026-11-23T18:03:55+00:00",
+    "viewpoint": "office-workstation (viewpoint B; anonymous plane, focused follow-up A)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 17,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "KE21-struct-admins-id",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "body_len": 47,
+      "content_range": "",
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "content-range": "0-0/1",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "e6b98d1ccfa0d185"
+          }
+        }
+      }
+    },
+    {
+      "item": "KE21-struct-admins-hash",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 45,
+            "sha256_16": "8359b148233f95d7"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "body_len": 196,
+      "content_range": "",
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "196",
+        "content-range": "0-0/1",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "e6b98d1ccfa0d185"
+          },
+          "username": {
+            "t": "str",
+            "len": 5
+          },
+          "full_name": {
+            "t": "str",
+            "len": 5
+          },
+          "is_active": {
+            "t": "bool"
+          },
+          "password_hash": {
+            "t": "str",
+            "len": 64,
+            "sha16": "9893af60c940e6da"
+          }
+        }
+      }
+    },
+    {
+      "item": "KE21-struct-prompts",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 34,
+            "sha256_16": "94cfe20948d3bfab"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 206,
+      "body_len": 156,
+      "content_range": "",
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "156",
+        "content-range": "0-0/28",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "b1f01c5ab5287881"
+          },
+          "name": {
+            "t": "str",
+            "len": 8
+          },
+          "platform": {
+            "t": "str",
+            "len": 5
+          },
+          "prompt_type": {
+            "t": "str",
+            "len": 15
+          },
+          "email": {
+            "t": "str",
+            "len": 13
+          }
+        }
+      }
+    },
+    {
+      "item": "KE21-struct-usage-logs",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 206,
+      "body_len": 47,
+      "content_range": "",
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "content-range": "0-0/2239107",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "5432c057f733f457"
+          }
+        }
+      }
+    },
+    {
+      "item": "KE21-count-admins",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.276,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept-Encoding",
+        "content-range": "0-0/1",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-count-prompts",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.216,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept-Encoding",
+        "content-range": "0-27/28",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-count-usage-logs",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+        "query_param_names": [
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          }
+        ]
+      },
+      "http": 206,
+      "elapsed_s": 0.717,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-range": "0-999999/2239107",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-count-users",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/users",
+        "query_param_names": [
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.335,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "vary": "Accept-Encoding",
+        "content-range": "0-80794/80795",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-write-prompts-insert-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 201,
+      "elapsed_s": 0.293,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-length": "0",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-write-prompts-canary-cleanup",
+      "method": "DELETE",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "name"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "name",
+            "len": 29,
+            "sha256_16": "8b53832d6e7b6123"
+          }
+        ]
+      },
+      "http": 204,
+      "elapsed_s": 0.231,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-write-prompts-update-zero-match",
+      "method": "PATCH",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "id",
+            "len": 39,
+            "sha256_16": "8d53c36daa62f423"
+          }
+        ]
+      },
+      "http": 204,
+      "elapsed_s": 0.233,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-write-admins-insert-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.247,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "119",
+        "www-authenticate": "Bearer",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 119,
+      "body_sha256": "d4b4d88966f77bf7e3ce893f399cf05e11c4e250bdb8bde5d2e5ffba66d97465",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "42501",
+      "text_message": "new row violates row-level security policy for table \"admins\"",
+      "data_shape": null
+    },
+    {
+      "item": "KE21-rpc-wrong-signature",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview_with_filter",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.242,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "361",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 361,
+      "body_sha256": "1b04e14611d0f49694b9724a522371add4a565a34f8573875771010db987eb42",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "PGRST202",
+      "text_message": "Could not find the function public.get_usage_overview_with_filter(round2_nonexistent_arg) in the schema cache",
+      "data_shape": null
+    },
+    {
+      "item": "KE25-decrypt-semantics-with-key",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.177,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "296",
+        "vary": "Origin"
+      },
+      "body_len": 296,
+      "body_sha256": "27bd3dda6b87cd5f4caf79f5eb1955c8527d7cebf758859adfc58d78cb79eaf8",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "text_msg": "Field=>rows RequestValidationError: Input should be a valid dictionary",
+      "text_fe_message": "参数校验失败: Field=>rows RequestValidationError: Input should be a valid dictionary\nrequest_id=adea692475c04bd7",
+      "text_show_type": "nothing",
+      "text_request_id": "adea692475c04bd7",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE25-decrypt-semantics-no-key",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.195,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "296",
+        "vary": "Origin"
+      },
+      "body_len": 296,
+      "body_sha256": "19b2506ff23ed18f1331d8920810295a834303be621e3c60ec36d9615d833d7c",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "text_msg": "Field=>rows RequestValidationError: Input should be a valid dictionary",
+      "text_fe_message": "参数校验失败: Field=>rows RequestValidationError: Input should be a valid dictionary\nrequest_id=e6c49b3e2ba745af",
+      "text_show_type": "nothing",
+      "text_request_id": "e6c49b3e2ba745af",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE25-decrypt-admins-table-probe",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.194,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "296",
+        "vary": "Origin"
+      },
+      "body_len": 296,
+      "body_sha256": "96bfc0cdbee3c7a3d94a5af8451d7f29620671409cb9dd938e309e244c8f0c40",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "text_msg": "Field=>rows RequestValidationError: Input should be a valid dictionary",
+      "text_fe_message": "参数校验失败: Field=>rows RequestValidationError: Input should be a valid dictionary\nrequest_id=43133c2ae036414f",
+      "text_show_type": "nothing",
+      "text_request_id": "43133c2ae036414f",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE21-password-debug-redirect",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/admin/password-debug",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 302,
+      "elapsed_s": 0.18,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html",
+        "location": "https://moma.ke.com/deploy_404",
+        "cache-control": "no-cache, no-store, must-revalidate, max-age=0"
+      },
+      "body_len": 489,
+      "body_sha256": "29e4e1e55236fe217b05670e79480f73b9d9f1825973b038f4e6598f51c31901",
+      "json": false,
+      "head_ascii": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n<html>\r\n<head><script src=\"https://s1.ljcdn.com/risk-control/static/"
+    }
+  ],
+  "findings": {
+    "KE21-struct-admins-id": {
+      "http": 200,
+      "body_len": 47,
+      "content_range": "",
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "e6b98d1ccfa0d185"
+          }
+        }
+      }
+    },
+    "KE21-struct-admins-hash": {
+      "http": 200,
+      "body_len": 196,
+      "content_range": "",
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "e6b98d1ccfa0d185"
+          },
+          "username": {
+            "t": "str",
+            "len": 5
+          },
+          "full_name": {
+            "t": "str",
+            "len": 5
+          },
+          "is_active": {
+            "t": "bool"
+          },
+          "password_hash": {
+            "t": "str",
+            "len": 64,
+            "sha16": "9893af60c940e6da"
+          }
+        }
+      }
+    },
+    "KE21-struct-prompts": {
+      "http": 206,
+      "body_len": 156,
+      "content_range": "",
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "b1f01c5ab5287881"
+          },
+          "name": {
+            "t": "str",
+            "len": 8
+          },
+          "platform": {
+            "t": "str",
+            "len": 5
+          },
+          "prompt_type": {
+            "t": "str",
+            "len": 15
+          },
+          "email": {
+            "t": "str",
+            "len": 13
+          }
+        }
+      }
+    },
+    "KE21-struct-usage-logs": {
+      "http": 206,
+      "body_len": 47,
+      "content_range": "",
+      "structure": {
+        "list_len": 1,
+        "first_item": {
+          "id": {
+            "t": "str",
+            "len": 36,
+            "sha16": "5432c057f733f457"
+          }
+        }
+      }
+    },
+    "KE21_admin_canary": {
+      "insert_http": 401
+    },
+    "KE21_prompts_canary": {
+      "insert_http": 201,
+      "delete_http": 204
+    },
+    "KE21_password_debug_redirect_path": "/deploy_404"
+  }
+}

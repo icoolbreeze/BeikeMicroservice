@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "date": "2026-11-23",
+    "viewpoint": "beike-server isolated browser",
+    "principal_len": 16,
+    "redaction": "status/booleans/header attrs only"
+  },
+  "csrf": {
+    "cross_site_no_custom_header": {
+      "title": "cs:err",
+      "document_origin": "https://evil.example",
+      "observed": [
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        }
+      ],
+      "cookie_samesite_applied": "Lax",
+      "cookies_sent_note": "Absent SameSite is Lax. Cross-site POST should not include these cookies."
+    },
+    "same_site_with_header": {
+      "title": "房源列表 - 普租",
+      "document_origin": "https://lease-pz.link.lianjia.com",
+      "observed": [
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        },
+        {
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "acao": "https://lease-pz.link.lianjia.com",
+          "acac": "true",
+          "vary": "Origin"
+        }
+      ]
+    }
+  },
+  "postmessage": {
+    "synthetic_unknown_type": {
+      "runtime_signals": {
+        "console_markers": [],
+        "title_unchanged": true,
+        "url_unchanged": true
+      },
+      "document_origin": "https://login.ke.com",
+      "static_basis": "uo() requires c.origin===formBaseUrl/petBaseUrl origin AND contentWindow match"
+    }
+  },
+  "xss_write": "skipped"
+}

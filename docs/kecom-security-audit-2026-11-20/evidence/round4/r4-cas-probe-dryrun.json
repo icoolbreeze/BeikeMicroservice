@@ -1,0 +1,376 @@
+{
+  "meta": {
+    "evidence_file": "r4-cas-probe-dryrun.json",
+    "module": "r4-CAS-KE11-placeholder-sign",
+    "generated_at_utc": "2026-11-24T08:46:41+00:00",
+    "mode": "DRY_RUN_ZERO_REQUESTS",
+    "redaction": "plan-only; no packet sent; URLs redacted to path+param names",
+    "hard_burst_cap": 12
+  },
+  "plan": [
+    {
+      "item": "C1-initialize-get",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/initialize",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "baseline contract discovery",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C1-initialize-empty",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/initialize",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "empty body validation response",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 2,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C2-placeholder-default",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/initialize",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "acceptance matrix for client-controlled sign fields",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 42,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C2-garbage-values",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/initialize",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "acceptance matrix for client-controlled sign fields",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 60,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C2-missing-sign",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/initialize",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "acceptance matrix for client-controlled sign fields",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 33,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C2-empty-strings",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/initialize",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "acceptance matrix for client-controlled sign fields",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 28,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C3-authenticate-placeholder",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "canary identity; does placeholder sign reach auth business logic",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C4-failed-login-01",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "failed attempt 1/6; watch lockout/captcha/delay ladder",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C4-failed-login-02",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "failed attempt 2/6; watch lockout/captcha/delay ladder",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C4-failed-login-03",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "failed attempt 3/6; watch lockout/captcha/delay ladder",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C4-failed-login-04",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "failed attempt 4/6; watch lockout/captcha/delay ladder",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C4-failed-login-05",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "failed attempt 5/6; watch lockout/captcha/delay ladder",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C4-failed-login-06",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "failed attempt 6/6; watch lockout/captcha/delay ladder",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C5-failed-login-xff-01",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "burst 1/6 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C5-failed-login-xff-02",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "burst 2/6 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C5-failed-login-xff-03",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "burst 3/6 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C5-failed-login-xff-04",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "burst 4/6 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C5-failed-login-xff-05",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "burst 5/6 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "C5-failed-login-xff-06",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/authentication/authenticate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "burst 6/6 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 102,
+      "status": "PLANNED_DRY_RUN"
+    }
+  ],
+  "findings": {
+    "mode": "dry-run",
+    "canary_phone_shape": "11-digit",
+    "C2_placeholder_acceptance": "compare http/biz_code/body_sha across variants in evidence",
+    "C4_lockout_ladder_direct": {
+      "count": 6,
+      "status_distribution": {
+        "PLANNED_DRY_RUN": 6
+      },
+      "http_429_seen": false,
+      "rate_limit_header_responses": 0,
+      "elapsed_range_s": [
+        null,
+        null
+      ]
+    },
+    "C5_lockout_ladder_xff_rotation": {
+      "count": 6,
+      "status_distribution": {
+        "PLANNED_DRY_RUN": 6
+      },
+      "http_429_seen": false,
+      "rate_limit_header_responses": 0,
+      "elapsed_range_s": [
+        null,
+        null
+      ]
+    },
+    "C5_verdict_guide": "compare biz_code/body_sha between arms: identical throttling => XFF ignored (good); xff arm continues while direct arm locks => server rate limit trusts X-Forwarded-For",
+    "C6_risk_markers_watchlist": [
+      "captcha",
+      "verify",
+      "risk",
+      "block",
+      "lock",
+      "frozen",
+      "滑块",
+      "验证",
+      "风控",
+      "锁定"
+    ]
+  }
+}

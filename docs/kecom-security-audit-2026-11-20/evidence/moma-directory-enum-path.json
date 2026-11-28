@@ -1,0 +1,41 @@
+{
+  "terms": {
+    "a": {
+      "totalCount": 1342754,
+      "returned": 100,
+      "mobile_populated": 27
+    },
+    "e": {
+      "totalCount": 1069198,
+      "returned": 100,
+      "mobile_populated": 55
+    },
+    "o": {
+      "totalCount": 1619461,
+      "returned": 100,
+      "mobile_populated": 33
+    },
+    "zhang": {
+      "totalCount": 537706,
+      "returned": 100,
+      "mobile_populated": 77
+    }
+  },
+  "unique_per_term_hash_counts": {
+    "a": 100,
+    "e": 100,
+    "o": 97,
+    "zhang": 76
+  },
+  "union_unique_across_4_terms": 372,
+  "pairwise_overlap": {
+    "a|e": 0,
+    "a|o": 0,
+    "a|zhang": 0,
+    "e|o": 0,
+    "e|zhang": 0,
+    "o|zhang": 1
+  },
+  "conclusion": "low cross-term overlap => query-term diversification yields new populations, so the paging defect does not prevent large-scale harvesting; a term/pinyin dictionary plus targeted code lookups remains an open enumeration path",
+  "redaction": "truncated sha256 hashes only"
+}

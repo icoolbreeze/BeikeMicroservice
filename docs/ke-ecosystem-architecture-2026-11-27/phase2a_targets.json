@@ -1,0 +1,178 @@
+[
+  {
+    "host": "helper.ke.com",
+    "name": "客服中心 / 业绩争议",
+    "url": "https://helper.ke.com/",
+    "category": "baseline_public_direct",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "letsai.ke.com",
+    "name": "AI 门户",
+    "url": "https://letsai.ke.com/",
+    "category": "baseline_public_direct",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "moma.ke.com",
+    "name": "Moma 轻应用平台",
+    "url": "https://moma.ke.com/",
+    "category": "baseline_public_direct",
+    "batch": "2A",
+    "auth_hint": "moma_supabase_cas"
+  },
+  {
+    "host": "wandou.ke.com",
+    "name": "豌豆（CRM 普租 IM）",
+    "url": "https://wandou.ke.com/",
+    "category": "baseline_public_direct",
+    "batch": "2A",
+    "auth_hint": "wandou_localstorage_token"
+  },
+  {
+    "host": "listing-de.ke.com",
+    "name": "商铺写字楼",
+    "url": "https://listing-de.ke.com/",
+    "category": "baseline_public_direct",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ai-sec.ke.com",
+    "name": "贝壳安全AI助手",
+    "url": "https://ai-sec.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "aiglasses.ke.com",
+    "name": "智眸AI眼镜",
+    "url": "https://aiglasses.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "bella.ke.com",
+    "name": "Bella（招聘与面试 AI 助手）",
+    "url": "https://bella.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "chat-excel.ke.com",
+    "name": "CHAT-EXCEL",
+    "url": "https://chat-excel.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "chatbi.ke.com",
+    "name": "Chat BI",
+    "url": "https://chatbi.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "codelink.ke.com",
+    "name": "CodeLink",
+    "url": "https://codelink.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "is-prod.ke.com",
+    "name": "闹海 / 小伯乐",
+    "url": "https://is-prod.ke.com/pages/chat",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "jianli.ke.com",
+    "name": "聘多多系统",
+    "url": "https://jianli.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ketest-pro.ke.com",
+    "name": "Ketest Copilot",
+    "url": "https://ketest-pro.ke.com/#/keTest-copilot",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "opengpt.ke.com",
+    "name": "ChatGPT 4",
+    "url": "https://opengpt.ke.com/#/intelligentChat/54961496895488",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "speechhub.ke.com",
+    "name": "贝壳语音",
+    "url": "http://speechhub.ke.com/",
+    "category": "ai_portal_candidate",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "luoshu.ke.com",
+    "name": "洛书动态表单（首看保护/印章/访客/干部）",
+    "url": "https://luoshu.ke.com/dynamicFormRender?definitionCode=VWACAIIALKFEUEXPHDVFCLCOXMWZOJ&mode=run&params=%7B%7D",
+    "category": "help_center_related",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "m-jury.ke.com",
+    "name": "B端纠纷调解",
+    "url": "https://m-jury.ke.com/new/mediation/agentList",
+    "category": "help_center_related",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "xiaobei.ke.com",
+    "name": "小贝知道 / 财务制度&财务指引",
+    "url": "https://xiaobei.ke.com/#/",
+    "category": "help_center_related",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "app-fly.ke.com",
+    "name": "员工文化应用（员工关系/新文化内核/品牌资源）",
+    "url": "https://app-fly.ke.com/employee-relations-hub",
+    "category": "reappeared_page_only_unverified",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "jixiao.ke.com",
+    "name": "绩效与试用期系统",
+    "url": "https://jixiao.ke.com/p/home",
+    "category": "reappeared_page_only_unverified",
+    "batch": "2A",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "app-moma.ke.com",
+    "name": "Moma 轻应用（page_only_unverified）",
+    "url": "https://app-moma.ke.com/",
+    "category": "reappeared_page_only_unverified",
+    "batch": "2A",
+    "auth_hint": "moma_supabase_cas"
+  }
+]

@@ -1,0 +1,79 @@
+{
+  "generated_at_utc": "2026-11-27T17:18:17.779410+00:00",
+  "source_jsonl": "site_profiles_2a.jsonl",
+  "handoff_count": 6,
+  "targets": [
+    {
+      "host": "chat-excel.ke.com",
+      "name": "CHAT-EXCEL",
+      "url": "https://chat-excel.ke.com/",
+      "category": "ai_portal_candidate",
+      "from_batch": "2A",
+      "target_batch": "2B",
+      "auth_hint": "cas_cookie",
+      "reason": "Error: Page.goto: net::ERR_CONNECTION_CLOSED at https://chat-excel.ke.com/",
+      "access_verdict": "direct_blocked_handoff_2b",
+      "checked_at_utc": "2026-11-27T17:16:45.036494+00:00"
+    },
+    {
+      "host": "codelink.ke.com",
+      "name": "CodeLink",
+      "url": "https://codelink.ke.com/",
+      "category": "ai_portal_candidate",
+      "from_batch": "2A",
+      "target_batch": "2B",
+      "auth_hint": "cas_cookie",
+      "reason": "Error: Page.goto: net::ERR_CONNECTION_CLOSED at https://codelink.ke.com/",
+      "access_verdict": "direct_blocked_handoff_2b",
+      "checked_at_utc": "2026-11-27T17:17:02.685193+00:00"
+    },
+    {
+      "host": "ketest-pro.ke.com",
+      "name": "Ketest Copilot",
+      "url": "https://ketest-pro.ke.com/#/keTest-copilot",
+      "category": "ai_portal_candidate",
+      "from_batch": "2A",
+      "target_batch": "2B",
+      "auth_hint": "cas_cookie",
+      "reason": "Error: Page.goto: net::ERR_CONNECTION_CLOSED at https://ketest-pro.ke.com/#/keTest-copilot",
+      "access_verdict": "direct_blocked_handoff_2b",
+      "checked_at_utc": "2026-11-27T17:17:20.592871+00:00"
+    },
+    {
+      "host": "speechhub.ke.com",
+      "name": "贝壳语音",
+      "url": "http://speechhub.ke.com/",
+      "category": "ai_portal_candidate",
+      "from_batch": "2A",
+      "target_batch": "2B",
+      "auth_hint": "cas_cookie",
+      "reason": "Error: Page.goto: net::ERR_EMPTY_RESPONSE at http://speechhub.ke.com/",
+      "access_verdict": "direct_blocked_handoff_2b",
+      "checked_at_utc": "2026-11-27T17:17:34.009557+00:00"
+    },
+    {
+      "host": "app-fly.ke.com",
+      "name": "员工文化应用（员工关系/新文化内核/品牌资源）",
+      "url": "https://app-fly.ke.com/employee-relations-hub",
+      "category": "reappeared_page_only_unverified",
+      "from_batch": "2A",
+      "target_batch": "2B",
+      "auth_hint": "cas_cookie",
+      "reason": "Error: Page.goto: net::ERR_CONNECTION_CLOSED at https://app-fly.ke.com/employee-relations-hub",
+      "access_verdict": "direct_blocked_handoff_2b",
+      "checked_at_utc": "2026-11-27T17:18:01.817635+00:00"
+    },
+    {
+      "host": "jixiao.ke.com",
+      "name": "绩效与试用期系统",
+      "url": "https://jixiao.ke.com/p/home",
+      "category": "reappeared_page_only_unverified",
+      "from_batch": "2A",
+      "target_batch": "2B",
+      "auth_hint": "cas_cookie",
+      "reason": "Error: Page.goto: net::ERR_CONNECTION_CLOSED at https://jixiao.ke.com/p/home",
+      "access_verdict": "direct_blocked_handoff_2b",
+      "checked_at_utc": "2026-11-27T17:18:11.954723+00:00"
+    }
+  ]
+}

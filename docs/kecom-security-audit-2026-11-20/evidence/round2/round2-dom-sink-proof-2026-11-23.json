@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "date": "2026-11-23",
+    "mode": "local-headless-chrome-cdp",
+    "network_access": "none (file:// fixture only)",
+    "chrome": "Chrome headless=new, CDP",
+    "sinks_under_test": [
+      "moma-main MessageCard innerHTML:S(content.replace newline-br)",
+      "moma-main MessageCenterDrawer innerHTML:et(content.replace newline-br)"
+    ]
+  },
+  "results": {
+    "fixture": "round2-sink",
+    "payloads": {
+      "javascript_href": true,
+      "iframe_srcdoc": true,
+      "body_onerror_attr": true,
+      "img_onerror": true,
+      "drawer_img_onerror": true,
+      "svg_onload": true
+    },
+    "sink_logic": "verbatim newline-to-br only",
+    "newline_preserved_as_br": true,
+    "dompurify_present": false
+  },
+  "verdict": {
+    "unsanitized_html_execution": true,
+    "inline_script_via_innerhtml_blocked_natively": true,
+    "javascript_href_clickable": true,
+    "newline_br_baseline": true,
+    "dompurify_in_app_bundle": false
+  }
+}

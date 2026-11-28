@@ -1,0 +1,595 @@
+{
+  "meta": {
+    "evidence_file": "round2-anon-followup-b-2026-11-23.json",
+    "module": "M1-KE21/KE25-followup-b",
+    "generated_at_utc": "2026-11-23T18:05:58+00:00",
+    "viewpoint": "office-workstation (viewpoint B; anonymous plane, focused follow-up B)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 11,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "KE21-count-exact-admins",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 206,
+      "content_range": "",
+      "body_len": 2,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/1",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      }
+    },
+    {
+      "item": "KE21-count-exact-prompts",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 206,
+      "content_range": "",
+      "body_len": 2,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/29",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      }
+    },
+    {
+      "item": "KE21-count-exact-usage_logs",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 206,
+      "content_range": "",
+      "body_len": 2,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/2239107",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      }
+    },
+    {
+      "item": "KE21-count-exact-users",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/users",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 206,
+      "content_range": "",
+      "body_len": 2,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/80795",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      }
+    },
+    {
+      "item": "KE21-count-exact-policy_news",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/policy_news",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 206,
+      "content_range": "",
+      "body_len": 2,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/58252",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      }
+    },
+    {
+      "item": "KE21-count-exact-new_buildings",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/new_buildings",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "http": 206,
+      "content_range": "",
+      "body_len": 2,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/4095",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      }
+    },
+    {
+      "item": "KE21-postgrest-root-openapi",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "body_len": 59339,
+      "metadata_only": true
+    },
+    {
+      "item": "KE21-admins-update-zero-match-canary",
+      "method": "PATCH",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "username"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "username",
+            "len": 31,
+            "sha256_16": "5978d24831e391ee"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.238,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "2",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 2,
+      "body_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE25-decrypt-shape-try1",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.177,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "284",
+        "vary": "Origin"
+      },
+      "body_len": 284,
+      "body_sha256": "6c63dbc7c9c23037ffe09b18210c94c4d638c8341527c5001e6a41a9591accfa",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "text_msg": "Field=>rows RequestValidationError: Input should be a valid list",
+      "text_fe_message": "参数校验失败: Field=>rows RequestValidationError: Input should be a valid list\nrequest_id=bac53545f94b471d",
+      "text_show_type": "nothing",
+      "text_request_id": "bac53545f94b471d",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE25-decrypt-shape-try2",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.191,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "284",
+        "vary": "Origin"
+      },
+      "body_len": 284,
+      "body_sha256": "e677df699f7b18fbab9a42570e3d4f097390433ee77997a63b171cfab6eae4e7",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "text_msg": "Field=>rows RequestValidationError: Input should be a valid list",
+      "text_fe_message": "参数校验失败: Field=>rows RequestValidationError: Input should be a valid list\nrequest_id=6bef2db15a8e41b5",
+      "text_show_type": "nothing",
+      "text_request_id": "6bef2db15a8e41b5",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE25-decrypt-shape-try3",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.211,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "284",
+        "vary": "Origin"
+      },
+      "body_len": 284,
+      "body_sha256": "0da6e1dc0bf353317f5607c7f5213b0c4ea96c002837b14d6f0133f28729c3ef",
+      "json": true,
+      "top_keys": [
+        "data",
+        "fe_message",
+        "msg",
+        "request_id",
+        "show_type",
+        "status"
+      ],
+      "biz_status": 10001,
+      "text_msg": "Field=>rows RequestValidationError: Input should be a valid list",
+      "text_fe_message": "参数校验失败: Field=>rows RequestValidationError: Input should be a valid list\nrequest_id=575af2c37ed34255",
+      "text_show_type": "nothing",
+      "text_request_id": "575af2c37ed34255",
+      "data_shape": "NoneType"
+    }
+  ],
+  "findings": {
+    "table_counts": {
+      "admins": {
+        "http": 206,
+        "content_range": ""
+      },
+      "prompts": {
+        "http": 206,
+        "content_range": ""
+      },
+      "usage_logs": {
+        "http": 206,
+        "content_range": ""
+      },
+      "users": {
+        "http": 206,
+        "content_range": ""
+      },
+      "policy_news": {
+        "http": 206,
+        "content_range": ""
+      },
+      "new_buildings": {
+        "http": 206,
+        "content_range": ""
+      }
+    },
+    "postgrest_schema": {
+      "http": 200,
+      "body_len": 59339,
+      "openapi_title": "standard public schema",
+      "table_count": 9,
+      "tables": {
+        "new_buildings": {
+          "columns": {
+            "id": "uuid",
+            "city": "text",
+            "building_name": "text",
+            "project_id": "text",
+            "is_active": "boolean",
+            "created_at": "timestamp with time zone",
+            "updated_at": "timestamp with time zone"
+          }
+        },
+        "schema_migrations": {
+          "columns": {
+            "version": "character varying",
+            "name": "text",
+            "sql": "text",
+            "inserted_at": "timestamp with time zone"
+          }
+        },
+        "prompts": {
+          "columns": {
+            "id": "uuid",
+            "name": "text",
+            "content": "text",
+            "created_at": "timestamp with time zone",
+            "updated_at": "timestamp with time zone",
+            "sort_order": "integer",
+            "platform": "text",
+            "prompt_type": "text",
+            "email": "text",
+            "is_deleted": "boolean"
+          }
+        },
+        "policy_news": {
+          "columns": {
+            "id": "uuid",
+            "title": "text",
+            "content": "text",
+            "source": "text",
+            "publish_date": "date",
+            "province": "text",
+            "city": "text",
+            "policy_category": "text",
+            "news_url": "text",
+            "summary": "text",
+            "created_at": "timestamp with time zone",
+            "updated_at": "timestamp with time zone"
+          }
+        },
+        "admins": {
+          "columns": {
+            "id": "uuid",
+            "email": "text",
+            "user_code": "text",
+            "full_name": "text",
+            "org_code": "text",
+            "org_name": "text",
+            "is_active": "boolean",
+            "last_login_at": "timestamp with time zone",
+            "created_at": "timestamp with time zone",
+            "updated_at": "timestamp with time zone",
+            "username": "text",
+            "password_hash": "text"
+          }
+        },
+        "usage_logs": {
+          "columns": {
+            "id": "uuid",
+            "user_id": "text",
+            "user_name": "text",
+            "user_email": "text",
+            "property_id": "text",
+            "property_title": "text",
+            "property_address": "text",
+            "prompt_template_id": "uuid",
+            "prompt_template_name": "text",
+            "is_custom_prompt": "boolean",
+            "script_length": "integer",
+            "created_at": "timestamp with time zone",
+            "user_city": "text",
+            "feature_type": "text",
+            "duration_seconds": "integer"
+          }
+        },
+        "usage_stats_cache": {
+          "columns": {
+            "id": "uuid",
+            "stat_date": "date",
+            "total_usage": "bigint",
+            "total_users": "bigint",
+            "today_usage": "bigint",
+            "week_usage": "bigint",
+            "city_filter": "text[]",
+            "updated_at": "timestamp with time zone",
+            "created_at": "timestamp with time zone",
+            "email": "text"
+          }
+        },
+        "news_scraping_logs": {
+          "columns": {
+            "id": "uuid",
+            "scrape_start_time": "timestamp with time zone",
+            "scrape_end_time": "timestamp with time zone",
+            "total_searched": "integer",
+            "total_filtered": "integer",
+            "total_added": "integer",
+            "status": "text",
+            "error_message": "text",
+            "created_at": "timestamp with time zone"
+          }
+        },
+        "users": {
+          "columns": {
+            "id": "uuid",
+            "user_id": "text",
+            "user_name": "text",
+            "user_email": "text",
+            "user_city": "text",
+            "org_name": "text",
+            "org_code": "text",
+            "phone": "text",
+            "ucid": "text",
+            "user_code": "text",
+            "avatar_url": "text",
+            "last_login_at": "timestamp with time zone",
+            "created_at": "timestamp with time zone",
+            "updated_at": "timestamp with time zone"
+          }
+        }
+      },
+      "rpc_count": 14,
+      "rpc_names": [
+        "get_available_cities",
+        "get_city_statistics",
+        "get_city_statistics_with_filter",
+        "get_daily_trend",
+        "get_daily_trend_with_filter",
+        "get_hourly_trend",
+        "get_hourly_trend_with_filter",
+        "get_top_templates",
+        "get_top_templates_with_filter",
+        "get_top_users",
+        "get_top_users_with_filter",
+        "get_usage_overview",
+        "get_usage_overview_with_filter",
+        "sync_usage_logs_city"
+      ]
+    }
+  }
+}

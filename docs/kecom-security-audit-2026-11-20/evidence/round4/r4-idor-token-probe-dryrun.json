@@ -1,0 +1,1027 @@
+{
+  "meta": {
+    "evidence_file": "r4-idor-token-probe-dryrun.json",
+    "module": "r4-IDT-numeric-id-and-share-token",
+    "generated_at_utc": "2026-11-24T08:46:41+00:00",
+    "mode": "DRY_RUN_ZERO_REQUESTS",
+    "redaction": "plan-only; no packet sent; URLs redacted to path+param names",
+    "hard_burst_cap": 12
+  },
+  "plan": [
+    {
+      "item": "T1-zu-no-signature",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "note": "control: expect 401 missing signature",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-zu-zero",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "note": "malformed/boundary canary; no +/-1 enumeration",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-zu-nonnumeric",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 3,
+            "sha256_16": "ba7816bf8f01cfea"
+          }
+        ]
+      },
+      "note": "malformed/boundary canary; no +/-1 enumeration",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-zu-huge-canary",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "malformed/boundary canary; no +/-1 enumeration",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-nh-zero",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/house_info",
+        "query_param_names": [
+          "pid"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "pid",
+            "len": 1,
+            "sha256_16": "5feceb66ffc86f38"
+          }
+        ]
+      },
+      "note": "malformed/boundary canary; no +/-1 enumeration",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-nh-nonnumeric",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/house_info",
+        "query_param_names": [
+          "pid"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "pid",
+            "len": 3,
+            "sha256_16": "3608bca1e44ea6c4"
+          }
+        ]
+      },
+      "note": "malformed/boundary canary; no +/-1 enumeration",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-nh-huge-canary",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/house_info",
+        "query_param_names": [
+          "pid"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "pid",
+            "len": 12,
+            "sha256_16": "f13f69c70a1e79cd"
+          }
+        ]
+      },
+      "note": "malformed/boundary canary; no +/-1 enumeration",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-01",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 1/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-02",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 2/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-03",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 3/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-04",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 4/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-05",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 5/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-06",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 6/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-07",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 7/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-direct-08",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 8/8 direct",
+      "xff_rotation": false,
+      "request_header_names": [
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-01",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 1/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-02",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 2/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-03",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 3/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-04",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 4/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-05",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 5/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-06",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 6/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-07",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 7/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T1-burst-xff-08",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/house/zu/house_info",
+        "query_param_names": [
+          "house_id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "house_id",
+            "len": 12,
+            "sha256_16": "562d4aba4cc17834"
+          }
+        ]
+      },
+      "note": "burst 8/8 xff-rotate",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "X-Signature"
+      ],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-anon-gate-moma_agent-shared",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/shared",
+        "query_param_names": [
+          "share_token",
+          "token"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 31,
+            "sha256_16": "4824018f53fd7497"
+          },
+          {
+            "name": "token",
+            "len": 31,
+            "sha256_16": "4824018f53fd7497"
+          }
+        ]
+      },
+      "note": "random canary token; expect 401/403 or 'invalid/expired'",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-anon-gate-prd-shared",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/prd/shared",
+        "query_param_names": [
+          "share_token",
+          "token"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 31,
+            "sha256_16": "dbd6ea2c485cb97a"
+          },
+          {
+            "name": "token",
+            "len": 31,
+            "sha256_16": "dbd6ea2c485cb97a"
+          }
+        ]
+      },
+      "note": "random canary token; expect 401/403 or 'invalid/expired'",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-anon-gate-prototype-shared",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/prototype/shared",
+        "query_param_names": [
+          "share_token",
+          "token"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 31,
+            "sha256_16": "8b067a824553213c"
+          },
+          {
+            "name": "token",
+            "len": 31,
+            "sha256_16": "8b067a824553213c"
+          }
+        ]
+      },
+      "note": "random canary token; expect 401/403 or 'invalid/expired'",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-anon-gate-research-shared",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/research/shared",
+        "query_param_names": [
+          "share_token",
+          "token"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 31,
+            "sha256_16": "164005d7be598718"
+          },
+          {
+            "name": "token",
+            "len": 31,
+            "sha256_16": "164005d7be598718"
+          }
+        ]
+      },
+      "note": "random canary token; expect 401/403 or 'invalid/expired'",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-anon-gate-moma_agent-html-to-pdf-shared",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-pdf/shared",
+        "query_param_names": [
+          "share_token",
+          "token"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 31,
+            "sha256_16": "dc01eb1982deca4f"
+          },
+          {
+            "name": "token",
+            "len": 31,
+            "sha256_16": "dc01eb1982deca4f"
+          }
+        ]
+      },
+      "note": "random canary token; expect 401/403 or 'invalid/expired'",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-anon-gate-moma_agent-html-to-image-shared",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-image/shared",
+        "query_param_names": [
+          "share_token",
+          "token"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "share_token",
+            "len": 31,
+            "sha256_16": "4532d8a362faaf37"
+          },
+          {
+            "name": "token",
+            "len": 31,
+            "sha256_16": "4532d8a362faaf37"
+          }
+        ]
+      },
+      "note": "random canary token; expect 401/403 or 'invalid/expired'",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-01",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-02",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-03",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-04",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-05",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-06",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-07",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-invite-accept-wrong-08",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/invite/accept",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "random invite code; wrong-attempt rate-limit oracle",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-user-invite-anon",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/invite",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "own invite_code issuance endpoint; expect errno 401 anonymously",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "T2-chat-invite-gen-anon",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/chats/r4-canary-chat/invite/generate",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "invite generation requires chat ownership; expect 401",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 2,
+      "status": "PLANNED_DRY_RUN"
+    }
+  ],
+  "findings": {
+    "mode": "dry-run",
+    "T1_falcon_rate_coverage": {
+      "direct": {
+        "count": 8,
+        "status_distribution": {
+          "PLANNED_DRY_RUN": 8
+        },
+        "http_429_seen": false,
+        "rate_limit_header_responses": 0,
+        "elapsed_range_s": [
+          null,
+          null
+        ]
+      },
+      "xff_rotate": {
+        "count": 8,
+        "status_distribution": {
+          "PLANNED_DRY_RUN": 8
+        },
+        "http_429_seen": false,
+        "rate_limit_header_responses": 0,
+        "elapsed_range_s": [
+          null,
+          null
+        ]
+      },
+      "interpretation": "any 200/400 business response without 429 across the burst means the falcon gateway path has no effective per-IP throttle"
+    },
+    "T2_invite_accept_rate_limit": {
+      "count": 8,
+      "status_distribution": {
+        "PLANNED_DRY_RUN": 8
+      },
+      "http_429_seen": false,
+      "rate_limit_header_responses": 0,
+      "elapsed_range_s": [
+        null,
+        null
+      ]
+    },
+    "T3_wandou_numeric_id": "blocked: credential store logged out (KE-24 window); harness ready for R4_WANDOU=1",
+    "T4_token_entropy_baseline": {
+      "required_min_bits": 128,
+      "typical_6digit_numeric_bits": 19.9,
+      "typical_8char_alnum_bits": 47.6,
+      "typical_22char_base64url_bits": 132.0,
+      "collection_method": "with live session: call invite/generate twice and share-token once, feed returned tokens (in-memory only) into entropy_bits(); then re-GET after TTL to verify expiry and second-use rejection",
+      "canary_self_check": {
+        "len": 31,
+        "distinct_chars": 26,
+        "class_counts": {
+          "digit": 7,
+          "lower": 13,
+          "upper": 10,
+          "symbol": 1
+        },
+        "shannon_bits_observed": 142.8,
+        "alphabet_space_bits_upper": 145.7,
+        "meets_128bit_lower_bound": true
+      }
+    }
+  }
+}

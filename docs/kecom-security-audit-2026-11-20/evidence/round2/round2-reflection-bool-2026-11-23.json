@@ -1,0 +1,363 @@
+{
+  "meta": {
+    "evidence_file": "round2-reflection-bool-2026-11-23.json",
+    "module": "M3-reflection-boolean",
+    "generated_at_utc": "2026-11-23T18:20:26+00:00",
+    "viewpoint": "office-workstation (viewpoint B; boolean reflection probe)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 5,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "REFL-baseline",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 1,
+            "sha256_16": "ca978112ca1bbdca"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.184,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "缺少签名头",
+      "data_shape": null
+    },
+    {
+      "item": "REFL-ssti_marker",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 18,
+            "sha256_16": "b44ef087517bb4be"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.204,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "缺少签名头",
+      "data_shape": null
+    },
+    {
+      "item": "REFL-single_quote",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 2,
+            "sha256_16": "a80c8a675a0e6f40"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.21,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "缺少签名头",
+      "data_shape": null
+    },
+    {
+      "item": "REFL-bool_pair",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 12,
+            "sha256_16": "bb3a54f2b42649fb"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.182,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "缺少签名头",
+      "data_shape": null
+    },
+    {
+      "item": "REFL-html_tag",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/new_house/project_sug",
+        "query_param_names": [
+          "city_id",
+          "page_num",
+          "page_size",
+          "query"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "city_id",
+            "len": 6,
+            "sha256_16": "88c837b24b4dab1a"
+          },
+          {
+            "name": "page_size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "page_num",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "query",
+            "len": 22,
+            "sha256_16": "daf4981c60521d27"
+          }
+        ]
+      },
+      "http": 401,
+      "elapsed_s": 0.173,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "27",
+        "cache-control": "no-store"
+      },
+      "body_len": 27,
+      "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+      "json": true,
+      "top_keys": [
+        "error"
+      ],
+      "text_error": "缺少签名头",
+      "data_shape": null
+    }
+  ],
+  "findings": {
+    "reflection_booleans": [
+      {
+        "case": "baseline",
+        "http": 200,
+        "body_len": 21,
+        "len_delta_vs_baseline": 0,
+        "marker_reflected": false,
+        "raw_template_reflected": false,
+        "raw_html_reflected": false,
+        "json_content_type": true,
+        "content_type": "application/json"
+      },
+      {
+        "case": "ssti_marker",
+        "http": 200,
+        "body_len": 21,
+        "len_delta_vs_baseline": 0,
+        "marker_reflected": false,
+        "raw_template_reflected": false,
+        "raw_html_reflected": false,
+        "json_content_type": true,
+        "content_type": "application/json"
+      },
+      {
+        "case": "single_quote",
+        "http": 200,
+        "body_len": 21,
+        "len_delta_vs_baseline": 0,
+        "marker_reflected": false,
+        "raw_template_reflected": false,
+        "raw_html_reflected": false,
+        "json_content_type": true,
+        "content_type": "application/json"
+      },
+      {
+        "case": "bool_pair",
+        "http": 200,
+        "body_len": 175,
+        "len_delta_vs_baseline": 154,
+        "marker_reflected": false,
+        "raw_template_reflected": false,
+        "raw_html_reflected": false,
+        "json_content_type": true,
+        "content_type": "application/json"
+      },
+      {
+        "case": "html_tag",
+        "http": 200,
+        "body_len": 21,
+        "len_delta_vs_baseline": 0,
+        "marker_reflected": false,
+        "raw_template_reflected": false,
+        "raw_html_reflected": false,
+        "json_content_type": true,
+        "content_type": "application/json"
+      }
+    ],
+    "body_stored": false
+  }
+}

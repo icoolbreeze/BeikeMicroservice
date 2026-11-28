@@ -1,0 +1,1401 @@
+{
+  "meta": {
+    "evidence_file": "round2-session-2026-11-23-write.json",
+    "module": "M1-M5-session-write",
+    "generated_at_utc": "2026-11-24T05:02:03+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized account, session plane)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 21,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "M3-mass-assignment-config",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/aschat/config",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 500,
+      "elapsed_s": 0.256,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html",
+        "content-length": "3006",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 3006,
+      "body_sha256": "0730a5f9f2a35ac5edd0e5345b8f3033bee8a053e7143da0f748195a6583ea8a",
+      "json": false,
+      "head_ascii": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"apple-mobile-web-app-title\" content=\""
+    },
+    {
+      "item": "M3-mass-assignment-readback",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/aschat/config",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.262,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 236,
+      "body_sha256": "79aeec22044779b880550581a5b05fe2941d8da171ab67e6582ae93363c3c094",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "mainSessionId": "int",
+        "webSearchEnabled": "bool",
+        "noteEnabled": "bool",
+        "knowledgeBaseEnabled": "bool"
+      }
+    },
+    {
+      "item": "M3-users-me-shape",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v1/users/me",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.201,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "x-frame-options": "SAMEORIGIN"
+      },
+      "body_len": 322,
+      "body_sha256": "8bddf67405abbf5b6556c5ce1bddcfc731acc6d9561f0f7a5b44ca697a7f4cae",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "ucid": "str",
+        "userCode": "str",
+        "name": "str",
+        "cityCode": "str",
+        "cityName": "str",
+        "positionCode": "str",
+        "positionName": "str",
+        "positionType": "NoneType"
+      }
+    },
+    {
+      "item": "M3-upload-html",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.559,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 621,
+      "body_sha256": "0bb7b824934c380089297cadf2dd98728846e58265e143bff0d838b6b999f4f0",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "fileId": "int",
+        "url": "str",
+        "fileName": "str",
+        "fileKey": "str",
+        "fileSize": "int",
+        "contentType": "str"
+      }
+    },
+    {
+      "item": "M3-upload-html-capability-head",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "ods.lianjia.com",
+        "path": {
+          "len": 65,
+          "sha256_16": "956349dbb8f0af75"
+        },
+        "query_param_names": [
+          "X-Amz-Algorithm",
+          "X-Amz-Credential",
+          "X-Amz-Date",
+          "X-Amz-Expires",
+          "X-Amz-Signature",
+          "X-Amz-SignedHeaders"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "X-Amz-Algorithm",
+            "len": 16,
+            "sha256_16": "608d9859e6bc152c"
+          },
+          {
+            "name": "X-Amz-Date",
+            "len": 16,
+            "sha256_16": "109e5b258ba80323"
+          },
+          {
+            "name": "X-Amz-SignedHeaders",
+            "len": 4,
+            "sha256_16": "4740ae6347b0172c"
+          },
+          {
+            "name": "X-Amz-Credential",
+            "len": 56,
+            "sha256_16": "d90a1eb1cf7b2524"
+          },
+          {
+            "name": "X-Amz-Expires",
+            "len": 4,
+            "sha256_16": "3c5d8ca315f8c36d"
+          },
+          {
+            "name": "X-Amz-Signature",
+            "len": 64,
+            "sha256_16": "943380757cbda70f"
+          }
+        ]
+      },
+      "http": 403,
+      "elapsed_s": 0.205,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/xml",
+        "content-length": "181",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "M3-upload-html-bind-note",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/create-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 400,
+      "elapsed_s": 0.237,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Origin"
+      },
+      "body_len": 181,
+      "body_sha256": "a3d003211c61c7620d64734dfbf0eef7a125d5e0fc03b53487d4c226fef1764d",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "INVALID_PARAM",
+      "biz_success": false,
+      "text_message": "仅支持图片文件创建图片笔记",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "M3-upload-svg",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.578,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 623,
+      "body_sha256": "de15736836f562a5b574d798f0fd795724de80643c23918b91d9b601e0dde255",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "fileId": "int",
+        "url": "str",
+        "fileName": "str",
+        "fileKey": "str",
+        "fileSize": "int",
+        "contentType": "str"
+      }
+    },
+    {
+      "item": "M3-upload-svg-capability-head",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "ods.lianjia.com",
+        "path": {
+          "len": 64,
+          "sha256_16": "466f7104f405e3fd"
+        },
+        "query_param_names": [
+          "X-Amz-Algorithm",
+          "X-Amz-Credential",
+          "X-Amz-Date",
+          "X-Amz-Expires",
+          "X-Amz-Signature",
+          "X-Amz-SignedHeaders"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "X-Amz-Algorithm",
+            "len": 16,
+            "sha256_16": "608d9859e6bc152c"
+          },
+          {
+            "name": "X-Amz-Date",
+            "len": 16,
+            "sha256_16": "de4a3ecd1a64bcc8"
+          },
+          {
+            "name": "X-Amz-SignedHeaders",
+            "len": 4,
+            "sha256_16": "4740ae6347b0172c"
+          },
+          {
+            "name": "X-Amz-Credential",
+            "len": 56,
+            "sha256_16": "d90a1eb1cf7b2524"
+          },
+          {
+            "name": "X-Amz-Expires",
+            "len": 4,
+            "sha256_16": "3c5d8ca315f8c36d"
+          },
+          {
+            "name": "X-Amz-Signature",
+            "len": 64,
+            "sha256_16": "1ae209ba48dc903b"
+          }
+        ]
+      },
+      "http": 403,
+      "elapsed_s": 0.199,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/xml",
+        "content-length": "180",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "M3-upload-svg-bind-note",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/create-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 400,
+      "elapsed_s": 0.228,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Origin"
+      },
+      "body_len": 181,
+      "body_sha256": "1c093a5608609616835ab84ed6ec08e811666974aa3346c43d9bcb67d46e712b",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "INVALID_PARAM",
+      "biz_success": false,
+      "text_message": "仅支持图片文件创建图片笔记",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "M3-upload-double-ext",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.502,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 624,
+      "body_sha256": "bdca28b894f1888bb6b556961a52a4a0936636ba05e287fd6a49380bb13051bb",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "fileId": "int",
+        "url": "str",
+        "fileName": "str",
+        "fileKey": "str",
+        "fileSize": "int",
+        "contentType": "str"
+      }
+    },
+    {
+      "item": "M3-upload-double-ext-capability-head",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "ods.lianjia.com",
+        "path": {
+          "len": 64,
+          "sha256_16": "0f3e06f0a5f562e9"
+        },
+        "query_param_names": [
+          "X-Amz-Algorithm",
+          "X-Amz-Credential",
+          "X-Amz-Date",
+          "X-Amz-Expires",
+          "X-Amz-Signature",
+          "X-Amz-SignedHeaders"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "X-Amz-Algorithm",
+            "len": 16,
+            "sha256_16": "608d9859e6bc152c"
+          },
+          {
+            "name": "X-Amz-Date",
+            "len": 16,
+            "sha256_16": "07be1c65400495e1"
+          },
+          {
+            "name": "X-Amz-SignedHeaders",
+            "len": 4,
+            "sha256_16": "4740ae6347b0172c"
+          },
+          {
+            "name": "X-Amz-Credential",
+            "len": 56,
+            "sha256_16": "d90a1eb1cf7b2524"
+          },
+          {
+            "name": "X-Amz-Expires",
+            "len": 4,
+            "sha256_16": "3c5d8ca315f8c36d"
+          },
+          {
+            "name": "X-Amz-Signature",
+            "len": 64,
+            "sha256_16": "a5cb65bebe404214"
+          }
+        ]
+      },
+      "http": 403,
+      "elapsed_s": 0.2,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/xml",
+        "content-length": "180",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "M3-upload-double-ext-bind-note",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/create-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 1.14,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 1113,
+      "body_sha256": "3419930b22b997caef814d69c4c3170dbcf53f611caaa29a3cf34c272491991e",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "noteId": "int",
+        "userId": "int",
+        "canEdit": "bool",
+        "type": "str",
+        "title": "str",
+        "content": "str",
+        "summary": "str",
+        "noteStatus": "str",
+        "aggregateStatus": "str",
+        "createdAt": "str",
+        "updatedAt": "str",
+        "textNote": "NoneType",
+        "audioNote": "NoneType",
+        "imageNote": {
+          "files": {
+            "list_len": 1,
+            "item_shape": {
+              "imageId": "int",
+              "fileId": "int",
+              "fileName": "str",
+              "fileUrl": "str",
+              "sortNo": "int",
+              "uploadStatus": "str",
+              "ocrStatus": "str",
+              "ocrText": "str"
+            }
+          }
+        },
+        "pdfNote": "NoneType",
+        "customers": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "houses": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "kbInfoId": "int",
+        "knowledgeBaseId": "int",
+        "capabilities": {
+          "canUpdate": "bool",
+          "canDelete": "bool",
+          "canExport": "bool"
+        },
+        "creator": "int"
+      }
+    },
+    {
+      "item": "M3-upload-double-ext-note-capability-head",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "ods.lianjia.com",
+        "path": {
+          "len": 64,
+          "sha256_16": "0f3e06f0a5f562e9"
+        },
+        "query_param_names": [
+          "X-Amz-Algorithm",
+          "X-Amz-Credential",
+          "X-Amz-Date",
+          "X-Amz-Expires",
+          "X-Amz-Signature",
+          "X-Amz-SignedHeaders"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "X-Amz-Algorithm",
+            "len": 16,
+            "sha256_16": "608d9859e6bc152c"
+          },
+          {
+            "name": "X-Amz-Date",
+            "len": 16,
+            "sha256_16": "64c8443ed4fd7130"
+          },
+          {
+            "name": "X-Amz-SignedHeaders",
+            "len": 4,
+            "sha256_16": "4740ae6347b0172c"
+          },
+          {
+            "name": "X-Amz-Credential",
+            "len": 56,
+            "sha256_16": "d90a1eb1cf7b2524"
+          },
+          {
+            "name": "X-Amz-Expires",
+            "len": 4,
+            "sha256_16": "3c5d8ca315f8c36d"
+          },
+          {
+            "name": "X-Amz-Signature",
+            "len": 64,
+            "sha256_16": "bc99f5b94b0b8231"
+          }
+        ]
+      },
+      "http": 403,
+      "elapsed_s": 0.176,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/xml",
+        "content-length": "180",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "M3-upload-double-ext-note-detail",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": {
+          "len": 27,
+          "sha256_16": "29c3a52b69d4151a"
+        },
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.636,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 1113,
+      "body_sha256": "26ae993a790467d2fa487286d0a1b4c8fde6c67984f54eb46dd1f70d78fc39c0",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "noteId": "int",
+        "userId": "int",
+        "canEdit": "bool",
+        "type": "str",
+        "title": "str",
+        "content": "str",
+        "summary": "str",
+        "noteStatus": "str",
+        "aggregateStatus": "str",
+        "createdAt": "str",
+        "updatedAt": "str",
+        "textNote": "NoneType",
+        "audioNote": "NoneType",
+        "imageNote": {
+          "files": {
+            "list_len": 1,
+            "item_shape": {
+              "imageId": "int",
+              "fileId": "int",
+              "fileName": "str",
+              "fileUrl": "str",
+              "sortNo": "int",
+              "uploadStatus": "str",
+              "ocrStatus": "str",
+              "ocrText": "str"
+            }
+          }
+        },
+        "pdfNote": "NoneType",
+        "customers": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "houses": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "kbInfoId": "int",
+        "knowledgeBaseId": "int",
+        "capabilities": {
+          "canUpdate": "bool",
+          "canDelete": "bool",
+          "canExport": "bool"
+        },
+        "creator": "int"
+      }
+    },
+    {
+      "item": "M3-upload-double-ext-note-delete",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/delete",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.714,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 135,
+      "body_sha256": "e8c55471389be3f8975c3e35ff24f50c315c4ce37fc18f65e5e13fc4ff3441a1",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "M3-upload-traversal",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/note-files/upload",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.44,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 621,
+      "body_sha256": "3617c61c4214ef15bd9bb1bb9d8976fe87a7a48dcd18b28cc7b389b59bfe07dd",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "fileId": "int",
+        "url": "str",
+        "fileName": "str",
+        "fileKey": "str",
+        "fileSize": "int",
+        "contentType": "str"
+      }
+    },
+    {
+      "item": "M3-upload-traversal-capability-head",
+      "method": "HEAD",
+      "url": {
+        "scheme": "https",
+        "host": "ods.lianjia.com",
+        "path": {
+          "len": 65,
+          "sha256_16": "6632a33dfa5ae3ba"
+        },
+        "query_param_names": [
+          "X-Amz-Algorithm",
+          "X-Amz-Credential",
+          "X-Amz-Date",
+          "X-Amz-Expires",
+          "X-Amz-Signature",
+          "X-Amz-SignedHeaders"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "X-Amz-Algorithm",
+            "len": 16,
+            "sha256_16": "608d9859e6bc152c"
+          },
+          {
+            "name": "X-Amz-Date",
+            "len": 16,
+            "sha256_16": "533c232b1b5238e0"
+          },
+          {
+            "name": "X-Amz-SignedHeaders",
+            "len": 4,
+            "sha256_16": "4740ae6347b0172c"
+          },
+          {
+            "name": "X-Amz-Credential",
+            "len": 56,
+            "sha256_16": "d90a1eb1cf7b2524"
+          },
+          {
+            "name": "X-Amz-Expires",
+            "len": 4,
+            "sha256_16": "3c5d8ca315f8c36d"
+          },
+          {
+            "name": "X-Amz-Signature",
+            "len": 64,
+            "sha256_16": "b5465b603e32fc14"
+          }
+        ]
+      },
+      "http": 403,
+      "elapsed_s": 0.18,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/xml",
+        "content-length": "181",
+        "access-control-allow-origin": "*"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "M3-upload-traversal-bind-note",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/create-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 400,
+      "elapsed_s": 0.198,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Origin"
+      },
+      "body_len": 181,
+      "body_sha256": "39c07cf92e010f282fe7e5d1443bfc700b07749e4fb9c5f8ad358a488cfde074",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "INVALID_PARAM",
+      "biz_success": false,
+      "text_message": "仅支持图片文件创建图片笔记",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "M3-note-create-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/create-text",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.919,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 693,
+      "body_sha256": "2d8a7da1f2a1cc86ef1caa1aaf1fdda1c77400b496a753c696a72c4ffd69bb3b",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "noteId": "int",
+        "userId": "int",
+        "canEdit": "bool",
+        "type": "str",
+        "title": "str",
+        "content": "str",
+        "summary": "str",
+        "noteStatus": "str",
+        "aggregateStatus": "str",
+        "createdAt": "str",
+        "updatedAt": "str",
+        "textNote": {
+          "content": "str",
+          "draftContent": "str"
+        },
+        "audioNote": "NoneType",
+        "imageNote": "NoneType",
+        "pdfNote": "NoneType",
+        "customers": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "houses": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "kbInfoId": "NoneType",
+        "knowledgeBaseId": "NoneType",
+        "capabilities": {
+          "canUpdate": "bool",
+          "canDelete": "bool",
+          "canExport": "bool"
+        },
+        "creator": "int"
+      }
+    },
+    {
+      "item": "M3-note-detail-canary",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": {
+          "len": 27,
+          "sha256_16": "f09844dafffcec2e"
+        },
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.491,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 696,
+      "body_sha256": "f5305e8b0e2a44c422e93d9bd8bbabf65974196e7ca882c8e64014ee268ce840",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "noteId": "int",
+        "userId": "int",
+        "canEdit": "bool",
+        "type": "str",
+        "title": "str",
+        "content": "str",
+        "summary": "str",
+        "noteStatus": "str",
+        "aggregateStatus": "str",
+        "createdAt": "str",
+        "updatedAt": "str",
+        "textNote": {
+          "content": "str",
+          "draftContent": "str"
+        },
+        "audioNote": "NoneType",
+        "imageNote": "NoneType",
+        "pdfNote": "NoneType",
+        "customers": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "houses": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "kbInfoId": "int",
+        "knowledgeBaseId": "int",
+        "capabilities": {
+          "canUpdate": "bool",
+          "canDelete": "bool",
+          "canExport": "bool"
+        },
+        "creator": "int"
+      }
+    },
+    {
+      "item": "M3-note-delete-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v2/notes/delete",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.715,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 135,
+      "body_sha256": "4834058bb53a47c53dc254db6142ae9de143cc667f139404454e9a5bbfa9f300",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": "NoneType"
+    }
+  ],
+  "findings": {
+    "principal_len": 16,
+    "phase": "write",
+    "M3_uploads": [
+      {
+        "item": "M3-upload-html",
+        "http": 200,
+        "biz": {
+          "biz_code": "0",
+          "biz_success": true
+        },
+        "keys": [
+          "code",
+          "data",
+          "message",
+          "requestId",
+          "success",
+          "timestamp"
+        ],
+        "data_shape": {
+          "fileId": "int",
+          "url": "str",
+          "fileName": "str",
+          "fileKey": "str",
+          "fileSize": "int",
+          "contentType": "str"
+        },
+        "file_id_present": true,
+        "capability_url": "requested",
+        "cleanup": "bind_failed"
+      },
+      {
+        "item": "M3-upload-svg",
+        "http": 200,
+        "biz": {
+          "biz_code": "0",
+          "biz_success": true
+        },
+        "keys": [
+          "code",
+          "data",
+          "message",
+          "requestId",
+          "success",
+          "timestamp"
+        ],
+        "data_shape": {
+          "fileId": "int",
+          "url": "str",
+          "fileName": "str",
+          "fileKey": "str",
+          "fileSize": "int",
+          "contentType": "str"
+        },
+        "file_id_present": true,
+        "capability_url": "requested",
+        "cleanup": "bind_failed"
+      },
+      {
+        "item": "M3-upload-double-ext",
+        "http": 200,
+        "biz": {
+          "biz_code": "0",
+          "biz_success": true
+        },
+        "keys": [
+          "code",
+          "data",
+          "message",
+          "requestId",
+          "success",
+          "timestamp"
+        ],
+        "data_shape": {
+          "fileId": "int",
+          "url": "str",
+          "fileName": "str",
+          "fileKey": "str",
+          "fileSize": "int",
+          "contentType": "str"
+        },
+        "file_id_present": true,
+        "capability_url": "requested",
+        "cleanup": "deleted"
+      },
+      {
+        "item": "M3-upload-traversal",
+        "http": 200,
+        "biz": {
+          "biz_code": "0",
+          "biz_success": true
+        },
+        "keys": [
+          "code",
+          "data",
+          "message",
+          "requestId",
+          "success",
+          "timestamp"
+        ],
+        "data_shape": {
+          "fileId": "int",
+          "url": "str",
+          "fileName": "str",
+          "fileKey": "str",
+          "fileSize": "int",
+          "contentType": "str"
+        },
+        "file_id_present": true,
+        "capability_url": "requested",
+        "cleanup": "bind_failed"
+      }
+    ],
+    "M3_note_create": {
+      "http": 200,
+      "shape": {
+        "noteId": "int",
+        "userId": "int",
+        "canEdit": "bool",
+        "type": "str",
+        "title": "str",
+        "content": "str",
+        "summary": "str",
+        "noteStatus": "str",
+        "aggregateStatus": "str",
+        "createdAt": "str",
+        "updatedAt": "str",
+        "textNote": {
+          "content": "str",
+          "draftContent": "str"
+        },
+        "audioNote": "NoneType",
+        "imageNote": "NoneType",
+        "pdfNote": "NoneType",
+        "customers": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "houses": {
+          "list_len": 0,
+          "item_shape": null
+        },
+        "kbInfoId": "NoneType",
+        "knowledgeBaseId": "NoneType",
+        "capabilities": {
+          "canUpdate": "bool",
+          "canDelete": "bool",
+          "canExport": "bool"
+        },
+        "creator": "int"
+      },
+      "keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "note_id_present": true,
+      "capability_url": "absent",
+      "cleanup": "deleted"
+    }
+  }
+}

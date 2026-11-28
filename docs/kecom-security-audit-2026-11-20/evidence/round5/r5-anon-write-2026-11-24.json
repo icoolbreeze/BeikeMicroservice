@@ -1,0 +1,143 @@
+{
+  "meta": {
+    "evidence_file": "r5-anon-write-2026-11-24.json",
+    "module": "round5-anon-write-privilege (T15 empty-insert classification + T1 exact count)",
+    "generated_at_utc": "2026-11-24T14:32:07+00:00",
+    "viewpoint": "office-workstation (viewpoint B; anonymous plane)",
+    "redaction": "status/PGRST-code/short-message/count only; empty-object inserts create no row (constraint-backed); no token/cookie/raw value persisted",
+    "request_total": 9,
+    "retry_policy": "single attempt per item"
+  },
+  "findings": {
+    "identity_plane": "anonymous; public anon JWT only",
+    "T15_empty_insert": [
+      {
+        "pool": "A",
+        "table": "users",
+        "http": 401,
+        "code": "42501",
+        "message": "new row violates row-level security policy for table \"users\"",
+        "insert_verdict": "rls_denied_no_insert_privilege"
+      },
+      {
+        "pool": "A",
+        "table": "usage_logs",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"user_id\" of relation \"usage_logs\" violates not-null constraint",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "pool": "A",
+        "table": "prompts",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"name\" of relation \"prompts\" violates not-null constraint",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "pool": "A",
+        "table": "policy_news",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"title\" of relation \"policy_news\" violates not-null constraint",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "pool": "A",
+        "table": "admins",
+        "http": 401,
+        "code": "42501",
+        "message": "new row violates row-level security policy for table \"admins\"",
+        "insert_verdict": "rls_denied_no_insert_privilege"
+      },
+      {
+        "pool": "B",
+        "table": "properties",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"email\" of relation \"properties\" violates not-null constraint",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "pool": "B",
+        "table": "smart_clip_jobs",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"email\" of relation \"smart_clip_jobs\" violates not-null constraint",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      }
+    ],
+    "T1_canary_exact": {
+      "head_content_range": "0-1/2",
+      "id_only_rows": 2,
+      "marker_len": 26
+    }
+  },
+  "request_ledger": [
+    {
+      "http": 401,
+      "code": "42501",
+      "message": "new row violates row-level security policy for table \"users\"",
+      "content_range": "",
+      "item": "T15-A-users-empty-insert"
+    },
+    {
+      "http": 400,
+      "code": "23502",
+      "message": "null value in column \"user_id\" of relation \"usage_logs\" violates not-null constraint",
+      "content_range": "",
+      "item": "T15-A-usage_logs-empty-insert"
+    },
+    {
+      "http": 400,
+      "code": "23502",
+      "message": "null value in column \"name\" of relation \"prompts\" violates not-null constraint",
+      "content_range": "",
+      "item": "T15-A-prompts-empty-insert"
+    },
+    {
+      "http": 400,
+      "code": "23502",
+      "message": "null value in column \"title\" of relation \"policy_news\" violates not-null constraint",
+      "content_range": "",
+      "item": "T15-A-policy_news-empty-insert"
+    },
+    {
+      "http": 401,
+      "code": "42501",
+      "message": "new row violates row-level security policy for table \"admins\"",
+      "content_range": "",
+      "item": "T15-A-admins-empty-insert"
+    },
+    {
+      "http": 400,
+      "code": "23502",
+      "message": "null value in column \"email\" of relation \"properties\" violates not-null constraint",
+      "content_range": "",
+      "item": "T15-B-properties-empty-insert"
+    },
+    {
+      "http": 400,
+      "code": "23502",
+      "message": "null value in column \"email\" of relation \"smart_clip_jobs\" violates not-null constraint",
+      "content_range": "",
+      "item": "T15-B-smart_clip_jobs-empty-insert"
+    },
+    {
+      "http": 200,
+      "code": null,
+      "message": null,
+      "content_range": "0-1/2",
+      "body_len": 0,
+      "item": "T1-prompts-canary-exact-count"
+    },
+    {
+      "http": 200,
+      "code": null,
+      "message": null,
+      "content_range": "0-1/*",
+      "item": "T1-prompts-canary-id-only"
+    }
+  ]
+}

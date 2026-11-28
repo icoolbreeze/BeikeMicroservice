@@ -1,0 +1,166 @@
+{
+ "critical_endpoints_staging": {
+  "staging /api/upload/upload_only_public": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/upload/upload_only_public": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging /api/upload/upload_only": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/upload/upload_only": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging /api/public/moma-tool-hub-registration": {
+   "http": 404,
+   "errno": null,
+   "msg": "",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/public/moma-tool-hub-registration": {
+   "http": 404,
+   "errno": null,
+   "msg": "",
+   "data_type": "NoneType"
+  },
+  "staging /api/cache/auth": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/cache/auth": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging /api/cache/redis": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/cache/redis": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging /api/wechat/access-token": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/wechat/access-token": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging /api/open/supabase": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/open/supabase": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "staging /api/auth/verify_token": {
+   "http": 405,
+   "errno": null,
+   "msg": "",
+   "data_type": "NoneType"
+  },
+  "staging POST /api/auth/verify_token": {
+   "http": 422,
+   "errno": null,
+   "msg": "",
+   "data_type": "NoneType"
+  }
+ },
+ "critical_endpoints_prod": {
+  "/api/upload/upload_only_public": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "/api/upload/upload_only": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "/api/public/moma-tool-hub-registration": {
+   "http": 404,
+   "errno": null,
+   "msg": "",
+   "data_type": "NoneType"
+  },
+  "/api/cache/auth": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "/api/cache/redis": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "/api/wechat/access-token": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "/api/open/supabase": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期",
+   "data_type": "NoneType"
+  },
+  "/api/auth/verify_token": {
+   "http": 405,
+   "errno": null,
+   "msg": "",
+   "data_type": "NoneType"
+  }
+ },
+ "staging_aroute_users": {
+  "http": 200,
+  "errno": 401,
+  "msg": "未登录或登录已过期",
+  "data_type": "NoneType"
+ },
+ "prd_assistant_web_staging": {
+  "http": 200,
+  "len": 18703,
+  "scripts": [
+   "https://test-s1.ljcdn.com/moma/assets/polyfills-CLpgIgD-.js",
+   "//s1.ljcdn.com/risk-control/static/keRiskControl.js",
+   "https://test-s1.ljcdn.com/moma/assets/main-CGZ_Egqr.js"
+  ],
+  "has_login_hint": true
+ }
+}

@@ -1,0 +1,220 @@
+{
+  "meta": {
+    "evidence_file": "r5-logout-revoke-2026-11-24.json",
+    "module": "round5 T22/T23 logout server-side revocation v2 (destructive)",
+    "generated_at_utc": "2026-11-24T15:12:14+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized employee session)",
+    "redaction": "status/errno/redirect-host/header-names/length only; token & cookie values never persisted; browser Accept for CAS/page endpoints; re-scan required",
+    "request_total": 8,
+    "data_quality_note": "本文件为 v2 运行台账。同脚本 v1 运行（15 请求，含有效登出前正对照与 T22 Moma 登出/重放配对）写入同一路径后被本 v2 覆盖，v1 原始台账在工作站与服务器均无备份、无法恢复。v2 启动时 findings.session_established 为 {supabase_jwt:false, moma:false}（TGC 已在此前运行中失效），T22_moma_logout 为空对象，PRE-wandou-me 登出前即 401/U001；因此本文件不包含任何有效的 T22 服务端吊销配对证据，T23 亦无同文件登出前正对照。T23 的 TGC/豌豆/Moma 吊销结论以二期 round2-session-2026-11-23-logout.json（含完整 pre/post 配对）为准；T22 改判阻塞，待重新扫码补采。"
+  },
+  "findings": {
+    "tokens_present": [
+      "HOUSEJSESSIONID",
+      "Lianjia_BUcid",
+      "Lianjia_curWorkCity",
+      "Lianjia_u_info",
+      "TGC",
+      "TGC_Secure",
+      "UCID",
+      "UCID_secure",
+      "csrfSecret",
+      "lianjia_ssid",
+      "lianjia_trusteeship_token",
+      "lianjia_trusteeship_token_secure",
+      "lianjia_uuid",
+      "login_ucid",
+      "puzu_lease_token",
+      "puzu_lease_token_secure",
+      "saas_token",
+      "security_ticket"
+    ],
+    "session_established": {
+      "supabase_jwt": false,
+      "moma": false
+    },
+    "pre_logout_positive": {
+      "saas": {
+        "http": 302,
+        "body_len": 0,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "json": false,
+        "verdict": "inconclusive_http_302",
+        "item": "PRE-saas-shiro"
+      },
+      "trusteeship": {
+        "http": 200,
+        "body_len": 3369,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "json": false,
+        "verdict": "http200_not_redirected",
+        "item": "PRE-trusteeship"
+      },
+      "puzu": {
+        "http": 401,
+        "body_len": 148,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "code": "U001",
+        "verdict": "revoked_or_blocked",
+        "item": "PRE-wandou-me"
+      }
+    },
+    "T22_moma_logout": {},
+    "T23_cas_logout_call": {
+      "http": 200,
+      "body_len": 1134,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "http200_not_redirected",
+      "item": "T23-cas-logout"
+    },
+    "T23_post_logout_replay": {
+      "tgc_exchange": {
+        "http": 200,
+        "body_len": 1127,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "json": false,
+        "verdict": "http200_not_redirected",
+        "item": "T23-tgc-replay"
+      },
+      "saas": {
+        "http": 302,
+        "body_len": 0,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "json": false,
+        "verdict": "inconclusive_http_302",
+        "item": "T23-saas-old-token"
+      },
+      "trusteeship": {
+        "http": 200,
+        "body_len": 3369,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "json": false,
+        "verdict": "http200_not_redirected",
+        "item": "T23-trusteeship-old-token"
+      },
+      "puzu": {
+        "http": 401,
+        "body_len": 148,
+        "content_type": "",
+        "location_host": "",
+        "location_path": "",
+        "set_cookie_names": [],
+        "code": "U001",
+        "verdict": "revoked_or_blocked",
+        "item": "T23-wandou-old-token"
+      }
+    }
+  },
+  "request_ledger": [
+    {
+      "http": 302,
+      "body_len": 0,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "inconclusive_http_302",
+      "item": "PRE-saas-shiro"
+    },
+    {
+      "http": 200,
+      "body_len": 3369,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "http200_not_redirected",
+      "item": "PRE-trusteeship"
+    },
+    {
+      "http": 401,
+      "body_len": 148,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "code": "U001",
+      "verdict": "revoked_or_blocked",
+      "item": "PRE-wandou-me"
+    },
+    {
+      "http": 200,
+      "body_len": 1134,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "http200_not_redirected",
+      "item": "T23-cas-logout"
+    },
+    {
+      "http": 200,
+      "body_len": 1127,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "http200_not_redirected",
+      "item": "T23-tgc-replay"
+    },
+    {
+      "http": 302,
+      "body_len": 0,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "inconclusive_http_302",
+      "item": "T23-saas-old-token"
+    },
+    {
+      "http": 200,
+      "body_len": 3369,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "json": false,
+      "verdict": "http200_not_redirected",
+      "item": "T23-trusteeship-old-token"
+    },
+    {
+      "http": 401,
+      "body_len": 148,
+      "content_type": "",
+      "location_host": "",
+      "location_path": "",
+      "set_cookie_names": [],
+      "code": "U001",
+      "verdict": "revoked_or_blocked",
+      "item": "T23-wandou-old-token"
+    }
+  ]
+}

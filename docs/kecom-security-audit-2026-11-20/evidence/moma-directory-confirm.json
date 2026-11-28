@@ -1,0 +1,95 @@
+{
+  "mode": "moma_directory_pii_confirmation",
+  "redacted": true,
+  "peer_query": {
+    "http": 200,
+    "errno": 0,
+    "totalCount": 5,
+    "returned": 5,
+    "peer_record_present": true
+  },
+  "peer_record_sensitive_fill": {
+    "mobile": {
+      "present": true,
+      "populated": true
+    },
+    "homePhone": {
+      "present": true,
+      "populated": false
+    },
+    "compPhone": {
+      "present": true,
+      "populated": false
+    },
+    "email": {
+      "present": true,
+      "populated": false
+    },
+    "idCard": {
+      "present": true,
+      "populated": false
+    },
+    "birthday": {
+      "present": true,
+      "populated": true
+    },
+    "officeAddress": {
+      "present": true,
+      "populated": true
+    },
+    "superior": {
+      "present": true,
+      "populated": true
+    },
+    "account": {
+      "present": true,
+      "populated": true
+    }
+  },
+  "peer_record_all_field_count": 63,
+  "self_query": {
+    "http": 200,
+    "errno": 0,
+    "returned": 1,
+    "self_record_present": true
+  },
+  "scope_empty": {
+    "http": 200,
+    "errno": 500,
+    "totalCount": null,
+    "returned": 0
+  },
+  "scope_single_char_a": {
+    "http": 200,
+    "errno": 0,
+    "totalCount": 1342753,
+    "returned": 10
+  },
+  "scope_single_char_1": {
+    "http": 200,
+    "errno": 0,
+    "totalCount": 7464767,
+    "returned": 10
+  },
+  "sug_users": {
+    "http": 404,
+    "errno": null,
+    "data_type": "NoneType",
+    "list_len": null,
+    "contains_peer": false
+  },
+  "aroute_batch": {
+    "http": 200,
+    "errno": 500,
+    "data_type": "NoneType",
+    "list_len": null,
+    "contains_peer": false
+  },
+  "detail_flag": {
+    "http": 200,
+    "errno": 0,
+    "data_type": "dict",
+    "list_len": 5,
+    "contains_peer": true
+  }
+}

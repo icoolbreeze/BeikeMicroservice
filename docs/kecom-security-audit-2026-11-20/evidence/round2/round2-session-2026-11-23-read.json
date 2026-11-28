@@ -1,0 +1,1155 @@
+{
+  "meta": {
+    "evidence_file": "round2-session-2026-11-23-read.json",
+    "module": "M1-M5-session-read",
+    "generated_at_utc": "2026-11-24T04:56:31+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized account, session plane)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 26,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "KE21-user-admins-select",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.24,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "content-range": "0-0/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 47,
+      "body_sha256": "0d5f765eef08ac8c3a020c9ab4aa5b99ffd0370a8c17e3bf6c048653002c3be8",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-user-admins-hash",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 25,
+            "sha256_16": "75984038236ed43b"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.228,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "149",
+        "content-range": "0-0/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 149,
+      "body_sha256": "36848815b66c84dd40f927839c3a517edc8a22c2aee2967e29080ff095b44e0c",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-user-usage-logs",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+        "query_param_names": [
+          "limit",
+          "select"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "select",
+            "len": 2,
+            "sha256_16": "a56145270ce6b3be"
+          },
+          {
+            "name": "limit",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.224,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "47",
+        "content-range": "0-0/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 47,
+      "body_sha256": "786ff62cd75ba1e73ca8d42ad90a2b4042f2999a0129ea0453f1508546172a7a",
+      "json": true,
+      "json_root_type": "list"
+    },
+    {
+      "item": "KE21-user-rpc-usage-overview",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 400,
+      "elapsed_s": 8.21,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "100",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 100,
+      "body_sha256": "78387feff5f1123d9a3c0e3e11e262d2df5d67e8b396050b9510dee5717b38d1",
+      "json": true,
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "biz_code": "57014",
+      "text_message": "canceling statement due to statement timeout",
+      "data_shape": null
+    },
+    {
+      "item": "KE21-user-patch-admins-zero-match",
+      "method": "PATCH",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+        "query_param_names": [
+          "id"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "id",
+            "len": 39,
+            "sha256_16": "8d53c36daa62f423"
+          }
+        ]
+      },
+      "http": 204,
+      "elapsed_s": 0.238,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-user-insert-prompts-canary",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 201,
+      "elapsed_s": 0.226,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-length": "0",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE21-user-delete-prompts-canary-cleanup",
+      "method": "DELETE",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+        "query_param_names": [
+          "name"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "name",
+            "len": 29,
+            "sha256_16": "8b53832d6e7b6123"
+          }
+        ]
+      },
+      "http": 204,
+      "elapsed_s": 0.224,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Prefer",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-range": "*/*",
+        "access-control-allow-origin": "*",
+        "vary": "Origin"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "KE25-decrypt-user-with-key",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/supabase-crypto/decrypt",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.173,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "User-Agent",
+        "X-Envelope-Key",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "204",
+        "vary": "Origin"
+      },
+      "body_len": 204,
+      "body_sha256": "f7511f171093cb8ffd7033fd353ce68d42bef7c01b902ffdb2d3be101ef62155",
+      "json": true,
+      "top_keys": [
+        "code",
+        "envelope"
+      ],
+      "biz_code": 0,
+      "data_shape": null
+    },
+    {
+      "item": "KE26-html-image-script-iframe",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/moma_agent/html-to-image",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 404,
+      "elapsed_s": 0.249,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "43"
+      },
+      "body_len": 43,
+      "body_sha256": "8700b6ee30b0416ddba2107c31ead19d54b87e0dfcde839fd35ff0141b90bc26",
+      "json": true,
+      "top_keys": [
+        "detail"
+      ],
+      "text_detail": "文件不存在或无权访问",
+      "data_shape": null
+    },
+    {
+      "item": "KE26-mcp-stdio-rejected",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/connector/custom-mcp/test",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 422,
+      "elapsed_s": 0.183,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "244"
+      },
+      "body_len": 244,
+      "body_sha256": "3cdff4c78ae44f33cd266dc6185ba894e08ba5fbaf0566aa6a87ca691083e4c3",
+      "json": true,
+      "top_keys": [
+        "detail"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "KE26-groovy-harmless-1",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/platform-api/test-groovy-filter",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.214,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "71"
+      },
+      "body_len": 71,
+      "body_sha256": "adb4857b6d954683ae54c9be2b1e1740add8b68640ff2fe75244a6814ebcad2a",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "success"
+      ],
+      "biz_code": -1,
+      "biz_success": false,
+      "text_message": "script 不能为空",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "KE26-groovy-harmless-2",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/platform-api/test-groovy-filter",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.192,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "71"
+      },
+      "body_len": 71,
+      "body_sha256": "adb4857b6d954683ae54c9be2b1e1740add8b68640ff2fe75244a6814ebcad2a",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "success"
+      ],
+      "biz_code": -1,
+      "biz_success": false,
+      "text_message": "script 不能为空",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "M2-moma-userinfo",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.31,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "540",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 540,
+      "body_sha256": "341ef4107e6ff0b9272988312d8ed2ddc00137438ee6cc811b998fc13a5854d9",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 0,
+      "text_errmsg": "获取用户信息成功",
+      "data_shape": {
+        "user_info": {
+          "name": "str",
+          "nickName": "str",
+          "account": "str",
+          "agentSequenceType": "int",
+          "email": "str",
+          "usercode": "str",
+          "avatar": "str",
+          "ucid": "int",
+          "secondJobSeqName": "str",
+          "orgName": "str",
+          "orgCode": "str",
+          "location": "str",
+          "locationName": "str",
+          "sudo_active": "bool",
+          "real_ucid": "NoneType"
+        },
+        "is_authenticated": "bool",
+        "invite_code": "str",
+        "broker_assistant_shell_only": "bool"
+      }
+    },
+    {
+      "item": "WD01-stream-resume-synthetic-id",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/aschat/stream/resume",
+        "query_param_names": [
+          "streamId"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "streamId",
+            "len": 32,
+            "sha256_16": "3505e1a8f79757b7"
+          }
+        ]
+      },
+      "http": 400,
+      "elapsed_s": 0.271,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Origin"
+      },
+      "body_len": 166,
+      "body_sha256": "8a83570fd2632183cf3708c6a78a6799f5e75dba8a6d761346776f99b3b53072",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "INVALID_PARAM",
+      "biz_success": false,
+      "text_message": "流已过期或不存在",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "WD01-aschat-sessions",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v3/aschat/sessions",
+        "query_param_names": [
+          "page",
+          "size"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "page",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          },
+          {
+            "name": "size",
+            "len": 1,
+            "sha256_16": "6b86b273ff34fce1"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.282,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 3400,
+      "body_sha256": "5cb20332ec5f30370f275ccae058a9afac6d16f8283b557858aec01fbc1c740d",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "total": "int",
+        "page": "int",
+        "pageSize": "int",
+        "list": {
+          "list_len": 18,
+          "item_shape": {
+            "sessionId": "int",
+            "title": "str",
+            "isMain": "bool",
+            "createdAt": "int",
+            "updatedAt": "int"
+          }
+        }
+      }
+    },
+    {
+      "item": "M2-wandou-me-before-logout",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v1/users/me",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.23,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "x-frame-options": "SAMEORIGIN"
+      },
+      "body_len": 322,
+      "body_sha256": "9e92ebdcd653467b50cdbca92ca36b78058f2b6bc159c0f629d398373f3d25b5",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "ucid": "str",
+        "userCode": "str",
+        "name": "str",
+        "cityCode": "str",
+        "cityName": "str",
+        "positionCode": "str",
+        "positionName": "str",
+        "positionType": "NoneType"
+      }
+    },
+    {
+      "item": "CORS-A-moma-backend-get-anon",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.198,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-methods": "*",
+        "access-control-allow-headers": "*",
+        "vary": "Origin"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "CORS-A-moma-backend-opt-anon",
+      "method": "OPTIONS",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.155,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "vary": "Origin",
+        "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-headers": "content-type"
+      },
+      "body_len": 2,
+      "body_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "json": false,
+      "head_ascii": "OK"
+    },
+    {
+      "item": "CORS-A-app-moma-get-anon",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/city/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.199,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "29458",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true"
+      },
+      "body_len": 29458,
+      "body_sha256": "c9fcfc343f1a7d597057bac051f2bef97596e4246a05dcca144d6551b396c885",
+      "json": true,
+      "top_keys": [
+        "cities"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "CORS-A-app-moma-opt-anon",
+      "method": "OPTIONS",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/city/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.167,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "vary": "Origin",
+        "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-headers": "content-type"
+      },
+      "body_len": 2,
+      "body_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "json": false,
+      "head_ascii": "OK"
+    },
+    {
+      "item": "CORS-A-moma-backend-get-session",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.175,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "540",
+        "vary": "Accept-Encoding",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true"
+      },
+      "body_len": 540,
+      "body_sha256": "341ef4107e6ff0b9272988312d8ed2ddc00137438ee6cc811b998fc13a5854d9",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 0,
+      "text_errmsg": "获取用户信息成功",
+      "data_shape": {
+        "user_info": {
+          "name": "str",
+          "nickName": "str",
+          "account": "str",
+          "agentSequenceType": "int",
+          "email": "str",
+          "usercode": "str",
+          "avatar": "str",
+          "ucid": "int",
+          "secondJobSeqName": "str",
+          "orgName": "str",
+          "orgCode": "str",
+          "location": "str",
+          "locationName": "str",
+          "sudo_active": "bool",
+          "real_ucid": "NoneType"
+        },
+        "is_authenticated": "bool",
+        "invite_code": "str",
+        "broker_assistant_shell_only": "bool"
+      }
+    },
+    {
+      "item": "CORS-A-moma-backend-opt-session",
+      "method": "OPTIONS",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.175,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "Origin",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "vary": "Origin",
+        "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-headers": "content-type"
+      },
+      "body_len": 2,
+      "body_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "json": false,
+      "head_ascii": "OK"
+    },
+    {
+      "item": "CORS-A-app-moma-get-session",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/city/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.221,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "29458",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-credentials": "true"
+      },
+      "body_len": 29458,
+      "body_sha256": "c9fcfc343f1a7d597057bac051f2bef97596e4246a05dcca144d6551b396c885",
+      "json": true,
+      "top_keys": [
+        "cities"
+      ],
+      "data_shape": null
+    },
+    {
+      "item": "CORS-A-app-moma-opt-session",
+      "method": "OPTIONS",
+      "url": {
+        "scheme": "https",
+        "host": "app-moma.ke.com",
+        "path": "/falcon/city/list",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.214,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "Authorization",
+        "Origin",
+        "User-Agent",
+        "apikey"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "2",
+        "vary": "Origin",
+        "access-control-allow-methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+        "access-control-allow-credentials": "true",
+        "access-control-allow-origin": "https://evil.example",
+        "access-control-allow-headers": "content-type"
+      },
+      "body_len": 2,
+      "body_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "json": false,
+      "head_ascii": "OK"
+    },
+    {
+      "item": "KE09-csrf-cross-site-no-custom-header",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "lease-pz.link.lianjia.com",
+        "path": "/api/puzuHouse/puzu/house/auth/switchList",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.432,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "188",
+        "access-control-allow-origin": "https://evil.example",
+        "vary": "Origin",
+        "access-control-allow-methods": "GET, POST",
+        "access-control-allow-credentials": "true"
+      },
+      "body_len": 188,
+      "body_sha256": "21f71237f7f49ae751ed2145223a4b90a75fd585fc0b600d7ea6b171ad969a22",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "msg",
+        "nodeRequestId",
+        "traceId"
+      ],
+      "biz_code": 100001,
+      "text_msg": "key列表不能为空",
+      "data_shape": {}
+    },
+    {
+      "item": "KE09-csrf-same-site-with-header",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "lease-pz.link.lianjia.com",
+        "path": "/api/puzuHouse/puzu/house/auth/switchList",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.421,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Content-Type",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Requested-With"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "189",
+        "access-control-allow-origin": "https://lease-pz.link.lianjia.com",
+        "vary": "Origin",
+        "access-control-allow-methods": "GET, POST",
+        "access-control-allow-credentials": "true"
+      },
+      "body_len": 189,
+      "body_sha256": "93c36e3d5e9a852203b321a486c211dbcec9fb4ce763bcb4fbcac798a41773d8",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "msg",
+        "nodeRequestId",
+        "traceId"
+      ],
+      "biz_code": 100001,
+      "text_msg": "key列表不能为空",
+      "data_shape": {}
+    }
+  ],
+  "findings": {
+    "principal_len": 16,
+    "phase": "read",
+    "app_token_exchange": {
+      "ok": true,
+      "hop_count": 3,
+      "chain": [
+        {
+          "http": 302,
+          "host": "app-moma.ke.com",
+          "location_path": "/login"
+        },
+        {
+          "http": 302,
+          "host": "login.ke.com",
+          "location_path": "/falcon/volc-cas-callback/60758c5d-5f65-47aa-8238-645d8caaffb1"
+        },
+        {
+          "http": 302,
+          "host": "app-prd.ke.com",
+          "location_path": ""
+        }
+      ],
+      "terminal_redirect_host": "localhost:3000"
+    },
+    "moma_session_exchange": {
+      "ok": true,
+      "hop_count": 3,
+      "chain": [
+        {
+          "http": 302,
+          "host": "login.ke.com",
+          "location_path": "/login"
+        },
+        {
+          "http": 307,
+          "host": "prd-assistant-backend.ke.com",
+          "location_path": ""
+        },
+        {
+          "http": 200,
+          "host": "moma.ke.com"
+        }
+      ]
+    },
+    "KE26_ssrf": "skipped: ROUND2_OAST not set",
+    "KE09_note": "urllib contrast only; SameSite conclusion is ke_round2_browser_harness.py"
+  }
+}

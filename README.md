@@ -51,6 +51,10 @@ Docker Compose 启动后访问 `http://localhost:8080/`；直接运行 Uvicorn �
 
 架构扩展原则与分阶段改造计划见 [架构说明](docs/architecture.md) 和 [ADR-0001](docs/adr/0001-evolutionary-platform-architecture.md)。
 
+## CRM 周边应用接入研究
+
+[凭证复用与只读接口研究总览](docs/ke-app-credential-reuse.md) 汇总 Moma 主站、豌豆与文案 App 的实测认证方式、业务能力及归档边界，供后续 Agent 优先查阅。详细记录见 [豌豆业务接口](services/crm_connector/docs/wandou-api-probe-2026-11-20.md) 和 [Moma 文案 App](services/crm_connector/docs/moma-app-access-probe-2026-11-20.md)。这些是研究结果，尚未接入生产 HTTP/MCP 工具。全量 173 站旁路测绘与目标企业系统架构全景归档见 [目标企业全生态架构研究](docs/ke-ecosystem-architecture-2026-11-27/README.md)。
+
 ## 维护范围
 
 Hermes 侧接口适配、技能、脚本及渠道流程已停止维护，不属于本项目后续开发、测试或验收范围。项目自身的 HTTP/MCP 接口继续维护，接口变更无需同步 Hermes。

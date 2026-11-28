@@ -1,0 +1,793 @@
+{
+  "meta": {
+    "evidence_file": "r5-session-deep-2026-11-24.json",
+    "module": "round5-session-deep (T13/T15 user plane + T18-T21 Moma RBAC)",
+    "generated_at_utc": "2026-11-24T14:37:58+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized employee session)",
+    "redaction": "status/errno/field-names/lengths/per-run salted hmac16 only; tokens/cookies kept in memory, never persisted; empty-insert writes create no row; no logout/SMS/OAST",
+    "request_total": 34,
+    "retry_policy": "single attempt per item"
+  },
+  "findings": {
+    "identity_plane": "single authorized employee session (viewpoint A)",
+    "supabase_token_exchange": {
+      "ok": true,
+      "hop_count": 3,
+      "chain": [
+        {
+          "http": 302,
+          "host": "app-moma.ke.com",
+          "location_path": "/login"
+        },
+        {
+          "http": 302,
+          "host": "login.ke.com",
+          "location_path": "/falcon/volc-cas-callback/60758c5d-5f65-47aa-8238-645d8caaffb1"
+        },
+        {
+          "http": 302,
+          "host": "app-prd.ke.com",
+          "location_path": ""
+        }
+      ],
+      "terminal_redirect_host": "localhost:3000"
+    },
+    "T13_user_rpc": [
+      {
+        "rpc": "get_available_cities",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_city_statistics",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_city_statistics_with_filter",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_daily_trend",
+        "http": 404,
+        "code": "PGRST202",
+        "message": "Could not find the function public.get_daily_trend without parameters in the sch",
+        "verdict": "blocked_or_absent"
+      },
+      {
+        "rpc": "get_daily_trend_with_filter",
+        "http": 404,
+        "code": "PGRST202",
+        "message": "Could not find the function public.get_daily_trend_with_filter without parameter",
+        "verdict": "blocked_or_absent"
+      },
+      {
+        "rpc": "get_hourly_trend",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_hourly_trend_with_filter",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_top_templates",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_top_templates_with_filter",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_top_users",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_top_users_with_filter",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "get_usage_overview",
+        "http": 400,
+        "code": "57014",
+        "message": "canceling statement due to statement timeout",
+        "verdict": "user_reachable_timeout"
+      },
+      {
+        "rpc": "get_usage_overview_with_filter",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      },
+      {
+        "rpc": "sync_usage_logs_city",
+        "http": 200,
+        "code": null,
+        "message": "",
+        "verdict": "user_reachable"
+      }
+    ],
+    "T15_user_empty_insert": [
+      {
+        "table": "users",
+        "http": 403,
+        "code": "42501",
+        "message": "new row violates row-level security policy for table \"users\"",
+        "insert_verdict": "rls_denied_no_insert_privilege"
+      },
+      {
+        "table": "usage_logs",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"user_id\" of relation \"usage_logs\" violates not-null constr",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "table": "prompts",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"name\" of relation \"prompts\" violates not-null constraint",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "table": "policy_news",
+        "http": 400,
+        "code": "23502",
+        "message": "null value in column \"title\" of relation \"policy_news\" violates not-null constra",
+        "insert_verdict": "insert_privilege_present_constraint_blocks"
+      },
+      {
+        "table": "admins",
+        "http": 403,
+        "code": "42501",
+        "message": "new row violates row-level security policy for table \"admins\"",
+        "insert_verdict": "rls_denied_no_insert_privilege"
+      }
+    ],
+    "moma_session_exchange": {
+      "ok": true,
+      "hop_count": 3,
+      "chain": [
+        {
+          "http": 302,
+          "host": "login.ke.com",
+          "location_path": "/login"
+        },
+        {
+          "http": 307,
+          "host": "prd-assistant-backend.ke.com",
+          "location_path": ""
+        },
+        {
+          "http": 200,
+          "host": "moma.ke.com"
+        }
+      ]
+    },
+    "moma_positive_control": {
+      "http": 200,
+      "errno": 0,
+      "code": null,
+      "body_len": 540,
+      "session_valid": true
+    },
+    "T18_T21_moma_rbac": [
+      {
+        "task": "T18",
+        "path": "/api/admin/sudo",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T19",
+        "path": "/api/internal/platform-keys",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T19",
+        "path": "/api/internal/supabase",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T19",
+        "path": "/api/internal/security-storage",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T19",
+        "path": "/api/internal/auth",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T20",
+        "path": "/api/load-test/run",
+        "http": 405,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 31,
+        "rbac_verdict": "method_not_allowed_route_exists"
+      },
+      {
+        "task": "T20",
+        "path": "/api/messages/_debug",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 28,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T20",
+        "path": "/api/chats/proxy",
+        "http": 200,
+        "errno": 1,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 50,
+        "rbac_verdict": "accessible_no_rbac_block_review"
+      },
+      {
+        "task": "T20",
+        "path": "/api/moma-data/hive",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T20",
+        "path": "/api/moma-data/cli",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T20",
+        "path": "/api/cache/redis",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T20",
+        "path": "/api/offline/tasks",
+        "http": 404,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 22,
+        "rbac_verdict": "not_found_inconclusive"
+      },
+      {
+        "task": "T21",
+        "path": "/api/platform-api/iam-credential",
+        "http": 422,
+        "errno": null,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 141,
+        "rbac_verdict": "reached_business_logic_no_rbac_block"
+      },
+      {
+        "task": "T21",
+        "path": "/api/wechat/access-token",
+        "http": 200,
+        "errno": 0,
+        "code": null,
+        "content_type": "",
+        "location_path": "",
+        "body_len": 231,
+        "rbac_verdict": "accessible_no_rbac_block_review"
+      }
+    ]
+  },
+  "request_ledger": [
+    {
+      "item": "T13-user-rpc-get_available_cities",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_available_cities",
+      "http": 200,
+      "body_len": 1237,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_city_statistics",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_city_statistics",
+      "http": 200,
+      "body_len": 6216,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_city_statistics_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_city_statistics_with_filter",
+      "http": 200,
+      "body_len": 6216,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_daily_trend",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_daily_trend",
+      "http": 404,
+      "body_len": 307,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST202",
+      "message": "Could not find the function public.get_daily_trend without parameters in the schema cache"
+    },
+    {
+      "item": "T13-user-rpc-get_daily_trend_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_daily_trend_with_filter",
+      "http": 404,
+      "body_len": 331,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "PGRST202",
+      "message": "Could not find the function public.get_daily_trend_with_filter without parameters in the schema cach"
+    },
+    {
+      "item": "T13-user-rpc-get_hourly_trend",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_hourly_trend",
+      "http": 200,
+      "body_len": 860,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_hourly_trend_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_hourly_trend_with_filter",
+      "http": 200,
+      "body_len": 860,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_top_templates",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_templates",
+      "http": 200,
+      "body_len": 786,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_top_templates_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_templates_with_filter",
+      "http": 200,
+      "body_len": 786,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_top_users",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_users",
+      "http": 200,
+      "body_len": 649,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_top_users_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_top_users_with_filter",
+      "http": 200,
+      "body_len": 649,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-get_usage_overview",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview",
+      "http": 400,
+      "body_len": 100,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "57014",
+      "message": "canceling statement due to statement timeout"
+    },
+    {
+      "item": "T13-user-rpc-get_usage_overview_with_filter",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/get_usage_overview_with_filter",
+      "http": 200,
+      "body_len": 84,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T13-user-rpc-sync_usage_logs_city",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/rpc/sync_usage_logs_city",
+      "http": 200,
+      "body_len": 42,
+      "content_type": "",
+      "location_path": ""
+    },
+    {
+      "item": "T15-user-users-empty-insert",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/users",
+      "http": 403,
+      "body_len": 118,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "42501",
+      "message": "new row violates row-level security policy for table \"users\""
+    },
+    {
+      "item": "T15-user-usage_logs-empty-insert",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/usage_logs",
+      "http": 400,
+      "body_len": 144,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "23502",
+      "message": "null value in column \"user_id\" of relation \"usage_logs\" violates not-null constraint"
+    },
+    {
+      "item": "T15-user-prompts-empty-insert",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/prompts",
+      "http": 400,
+      "body_len": 138,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "23502",
+      "message": "null value in column \"name\" of relation \"prompts\" violates not-null constraint"
+    },
+    {
+      "item": "T15-user-policy_news-empty-insert",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/policy_news",
+      "http": 400,
+      "body_len": 143,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "23502",
+      "message": "null value in column \"title\" of relation \"policy_news\" violates not-null constraint"
+    },
+    {
+      "item": "T15-user-admins-empty-insert",
+      "method": "POST",
+      "url_path": "/falcon/supabase-volc/60758c5d-5f65-47aa-8238-645d8caaffb1/rest/v1/admins",
+      "http": 403,
+      "body_len": 119,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "code",
+        "details",
+        "hint",
+        "message"
+      ],
+      "code": "42501",
+      "message": "new row violates row-level security policy for table \"admins\""
+    },
+    {
+      "item": "M2-positive-userinfo",
+      "method": "GET",
+      "url_path": "/api/user/info",
+      "http": 200,
+      "body_len": 540,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 0
+    },
+    {
+      "item": "T18-rbac/api/admin/sudo",
+      "method": "GET",
+      "url_path": "/api/admin/sudo",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T19-rbac/api/internal/platform-keys",
+      "method": "GET",
+      "url_path": "/api/internal/platform-keys",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T19-rbac/api/internal/supabase",
+      "method": "GET",
+      "url_path": "/api/internal/supabase",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T19-rbac/api/internal/security-storage",
+      "method": "GET",
+      "url_path": "/api/internal/security-storage",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T19-rbac/api/internal/auth",
+      "method": "GET",
+      "url_path": "/api/internal/auth",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T20-rbac/api/load-test/run",
+      "method": "GET",
+      "url_path": "/api/load-test/run",
+      "http": 405,
+      "body_len": 31,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Method Not Allowed"
+    },
+    {
+      "item": "T20-rbac/api/messages/_debug",
+      "method": "GET",
+      "url_path": "/api/messages/_debug",
+      "http": 404,
+      "body_len": 28,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "消息不存在"
+    },
+    {
+      "item": "T20-rbac/api/chats/proxy",
+      "method": "GET",
+      "url_path": "/api/chats/proxy",
+      "http": 200,
+      "body_len": 50,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 1
+    },
+    {
+      "item": "T20-rbac/api/moma-data/hive",
+      "method": "GET",
+      "url_path": "/api/moma-data/hive",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T20-rbac/api/moma-data/cli",
+      "method": "GET",
+      "url_path": "/api/moma-data/cli",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T20-rbac/api/cache/redis",
+      "method": "GET",
+      "url_path": "/api/cache/redis",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T20-rbac/api/offline/tasks",
+      "method": "GET",
+      "url_path": "/api/offline/tasks",
+      "http": 404,
+      "body_len": 22,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ],
+      "detail": "Not Found"
+    },
+    {
+      "item": "T21-rbac/api/platform-api/iam-credential",
+      "method": "GET",
+      "url_path": "/api/platform-api/iam-credential",
+      "http": 422,
+      "body_len": 141,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "detail"
+      ]
+    },
+    {
+      "item": "T21-rbac/api/wechat/access-token",
+      "method": "GET",
+      "url_path": "/api/wechat/access-token",
+      "http": 200,
+      "body_len": 231,
+      "content_type": "",
+      "location_path": "",
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "errno": 0
+    }
+  ]
+}

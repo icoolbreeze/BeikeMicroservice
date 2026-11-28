@@ -1,0 +1,25 @@
+{
+  "scanned_files": [
+    "round2-anon-2026-11-23.json",
+    "round2-anon-followup-a-2026-11-23.json",
+    "round2-anon-followup-b-2026-11-23.json",
+    "round2-anon-followup-c-2026-11-23.json",
+    "round2-browser-harness-2026-11-23-csrf-rerun2.json",
+    "round2-browser-harness-2026-11-23-csrf.json",
+    "round2-cleanup-probe-2026-11-23.json",
+    "round2-dom-sink-proof-2026-11-23.json",
+    "round2-local-hardening-2026-11-23.json",
+    "round2-redaction-selfcheck.json",
+    "round2-reflection-bool-2026-11-23.json",
+    "round2-session-2026-11-23-burst.json",
+    "round2-session-2026-11-23-logout.json",
+    "round2-session-2026-11-23-read.json",
+    "round2-session-2026-11-23-sms.json",
+    "round2-session-2026-11-23-write.json",
+    "round2-static-verification-2026-11-23.json",
+    "kecom-security-audit-report-2026-11-20.md"
+  ],
+  "file_count": 18,
+  "failures": [],
+  "passed": true
+}

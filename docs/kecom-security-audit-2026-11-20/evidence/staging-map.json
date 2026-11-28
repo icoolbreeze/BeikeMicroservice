@@ -1,0 +1,3588 @@
+{
+ "staging_openapi": {
+  "fetch": 200,
+  "bytes": 1816426,
+  "title": "聊天助手API",
+  "total_paths": 1484,
+  "total_endpoints": 1768,
+  "groups": {
+   "/": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/access/control-policy": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/ability-categories": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/ability-info": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/agentic-tools": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/ai-analysis-access-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/announcements": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/antispider-gray": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/api-services": {
+    "count": 6,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/app-blacklist": {
+    "count": 7,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/apply-wiki-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/artifact-test-access-whitelist": {
+    "count": 7,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/assistant-access-whitelist": {
+    "count": 12,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/biz-config": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/bke-domains": {
+    "count": 10,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/broker-access-whitelist": {
+    "count": 11,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/chat-api-ratelimit": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/chat-model-history": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/chat-proxy-config": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/check-access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/city-report-access-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/collab-access-whitelist": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/component": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/component-category-gray-release": {
+    "count": 4,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/connectors": {
+    "count": 12,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/cost-analysis": {
+    "count": 5,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/customer-sms-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/data-access-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/data-asset-query-rate-limit": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/admin/data-permission-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/data-sync-alerts": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/db-rollback-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/design-templates": {
+    "count": 4,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/encrypted-columns": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/encryption-grayscale": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/expert-tags": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/expert-templates": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/expert-usage-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/experts": {
+    "count": 9,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/falcon-gateway-acl": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/feedback": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/hive-fast-gray": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/homepage": {
+    "count": 9,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/im": {
+    "count": 4,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/knowledge-base": {
+    "count": 16,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/lifecycle": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/memory-management-gate": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/metric-block": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/model-config": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/model-selection-gate": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/new-permission": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/odin-portal-admin": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/offline": {
+    "count": 8,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/partner-community": {
+    "count": 16,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/partner-showcase": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/permissions": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/platform-keys": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/admin/platform-skills": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/admin/prototype-templates": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/provider-accounts": {
+    "count": 25,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/qywx": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/rbac": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/redis": {
+    "count": 9,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/restore-tasks": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/roles": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/scheduled-tasks": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/admin/security_gray": {
+    "count": 10,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/sessions": {
+    "count": 16,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/skill-certification": {
+    "count": 8,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/skill-hub": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "POST"
+    ]
+   },
+   "/api/admin/skill-hub-approvers": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/skill-insight": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/skill-library-package-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/skill-verified-team": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/skills": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/slice-limit-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/space-expert-disclaimer": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/admin/sso-required-tools": {
+    "count": 9,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/statistics": {
+    "count": 7,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/sudo": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/supabase-pool": {
+    "count": 18,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/super": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/test-tasks": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/token-quota-approvals": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/token-quota-approvers": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/admin/token-quota-auto-approval-config": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/admin/tool-combos": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/admin/ucid-resolver": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/admin/upload": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/admin/user-orgs": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/user-quota": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/users": {
+    "count": 9,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/video-analytics": {
+    "count": 4,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/admin/video-creation-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/wechat-mini": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/wecom-smart-access-whitelist": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/admin/wps": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/agentic/apps": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/agentic/backend-link": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/agentic/chats": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/agentic/ke-gateway": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/agentic/workspace": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/ai-analysis/digital-assets": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/ai-analysis/indicator-assets": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/ai-analysis/sessions": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/ai-analysis/stats": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/ai-analysis/users": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/ai-video/ark": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/ai-video/minimax": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/ai-video/v1": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/announcements": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/announcements/latest": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/announcements/latest-mascot": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/announcements/latest-strong": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/announcements/read-all": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/announcements/{announcement_id}": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/app-subscriptions": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/app-subscriptions/by-link": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/app-subscriptions/groups": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/app-subscriptions/preview-by-link": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/app-subscriptions/{sub_id}": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/app_agent/chats": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/application-knowledge/{chat_id}": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/aroute/brand": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/aroute/city": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/aroute/orgs": {
+    "count": 8,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/aroute/users": {
+    "count": 4,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/asr/flash": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/assistant-grant/admin": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/assistant-grant/shared": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/auth/app_session": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/auth/external_app_session": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/auth/register_app_token": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/auth/verify_token": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/bke-domains/{chat_id}": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/cache/auth": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/cache/health": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/cache/redis": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/callback/kafka": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/chats/agentic": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/chats/api-ratelimit": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/chats/collaborative": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/chats/convert-sql": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/create_picture": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/extract-sql-tables": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/format-sql": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/im": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/lite_app": {
+    "count": 24,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/chats/lookup": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/chats/mult-prototype-contents": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/mult-prototype-html-code": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/optimize-prompt": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/plan": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/prompts": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/chats/prototype-html-code": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/proxy": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/chats/share": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/chats/status": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/chats/suggest": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/chats/{chat_id}": {
+    "count": 94,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/chats/{source_chat_id}": {
+    "count": 7,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/connector/connect": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/connector/custom-mcp": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/connector/feishu": {
+    "count": 3,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/connector/hive-sql": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/connector/ima": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/connector/interface": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/connector/list": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/connector/mcp": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/connector/moma-api": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/connector/security": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/connector/{connector_id}": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/cron/installed": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/cron/jobs": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/cron/runs": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/cuckoo/tasks": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/cuckoo/{path}": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/customer_auth/logout": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/customer_auth/send_code": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/customer_auth/verify_code": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/data-agent/ai-analysis": {
+    "count": 7,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/data-agent/cms": {
+    "count": 23,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/data-app/dims": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/data-app/getApiDetail": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/data-app/get_api_detail": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/data-app/odin": {
+    "count": 16,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/data-app/v2": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/data-asset-security/classify": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/data-security/confirm-fields": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/data-security/scan-results": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/design/domains": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/design/entry-visible": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/design/templates": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/domain-mapping": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/domain-mapping/chat": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/domain-mapping/external": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/domain-mapping/version": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/domain-mapping/{mapping_id}": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/experts": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/experts/accessible": {
+    "count": 3,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/experts/create": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/experts/generate-system-prompt": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/experts/instantiate": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/experts/mine": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/experts/personal-data": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/experts/plaza": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/experts/recent": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET"
+    ]
+   },
+   "/api/experts/tags": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/experts/usage-dashboard": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/experts/{expert_id}": {
+    "count": 44,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/export/pdf": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/export/word": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/feature/memory-management": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/feature/model-selection": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/feature/taro-mini": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/feature/voice-input": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/feedback": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/gateway/ability": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/gateway/agi-agent": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/gateway/friday": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/gateway/kafka_event": {
+    "count": 4,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/gateway/kafka_publish": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/gateway/process": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/gateway/semi-managed": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/home-hint/access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/config": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/home-hint/copy": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/home-hint/list": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/my-group-scope": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/reorder": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/home-hint/resolve": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/scoped": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/skill-fields": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/skill-group-options": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/home-hint/skill-options": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/homepage-cards": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/homepage-cards/batch": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/homepage-cards/reorder": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/homepage-cards/{card_id}": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "PATCH"
+    ]
+   },
+   "/api/im-default-expert": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/im-default-expert/experts": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/im-default-expert/{config_id}": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "PUT"
+    ]
+   },
+   "/api/im/agent-chat": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/im/agent-message": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/im/agent-profile": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/im/expert-applies": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/im/experts": {
+    "count": 5,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/im/intent-infer": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/im/qywx-avatars": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/access": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/auth": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/chat": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/internal/chats": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/data-security": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/events": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/experts": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/kespace": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/internal/model-config": {
+    "count": 3,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/openapi-concurrency": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/platform-keys": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/plaza": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/safety-assessment": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/internal/scheduled-tasks": {
+    "count": 9,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/internal/security-storage": {
+    "count": 3,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/supabase": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/user-workspace": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/internal/video-creation": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/internal/voice-grant": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/invite/accept": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/knowledge-base/create": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/knowledge-base/delete": {
+    "count": 1,
+    "methods": [
+     "DELETE"
+    ]
+   },
+   "/api/knowledge-base/documents": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/knowledge-base/generate-callback-url": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/knowledge-base/list": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/knowledge-base/update": {
+    "count": 1,
+    "methods": [
+     "PUT"
+    ]
+   },
+   "/api/lite_app/wx_webview_verify": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/load-test/caps": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/load-test/run": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/load-test/{chat_id}": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/manage/app-message-push": {
+    "count": 10,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/messages": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/messages/_debug": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/messages/read": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/messages/share-skill": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/messages/unread-summary": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/messages/{message_id}": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma-app-build/buckets": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma-app-build/columns": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma-app-build/list": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma-app-build/objects": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma-app-build/query": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma-app-build/tables": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma-data/aegis": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma-data/cli": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma-data/dashboard-square": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/moma-data/data-assets": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma-data/hive": {
+    "count": 7,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma-data/index": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma-data/odin": {
+    "count": 6,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma-data/odin-chart": {
+    "count": 11,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma-data/report-discovery": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma-user/platform-keys": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma/expert": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma/qiwei": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma/studio": {
+    "count": 21,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/moma_agent/artifact": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma_agent/html-to-image": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma_agent/html-to-image-by-s3": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma_agent/html-to-pdf": {
+    "count": 3,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma_agent/html-to-pdf-by-s3": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/moma_agent/message-ext-files": {
+    "count": 14,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/moma_agent/preview": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/moma_agent/shared": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/mult-prototype-contents/{page_id}": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "PUT"
+    ]
+   },
+   "/api/mult_prototype/share": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/my-apps": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/my-apps/accessible": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/backfill-offline": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/offline/backfill-offlining": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/offline/cluster-classify": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/dts": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/extension": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/offline/flush-app-status": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/migrate": {
+    "count": 9,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/migration-mapping": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/old-cluster-chat-ids-by-user": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/old-cluster-sso-stat": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/old-cluster-top-users": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/old-cluster-user-ids": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/queue-stat": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/offline/status": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/offline/verify-redis-consistency": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/offline/volc": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/offline/whitelist": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/open-api/im": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/open-api/video-creation": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/open/agentic": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/open/chats": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/open/skill": {
+    "count": 3,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/open/supabase": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/partner-community/booths": {
+    "count": 7,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/partner-community/comments": {
+    "count": 4,
+    "methods": [
+     "DELETE",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/partner-community/summary": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/partner-community/updates": {
+    "count": 3,
+    "methods": [
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/partner-showcase/cards": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/partner-showcase/feedbacks": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/permission/chat": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/personal-space/batch-operation": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/personal-space/folders": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/personal-space/items": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/personal-space/knowledge": {
+    "count": 5,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/personal-space/lite-app": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "POST"
+    ]
+   },
+   "/api/personal-space/stats": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/personal-space/types": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/phone-devices/recommend": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/plan/personal-todos": {
+    "count": 4,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/platform-api/abilities": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/platform-api/apply-output-schema": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/platform-api/categories": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/platform-api/generate-groovy-filter": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/platform-api/generate-schema": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/platform-api/iam-credential": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/platform-api/luoshu": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/platform-api/provider-abilities": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/platform-api/test-direct": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/platform-api/test-groovy-filter": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/plugin/wecom": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/prd/share": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/prd/shared": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/prototype/get_code": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/prototype/loading-videos": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/prototype/save_as_image": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/prototype/share": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/prototype/shared": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/prototype/styles": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/prototype/tags": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/prototype/templates": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/public/app-changelog": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/public/app-downloads": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/public/homepage": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/public/moma-tool-hub-registration": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/public/official-support": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/qywx/avatar": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/qywx/avatars": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/qywx/jssdk-agent-config": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/qywx/jssdk-config": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/recent-artifacts": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/refore/access-token": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/research-versions/{version_id}": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/research/shared": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/scheduled-tasks": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/scheduled-tasks/create": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/scheduled-tasks/executions": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/scheduled-tasks/health": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/scheduled-tasks/installed_skills": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/scheduled-tasks/list": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/scheduled-tasks/{task_id}": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/security/consent": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/security/external-access": {
+    "count": 1,
+    "methods": [
+     "PATCH"
+    ]
+   },
+   "/api/settings/models": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/settings/modes": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/skill-evaluation/batch-create-chat-ids": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/skill-evaluation/create-safety-chat-id": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/skill-library-package/whitelist": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/skill-usage-record/recent": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/skill-usage-record/report": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/skill/configs": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/skill/hub": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/skill/list": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/skill/upload": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/skill/{skill_id}": {
+    "count": 7,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "PUT"
+    ]
+   },
+   "/api/space-expert-disclaimer": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/static/images": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/static/svg": {
+    "count": 3,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/store-advisor/{chat_id}": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/studio/community-remix": {
+    "count": 19,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/studio/mofang": {
+    "count": 2,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/studio/remix": {
+    "count": 17,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/studio/remix-skills": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/studio/remix-template-settings": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/studio/warm-paper": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/sub-modules/{sub_module_id}": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/supabase-logs/{chat_id}": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/supabase/data-permission": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/supabase/encryption-grayscale": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/supabase/functions": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/supabase/personal": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/supabase/rls": {
+    "count": 19,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/supabase/storage": {
+    "count": 8,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST"
+    ]
+   },
+   "/api/supabase/table": {
+    "count": 6,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/supabase/tables": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/supabase/user": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "POST"
+    ]
+   },
+   "/api/supabase/users": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/allowed-roles": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/app-check": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/apps-by-chat": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/tab-display/grants": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/tab-display/group": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/tab-display/mine-entries": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/tab-display/mine-entry": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/tab-display/my-apps": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/my-group-scope": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/org-apps": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/overview": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/person": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/tab-display/prepare-bind": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/tab-display/resolve": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/roles": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/tab-display/tab-options": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/tab-types": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/tab-display/user-preview": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/templates": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/templates/{template_id}": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PUT"
+    ]
+   },
+   "/api/upload/": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/upload/audio": {
+    "count": 2,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/upload/file": {
+    "count": 1,
+    "methods": [
+     "DELETE",
+     "GET"
+    ]
+   },
+   "/api/upload/image": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/upload/multipart": {
+    "count": 4,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/upload/screenshot": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/upload/upload_only": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/upload/upload_only_public": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user-approval-requests/mine": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user-approval-requests/token-quota": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user-risk-consent": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/user/ai-analysis-access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/ai-analysis-chat-access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/api-keys": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/user/api-services": {
+    "count": 5,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/user/assistant-access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/auth": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user/bind": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user/check-auth": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/city-report-access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/clear-cookies": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user/collab-access": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/collab-seal": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user/config": {
+    "count": 6,
+    "methods": [
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/user/homepage": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/info": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/invite": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/join": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user/logout": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/user/platform-keys": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/user/points": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/product-stats": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/provider-abilities": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/user/search": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/v1/chat": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/v1/mcp": {
+    "count": 2,
+    "methods": [
+     "DELETE",
+     "GET",
+     "PATCH",
+     "POST",
+     "PUT"
+    ]
+   },
+   "/api/v1/platform-keys": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/v1/switchable-models": {
+    "count": 4,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/v1/validate-key": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/v1/version": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/video-export-audit/tasks": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/wandou/platform-keys": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/wechat-mini/{path}": {
+    "count": 1,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/wechat/access-token": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/wechat/jssdk-config": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/wechat/qrcode": {
+    "count": 5,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/wechat/urllink": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/workspace/{chat_id}": {
+    "count": 3,
+    "methods": [
+     "DELETE",
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/wps/heartbeat": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/api/wps/preview-content": {
+    "count": 2,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/api/wps/preview-token": {
+    "count": 3,
+    "methods": [
+     "GET",
+     "POST"
+    ]
+   },
+   "/api/wps/session": {
+    "count": 1,
+    "methods": [
+     "DELETE"
+    ]
+   },
+   "/api/wxapp/audit": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   },
+   "/health": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/login": {
+    "count": 1,
+    "methods": [
+     "GET"
+    ]
+   },
+   "/mini/createurl": {
+    "count": 1,
+    "methods": [
+     "POST"
+    ]
+   }
+  },
+  "servers": null,
+  "security_schemes": [],
+  "sample_post_paths": [
+   "/api/chats/api-ratelimit/override",
+   "/api/moma/studio/avatars/mobile-record",
+   "/api/moma/studio/avatars/invitations",
+   "/api/moma/studio/avatars/{avatar_id}/uploads/{asset_id}/content",
+   "/api/moma/studio/avatars/{avatar_id}/consent-notice",
+   "/api/moma/studio/avatars/{avatar_id}/recording-scripts/candidates",
+   "/api/moma/studio/avatars/{avatar_id}/photo-checks/stream",
+   "/api/moma/studio/avatars/{tail}",
+   "/api/moma/studio/avatars",
+   "/api/studio/mofang/script-finalize",
+   "/api/studio/mofang/script-finalize-file",
+   "/api/studio/warm-paper/story-finalize",
+   "/api/chats",
+   "/api/open/chats",
+   "/api/chats/{chat_id}/read",
+   "/api/chats/{chat_id}/task/start",
+   "/api/chats/{chat_id}/stream",
+   "/api/chats/{chat_id}/button-click",
+   "/api/messages/{message_id}/like",
+   "/api/chats/suggest",
+   "/api/chats/{chat_id}/toggle-favorite",
+   "/api/chats/optimize-prompt",
+   "/api/chats/format-sql",
+   "/api/chats/convert-sql",
+   "/api/chats/extract-sql-tables",
+   "/api/chats/{chat_id}/invite/generate",
+   "/api/invite/accept",
+   "/api/chats/{chat_id}/collaborators/add",
+   "/api/chats/{chat_id}/collaborators/remove",
+   "/api/chats/{chat_id}/collaborators/leave"
+  ]
+ },
+ "staging_post_gates": {
+  "/api/chats/api-ratelimit/override": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/mobile-record": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/invitations": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/{avatar_id}/uploads/{asset_id}/content": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/{avatar_id}/consent-notice": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/{avatar_id}/recording-scripts/candidates": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/{avatar_id}/photo-checks/stream": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  },
+  "/api/moma/studio/avatars/{tail}": {
+   "http": 200,
+   "errno": 401,
+   "msg": "未登录或登录已过期"
+  }
+ },
+ "smart_mo_staging": {
+  "/api/user/info": {
+   "http": 200,
+   "prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta chars"
+  },
+  "/xiaomo-user/api/user/info": {
+   "http": 200,
+   "prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta chars"
+  },
+  "/api/health": {
+   "http": 200,
+   "prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta chars"
+  },
+  "/health": {
+   "http": 200,
+   "prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta chars"
+  },
+  "/docs": {
+   "http": 200,
+   "prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta chars"
+  },
+  "/openapi.json": {
+   "http": 200,
+   "prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta chars"
+  }
+ },
+ "beta_ports": {
+  "http://beta.ttb.test.ke.com/": null,
+  "http://beta.ttb.test.ke.com:5000/": null,
+  "http://beta.ttb.test.ke.com:8000/": null,
+  "https://beta.ttb.test.ke.com/": null,
+  "https://beta.ttb.test.ke.com:5000/": null,
+  "https://beta.ttb.test.ke.com:8000/": null
+ },
+ "extra_staging_dns": {
+  "moma-web.ttb.test.ke.com": {
+   "resolves": true,
+   "http": null
+  },
+  "prd-assistant-web.ttb.test.ke.com": {
+   "resolves": true,
+   "http": 200
+  },
+  "gateway.ttb.test.ke.com": {
+   "resolves": true,
+   "http": null
+  },
+  "api.ttb.test.ke.com": {
+   "resolves": true,
+   "http": null
+  },
+  "auth.ttb.test.ke.com": {
+   "resolves": true,
+   "http": null
+  },
+  "sso.ttb.test.ke.com": {
+   "resolves": true,
+   "http": null
+  }
+ }
+}

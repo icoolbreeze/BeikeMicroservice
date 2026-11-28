@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "evidence_file": "r3-expert-gate-2026-11-24.json",
+    "module": "round3-P15-expert-gates",
+    "generated_at_utc": "2026-11-24T08:25:18+00:00",
+    "viewpoint": "office-workstation (viewpoint B; round3 expert/preview anonymous gates)",
+    "redaction": "status/business-code/shapes/lengths only; no token, cookie or raw value",
+    "request_total": 4,
+    "retry_policy": "single attempt per item"
+  },
+  "findings": {
+    "expert_anon_gates": [
+      {
+        "item": "P15-expert-candidates-anon",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "msg": null,
+        "body_len": 64,
+        "data_shape": "NoneType"
+      },
+      {
+        "item": "P15-expert-grants-anon-2",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "msg": null,
+        "body_len": 64,
+        "data_shape": "NoneType"
+      },
+      {
+        "item": "P15-user-experts-anon",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "msg": null,
+        "body_len": 64,
+        "data_shape": "NoneType"
+      },
+      {
+        "item": "P15-experts-list-anon",
+        "http": 200,
+        "errno": 401,
+        "code": null,
+        "msg": null,
+        "body_len": 64,
+        "data_shape": "NoneType"
+      }
+    ]
+  },
+  "request_ledger": [
+    {
+      "item": "P15-expert-candidates-anon",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/experts/6af06116-939a-4d84-a04e-188617d9fd98/api-service-candidates",
+        "query_param_names": [
+          "keyword"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "keyword",
+            "len": 0,
+            "sha256_16": "e3b0c44298fc1c14"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.189,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "P15-expert-grants-anon-2",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/experts/6af06116-939a-4d84-a04e-188617d9fd98/api-services",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.188,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "P15-user-experts-anon",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/api-services/6af06116-939a-4d84-a04e-188617d9fd98/experts",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.173,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    },
+    {
+      "item": "P15-experts-list-anon",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/experts",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.187,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "64"
+      },
+      "body_len": 64,
+      "body_sha256": "407bea6e483afe0f6add120eecf49295ed0db36facd27890191dc5db354c1f1f",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 401,
+      "text_errmsg": "未登录或登录已过期",
+      "data_shape": "NoneType"
+    }
+  ]
+}

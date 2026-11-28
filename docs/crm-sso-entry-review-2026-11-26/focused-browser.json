@@ -1,0 +1,603 @@
+[
+  {
+    "target": "https://kemcc.ke.com/noticeCenter",
+    "final": "https://kemcc.ke.com/noticeCenter",
+    "title": "触达平台",
+    "frames": [
+      "https://kemcc.ke.com/noticeCenter"
+    ],
+    "traffic": [
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v4/cf",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/time/sync",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/user/detail/fetch",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/config/sync",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://kemcc.ke.com/api/permisson/getRoleByUcid",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/account/list",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-h5-be-report.ke.com/h5/v4/besw",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/conv/config/list",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v2/g",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/user/conv/list",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/cookie",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/msg/sync",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://imapi.lianjia.com/msg/sync",
+        "status": 200
+      }
+    ],
+    "identity_proofs": [
+      {
+        "url": "https://imapi.lianjia.com/user/detail/fetch",
+        "status": 200,
+        "code": 0,
+        "identity_match": true,
+        "data_keys": [
+          "list"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "list": 1
+        }
+      },
+      {
+        "url": "https://kemcc.ke.com/api/permisson/getRoleByUcid",
+        "status": 200,
+        "code": 100000,
+        "identity_match": false,
+        "data_keys": [
+          "roles"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "roles": 0
+        }
+      },
+      {
+        "url": "https://imapi.lianjia.com/user/conv/list",
+        "status": 200,
+        "code": 0,
+        "identity_match": false,
+        "data_keys": [
+          "total_count",
+          "list"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "list": 0
+        }
+      },
+      {
+        "url": "https://imapi.lianjia.com/msg/sync",
+        "status": 200,
+        "code": 0,
+        "identity_match": false,
+        "data_keys": [
+          "latest_seq",
+          "has_more",
+          "max_history_seq",
+          "list"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "list": 0
+        }
+      },
+      {
+        "url": "https://imapi.lianjia.com/msg/sync",
+        "status": 200,
+        "code": 0,
+        "identity_match": false,
+        "data_keys": [
+          "latest_seq",
+          "has_more",
+          "max_history_seq",
+          "list"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "list": 0
+        }
+      }
+    ],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": []
+  },
+  {
+    "target": "https://odin.ke.com/portal/1809",
+    "final": "https://odin.ke.com/portal/1809",
+    "title": "奥丁数据分析平台",
+    "frames": [
+      "https://odin.ke.com/portal/1809"
+    ],
+    "traffic": [
+      {
+        "method": "GET",
+        "url": "https://odin.ke.com/ajax/user/me",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://odin.ke.com/kegate/odin/agent/hasGray",
+        "status": 200
+      }
+    ],
+    "identity_proofs": [
+      {
+        "url": "https://odin.ke.com/ajax/user/me",
+        "status": 200,
+        "code": 1,
+        "identity_match": true,
+        "data_keys": [
+          "id",
+          "usercode",
+          "name",
+          "avatar",
+          "account",
+          "mobile",
+          "homePhone",
+          "compPhone",
+          "orgCode",
+          "orgName",
+          "positionCode",
+          "positionName",
+          "superior",
+          "officeAddress",
+          "officeAddressName"
+        ],
+        "success": null,
+        "collection_lengths": {}
+      }
+    ],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": []
+  },
+  {
+    "target": "https://helper.ke.com/",
+    "final": "https://helper.ke.com/",
+    "title": "Loading https://login.ke.com/login?service=https%3A%2F%2Fhelper.ke.com%2Fweb%2F%3Frurl%3Dhttps%3A%2F%2Fhelper.ke.com%2F%23%2F",
+    "frames": [
+      "https://helper.ke.com/"
+    ],
+    "traffic": [
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v4/cf",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://helper.ke.com/web/loginUser/info",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-h5-be-report.ke.com/h5/v4/besw",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://helper.ke.com/web/fe/helpcenter/moduleConfigServiceImpl/getHomePageConfig",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://helper.ke.com/web/fe/message/innerMailServiceImpl/help/getUnReadCount",
+        "status": 200
+      }
+    ],
+    "identity_proofs": [],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": []
+  },
+  {
+    "target": "https://family.ke.com/myInfo/profile",
+    "final": "https://family.ke.com/myInfo/profile",
+    "title": "贝壳",
+    "frames": [
+      "https://family.ke.com/myInfo/profile"
+    ],
+    "traffic": [
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v4/cf",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://family.ke.com/api/user/profile",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://family.ke.com/api/nickname/status",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://family.ke.com/api/bank/checkModifyTime",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://family.ke.com/api/user/getTalentStandardIsView",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://family.ke.com/api/tenant/nav",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://family.ke.com/api/user/allInfo",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v4/cf",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-h5-be-report.ke.com/h5/v4/besw",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://msg.ke.com/sound/wave/webpush/server/v1/notice",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v2/g",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v2/g",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v2/g",
+        "status": 200
+      }
+    ],
+    "identity_proofs": [
+      {
+        "url": "https://family.ke.com/api/user/profile",
+        "status": 200,
+        "code": 100000,
+        "identity_match": true,
+        "data_keys": [
+          "user",
+          "preferedTenant",
+          "perms",
+          "tenants",
+          "myPackages"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "tenants": 1,
+          "myPackages": 7
+        }
+      },
+      {
+        "url": "https://family.ke.com/api/user/getTalentStandardIsView",
+        "status": 200,
+        "code": 100000,
+        "identity_match": false,
+        "data_keys": [],
+        "success": null,
+        "collection_lengths": {}
+      },
+      {
+        "url": "https://family.ke.com/api/user/allInfo",
+        "status": 200,
+        "code": 100000,
+        "identity_match": false,
+        "data_keys": [
+          "employeeV1",
+          "employeeHistoryV1List",
+          "eduExperienceV1List",
+          "empWorkExperienceV1s",
+          "awards",
+          "orgInfoV1List",
+          "contractInfoV1",
+          "limitDate",
+          "modifyControl",
+          "additionalRecordingControl",
+          "employeeExperienceOutsideInfo",
+          "interestRelationshipV1s",
+          "empChildInfoPOList",
+          "bankCard",
+          "cityList"
+        ],
+        "success": null,
+        "collection_lengths": {
+          "employeeHistoryV1List": 0,
+          "eduExperienceV1List": 1,
+          "empWorkExperienceV1s": 1,
+          "employeeExperienceOutsideInfo": 0
+        }
+      }
+    ],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": [
+      {
+        "text": "首页",
+        "href": "https://family.ke.com"
+      },
+      {
+        "text": "新文化内核",
+        "href": "https://app-fly.ke.com/4ca0a304-9d83-458e-8355-e4bcc1494196"
+      },
+      {
+        "text": "员工门户",
+        "href": "https://family.ke.com/home/portal"
+      },
+      {
+        "text": "AI门户",
+        "href": "https://letsai.ke.com"
+      },
+      {
+        "text": "HR门户",
+        "href": "https://hr.ke.com"
+      },
+      {
+        "text": "培训",
+        "href": "https://elearning.ke.com"
+      },
+      {
+        "text": "绩效",
+        "href": "http://jixiao.ke.com/p/home"
+      },
+      {
+        "text": "考勤",
+        "href": "http://kaoqin.hr.ke.com"
+      },
+      {
+        "text": "薪酬",
+        "href": "https://xinchou.ke.com"
+      },
+      {
+        "text": "内推",
+        "href": "https://neitui.italent.cn/join-lianjia/jobs?language=zh_CN"
+      }
+    ]
+  },
+  {
+    "target": "https://link.fang.lianjia.com/map",
+    "final": "https://link.fang.lianjia.com/map",
+    "title": "新房",
+    "frames": [
+      "https://link.fang.lianjia.com/map"
+    ],
+    "traffic": [
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v4/cf",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://public-h5-be-report.ke.com/h5/v4/besw",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://link.fang.lianjia.com/menuService/getTopNavList",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "url": "https://link.fang.lianjia.com/api/userinfo",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "url": "https://link.fang.lianjia.com/api/apollo/getConfig",
+        "status": 200
+      }
+    ],
+    "identity_proofs": [
+      {
+        "url": "https://link.fang.lianjia.com/api/userinfo",
+        "status": 200,
+        "code": 0,
+        "identity_match": true,
+        "data_keys": [
+          "user"
+        ],
+        "success": null,
+        "collection_lengths": {}
+      }
+    ],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": [
+      {
+        "text": "新房房源",
+        "href": null
+      },
+      {
+        "text": "首页",
+        "href": "https://shouye.link.lianjia.com"
+      },
+      {
+        "text": "房源",
+        "href": "https://fang.deyoulife.com"
+      },
+      {
+        "text": "客源",
+        "href": "https://ke.deyoulife.com/customer/list/"
+      },
+      {
+        "text": "线索",
+        "href": ""
+      },
+      {
+        "text": "我的潜在客户",
+        "href": ""
+      },
+      {
+        "text": "客户公海",
+        "href": ""
+      },
+      {
+        "text": "共享池",
+        "href": ""
+      },
+      {
+        "text": "签约",
+        "href": "https://hetong.link.lianjia.com"
+      },
+      {
+        "text": "签后",
+        "href": "http://i.nts.jiaoyi.ke.com"
+      }
+    ]
+  },
+  {
+    "target": "http://zhenzhu.ke.com/",
+    "final": "https://listing-de.ke.com/",
+    "title": "",
+    "frames": [
+      "https://listing-de.ke.com/"
+    ],
+    "traffic": [
+      {
+        "method": "POST",
+        "url": "https://public-digc.ke.com/h5/v4/cf",
+        "status": 200
+      }
+    ],
+    "identity_proofs": [],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": []
+  },
+  {
+    "target": "https://hestia.lianjia.com/districtList?from=request_from_A_plus_resblock",
+    "final": "https://hip.lianjia.com/forbidden",
+    "title": "Forbidden",
+    "frames": [
+      "https://hip.lianjia.com/forbidden"
+    ],
+    "traffic": [],
+    "identity_proofs": [],
+    "password_inputs": 0,
+    "login_markers": {
+      "登录": 0,
+      "退出登录": 0,
+      "无权限": 0,
+      "暂无权限": 0,
+      "请先登录": 0,
+      "暂无访问权限": 0
+    },
+    "nav": [
+      {
+        "text": "京ICP备16057509号-2",
+        "href": "https://beian.miit.gov.cn/"
+      },
+      {
+        "text": "京公网安备 11010802024019号",
+        "href": "http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=11010802024019"
+      }
+    ]
+  }
+]

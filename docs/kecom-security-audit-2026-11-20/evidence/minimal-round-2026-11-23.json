@@ -1,0 +1,1094 @@
+{
+ "meta": {
+  "date": "2026-11-23",
+  "viewpoint": "beike-server (viewpoint A)",
+  "mode": "single_account_minimal_read_only",
+  "redaction": "status/business-code/field-names/lengths/sha256/set-cookie-attributes only; no token, cookie value, phone, id number, name, address, listing text or raw body retained",
+  "retry_policy": "none",
+  "attempt_note": "first upload aborted after 1 request (G1) on a local JSON parser error when the response was a non-JSON login redirect; this recorded run is the single complete round, no endpoint is retried inside it",
+  "principal_len": 16,
+  "material_cookie_names": [
+   "HOUSEJSESSIONID",
+   "Lianjia_BUcid",
+   "Lianjia_curWorkCity",
+   "Lianjia_u_info",
+   "UCID",
+   "UCID_secure",
+   "csrfSecret",
+   "lianjia_ssid",
+   "lianjia_trusteeship_token",
+   "lianjia_trusteeship_token_secure",
+   "lianjia_uuid",
+   "login_ucid",
+   "puzu_lease_token",
+   "puzu_lease_token_secure",
+   "saas_token"
+  ],
+  "refresh_cookie_names": [
+   "TGC",
+   "TGC_Secure",
+   "lianjia_ssid",
+   "lianjia_uuid",
+   "login_ucid",
+   "security_ticket"
+  ]
+ },
+ "G1_own_test_artifact": {
+  "own_customers_search": {
+   "http": 500,
+   "business_code": null,
+   "envelope_keys": [
+    "_non_json_len"
+   ],
+   "data_keys": null,
+   "row_count": null,
+   "row_keys": null,
+   "markers": {
+    "contains_self_principal": false
+   },
+   "body_sha256": "0730a5f9f2a35ac5edd0e5345b8f3033bee8a053e7143da0f748195a6583ea8a"
+  }
+ },
+ "G3_cookie_attributes": {
+  "lease_pz_chain": {
+   "hop_count": 1,
+   "hops": [
+    {
+     "hop": 1,
+     "http": 200,
+     "host": "lease-pz.link.lianjia.com",
+     "set_cookie": [
+      {
+       "name": "csrfSecret",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "puzu_lease_token",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "puzu_lease_token_secure",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "UCID",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "UCID_secure",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "Lianjia_curWorkCity",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "Lianjia_BUcid",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "Lianjia_u_info",
+       "attrs": {
+        "path": "/",
+        "secure": true,
+        "httponly": true
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:15 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_uuid",
+       "attrs": {
+        "expires": "Thu, 20-Nov-36 10:29:15 GMT",
+        "max-age": "315360000",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:15 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_uuid",
+       "attrs": {
+        "expires": "Thu, 20-Nov-36 10:29:15 GMT",
+        "max-age": "315360000",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      }
+     ]
+    }
+   ],
+   "cookie_attributes": {
+    "csrfSecret": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "puzu_lease_token": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "puzu_lease_token_secure": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "UCID": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "UCID_secure": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "Lianjia_curWorkCity": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "Lianjia_BUcid": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "Lianjia_u_info": {
+     "path": "/",
+     "secure": true,
+     "httponly": true
+    },
+    "lianjia_ssid": {
+     "expires": "Mon, 23-Nov-26 10:59:15 GMT",
+     "max-age": "1800",
+     "domain": ".lianjia.com",
+     "path": "/"
+    },
+    "lianjia_uuid": {
+     "expires": "Thu, 20-Nov-36 10:29:15 GMT",
+     "max-age": "315360000",
+     "domain": ".lianjia.com",
+     "path": "/"
+    }
+   }
+  },
+  "house_link_chain": {
+   "hop_count": 4,
+   "hops": [
+    {
+     "hop": 1,
+     "http": 302,
+     "host": "house.link.lianjia.com",
+     "set_cookie": [
+      {
+       "name": "HOUSEJSESSIONID",
+       "attrs": {
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "rememberMe",
+       "attrs": {
+        "path": "/",
+        "max-age": "0",
+        "expires": "Sun, 22-Nov-2026 10:29:16 GMT",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:16 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_uuid",
+       "attrs": {
+        "expires": "Thu, 20-Nov-36 10:29:16 GMT",
+        "max-age": "315360000",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:16 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_uuid",
+       "attrs": {
+        "expires": "Thu, 20-Nov-36 10:29:16 GMT",
+        "max-age": "315360000",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      }
+     ]
+    },
+    {
+     "hop": 2,
+     "http": 301,
+     "host": "house.link.lianjia.com",
+     "set_cookie": [
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:16 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      }
+     ]
+    },
+    {
+     "hop": 3,
+     "http": 302,
+     "host": "house.link.lianjia.com",
+     "set_cookie": [
+      {
+       "name": "login_ucid",
+       "attrs": {
+        "max-age": "403200",
+        "expires": "Sat, 28-Nov-2026 02:29:17 GMT",
+        "domain": "lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "saas_token",
+       "attrs": {
+        "domain": "lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      }
+     ]
+    },
+    {
+     "hop": 4,
+     "http": 200,
+     "host": "house.link.lianjia.com",
+     "set_cookie": [
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+        "max-age": "1800",
+        "domain": ".lianjia.com",
+        "path": "/"
+       }
+      }
+     ]
+    }
+   ],
+   "cookie_attributes": {
+    "HOUSEJSESSIONID": {
+     "path": "/",
+     "samesite": "lax"
+    },
+    "rememberMe": {
+     "path": "/",
+     "max-age": "0",
+     "expires": "Sun, 22-Nov-2026 10:29:16 GMT",
+     "samesite": "lax"
+    },
+    "lianjia_ssid": {
+     "expires": "Mon, 23-Nov-26 10:59:17 GMT",
+     "max-age": "1800",
+     "domain": ".lianjia.com",
+     "path": "/"
+    },
+    "lianjia_uuid": {
+     "expires": "Thu, 20-Nov-36 10:29:16 GMT",
+     "max-age": "315360000",
+     "domain": ".lianjia.com",
+     "path": "/"
+    },
+    "login_ucid": {
+     "max-age": "403200",
+     "expires": "Sat, 28-Nov-2026 02:29:17 GMT",
+     "domain": "lianjia.com",
+     "path": "/"
+    },
+    "saas_token": {
+     "domain": "lianjia.com",
+     "path": "/"
+    }
+   }
+  },
+  "moma_backend_chain": {
+   "hop_count": 1,
+   "hops": [
+    {
+     "hop": 1,
+     "http": 307,
+     "host": "prd-assistant-backend.ke.com",
+     "set_cookie": [
+      {
+       "name": "prd-assistant-token-prod",
+       "attrs": {
+        "domain": ".ke.com",
+        "expires": "Mon, 23 Nov 2026 10:29:18 GMT",
+        "max-age": "0",
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "prd-assistant-token-prod",
+       "attrs": {
+        "domain": ".ke.com",
+        "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+        "httponly": true,
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "_ucid_",
+       "attrs": {
+        "domain": ".ke.com",
+        "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "_account_",
+       "attrs": {
+        "domain": ".ke.com",
+        "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "_usercode_",
+       "attrs": {
+        "domain": ".ke.com",
+        "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "_displayName_",
+       "attrs": {
+        "domain": ".ke.com",
+        "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+        "path": "/",
+        "samesite": "lax"
+       }
+      },
+      {
+       "name": "lianjia_ssid",
+       "attrs": {
+        "expires": "Mon, 23-Nov-26 10:59:18 GMT",
+        "max-age": "1800",
+        "domain": ".ke.com",
+        "path": "/"
+       }
+      }
+     ]
+    }
+   ],
+   "cookie_attributes": {
+    "prd-assistant-token-prod": {
+     "domain": ".ke.com",
+     "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+     "max-age": "0",
+     "path": "/",
+     "samesite": "lax",
+     "httponly": true
+    },
+    "_ucid_": {
+     "domain": ".ke.com",
+     "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+     "path": "/",
+     "samesite": "lax"
+    },
+    "_account_": {
+     "domain": ".ke.com",
+     "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+     "path": "/",
+     "samesite": "lax"
+    },
+    "_usercode_": {
+     "domain": ".ke.com",
+     "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+     "path": "/",
+     "samesite": "lax"
+    },
+    "_displayName_": {
+     "domain": ".ke.com",
+     "expires": "Sat, 16 Oct 2083 20:58:36 GMT",
+     "path": "/",
+     "samesite": "lax"
+    },
+    "lianjia_ssid": {
+     "expires": "Mon, 23-Nov-26 10:59:18 GMT",
+     "max-age": "1800",
+     "domain": ".ke.com",
+     "path": "/"
+    }
+   }
+  },
+  "trusteeship-get": {
+   "http": 200,
+   "set_cookie": [
+    {
+     "name": "trusteeship-front-state",
+     "attrs": {
+      "path": "/",
+      "secure": true,
+      "httponly": true
+     }
+    },
+    {
+     "name": "trusteeship-front-state",
+     "attrs": {
+      "path": "/",
+      "secure": true,
+      "httponly": true
+     }
+    },
+    {
+     "name": "lianjia_trusteeship_token",
+     "attrs": {
+      "path": "/",
+      "secure": true,
+      "httponly": true
+     }
+    },
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:19 GMT",
+      "max-age": "1800",
+      "domain": ".lianjia.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:19 GMT",
+      "max-age": "1800",
+      "domain": ".lianjia.com",
+      "path": "/"
+     }
+    }
+   ]
+  },
+  "bms-get": {
+   "http": 200,
+   "set_cookie": [
+    {
+     "name": "csrfSecret",
+     "attrs": {
+      "path": "/",
+      "secure": true,
+      "httponly": true
+     }
+    },
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:19 GMT",
+      "max-age": "1800",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_uuid",
+     "attrs": {
+      "expires": "Thu, 20-Nov-36 10:29:19 GMT",
+      "max-age": "315360000",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:19 GMT",
+      "max-age": "1800",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_uuid",
+     "attrs": {
+      "expires": "Thu, 20-Nov-36 10:29:19 GMT",
+      "max-age": "315360000",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    }
+   ]
+  },
+  "wandou-get": {
+   "http": 200,
+   "set_cookie": [
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:19 GMT",
+      "max-age": "1800",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:19 GMT",
+      "max-age": "1800",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_uuid",
+     "attrs": {
+      "expires": "Thu, 20-Nov-36 10:29:19 GMT",
+      "max-age": "315360000",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    }
+   ]
+  },
+  "appmoma-get": {
+   "http": 200,
+   "set_cookie": [
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:20 GMT",
+      "max-age": "1800",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_ssid",
+     "attrs": {
+      "expires": "Mon, 23-Nov-26 10:59:20 GMT",
+      "max-age": "1800",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    },
+    {
+     "name": "lianjia_uuid",
+     "attrs": {
+      "expires": "Thu, 20-Nov-36 10:29:20 GMT",
+      "max-age": "315360000",
+      "domain": ".ke.com",
+      "path": "/"
+     }
+    }
+   ]
+  }
+ },
+ "G2_admin_paths_status_only": {
+  "prod_moma_admin_users_search": {
+   "http": 403,
+   "class": "denied-403"
+  },
+  "staging-cache-redis": {
+   "http": 200,
+   "class": "other-200"
+  },
+  "staging-wechat-token": {
+   "http": 200,
+   "class": "other-200"
+  },
+  "staging-upload": {
+   "http": 200,
+   "class": "other-200"
+  }
+ },
+ "G4_cors_one_per_host_body_discarded": {
+  "lease-pz": {
+   "http": 200,
+   "acao": "https://evil.example",
+   "acac": "true",
+   "acam": "GET, POST",
+   "vary": "Accept-Encoding",
+   "body_discarded": true
+  },
+  "house-link": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": "",
+   "vary": "Accept-Encoding",
+   "body_discarded": true
+  },
+  "trusteeship": {
+   "http": 200,
+   "acao": "https://evil.example",
+   "acac": "true",
+   "acam": "GET, POST",
+   "vary": "Accept-Encoding",
+   "body_discarded": true
+  },
+  "bms-lease": {
+   "http": 200,
+   "acao": "https://evil.example",
+   "acac": "true",
+   "acam": "GET, OPTIONS",
+   "vary": "Origin",
+   "body_discarded": true
+  },
+  "wandou": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": "",
+   "vary": "Accept-Encoding",
+   "body_discarded": true
+  },
+  "moma-backend": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": "",
+   "vary": "Accept-Encoding",
+   "body_discarded": true
+  },
+  "app-moma": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": "",
+   "vary": "Accept-Encoding",
+   "body_discarded": true
+  }
+ },
+ "G5_wandou_three_endpoints": {
+  "search_for_type1": {
+   "anonymous": {
+    "http": 401,
+    "business_code": "U001",
+    "success": false,
+    "body_len": 160,
+    "body_sha256": "b9ef19e437a3e5da0762ef701f91cbb9735a746082b5e2a31528f83d59facd29"
+   },
+   "authenticated": {
+    "http": 500,
+    "business_code": null,
+    "success": null,
+    "data_shape": "NoneType",
+    "data_keys": null,
+    "markers": {
+     "contains_self_principal": false
+    },
+    "body_len": 3006,
+    "body_sha256": "0730a5f9f2a35ac5edd0e5345b8f3033bee8a053e7143da0f748195a6583ea8a"
+   }
+  },
+  "batch_for_type2": {
+   "anonymous": {
+    "http": 401,
+    "business_code": "U001",
+    "success": false,
+    "body_len": 160,
+    "body_sha256": "f519862b94e942fd645cd287f16b34dd61ecdd1e8d2070f17ae4ee30af7ababa"
+   },
+   "authenticated": {
+    "http": 500,
+    "business_code": null,
+    "success": null,
+    "data_shape": "NoneType",
+    "data_keys": null,
+    "markers": {
+     "contains_self_principal": false
+    },
+    "body_len": 3006,
+    "body_sha256": "0730a5f9f2a35ac5edd0e5345b8f3033bee8a053e7143da0f748195a6583ea8a"
+   }
+  },
+  "notes_houses_history": {
+   "anonymous": {
+    "http": 401,
+    "business_code": "U001",
+    "success": false,
+    "body_len": 160,
+    "body_sha256": "04bae91fe263599572799d0ef9b03dfd28c72824ae8e35d31931c14fa96420f6"
+   },
+   "authenticated": {
+    "http": 500,
+    "business_code": null,
+    "success": null,
+    "data_shape": "NoneType",
+    "data_keys": null,
+    "markers": {
+     "contains_self_principal": false
+    },
+    "body_len": 3006,
+    "body_sha256": "0730a5f9f2a35ac5edd0e5345b8f3033bee8a053e7143da0f748195a6583ea8a"
+   }
+  }
+ },
+ "G6_cdn_head": {
+  "cdn-inspection-head": {
+   "http": 403,
+   "content_type": "application/json; charset=utf-8",
+   "content_length": "176",
+   "cache_status": null
+  },
+  "cdn-hdic-frame-head": {
+   "http": 403,
+   "content_type": "application/json; charset=utf-8",
+   "content_length": "169",
+   "cache_status": null
+  }
+ },
+ "G7_sse_ws": {
+  "moma_chat_stream_gate": {
+   "no_cookie": {
+    "http": 200,
+    "content_type": "application/json",
+    "stream_not_pulled": true
+   },
+   "with_cookie": {
+    "http": 422,
+    "content_type": "application/json",
+    "stream_not_pulled": true
+   }
+  },
+  "app_moma_ai_gate": {
+   "no_cookie": {
+    "http": 401,
+    "body_len": 27,
+    "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+    "json": true,
+    "top_keys": [
+     "error"
+    ],
+    "business_code": null,
+    "errno": null,
+    "success": null,
+    "generation_triggered": false
+   },
+   "with_cookie": {
+    "http": 401,
+    "body_len": 27,
+    "body_sha256": "687b8904a1b197948ee9acfe018241ec587fe24f1b4dd60753fc0fa598df3fa3",
+    "json": true,
+    "top_keys": [
+     "error"
+    ],
+    "business_code": null,
+    "errno": null,
+    "success": null,
+    "generation_triggered": false
+   }
+  },
+  "websocket": {
+   "status": "not_tested",
+   "reason": "no websocket endpoint contract exists in current evidence or docs; URL guessing is out of scope"
+  }
+ },
+ "G8_own_share_link": {
+  "status": "not_tested",
+  "reason": "no share link exists in evidence; creating one requires an export/write action which is prohibited this round; nothing requested",
+  "requests": 0
+ },
+ "G9_logout_and_tgc_replay": {
+  "status": "not_tested",
+  "reason": "re-login after logout depends on a human QR scan and no operator is available; per instruction logout is not invoked; nothing requested",
+  "requests": 0
+ },
+ "request_ledger": [
+  {
+   "item": "G1-own-customers",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/notes/customers/search"
+  },
+  {
+   "item": "G3-cas-lease",
+   "method": "GET",
+   "target": "https://login.ke.com/login"
+  },
+  {
+   "item": "G3-lease-hop1",
+   "method": "GET",
+   "target": "https://lease-pz.link.lianjia.com/login"
+  },
+  {
+   "item": "G3-cas-house",
+   "method": "GET",
+   "target": "https://login.ke.com/login"
+  },
+  {
+   "item": "G3-house-hop1",
+   "method": "GET",
+   "target": "https://house.link.lianjia.com/shiro-cas"
+  },
+  {
+   "item": "G3-house-hop2",
+   "method": "GET",
+   "target": "http://house.link.lianjia.com/"
+  },
+  {
+   "item": "G3-house-hop3",
+   "method": "GET",
+   "target": "https://house.link.lianjia.com/"
+  },
+  {
+   "item": "G3-house-hop4",
+   "method": "GET",
+   "target": "https://house.link.lianjia.com/search/sale/default/gdiv_mt"
+  },
+  {
+   "item": "G3-cas-moma2",
+   "method": "GET",
+   "target": "https://login.ke.com/login"
+  },
+  {
+   "item": "G3-moma-hop1",
+   "method": "GET",
+   "target": "https://prd-assistant-backend.ke.com/login"
+  },
+  {
+   "item": "G3-trusteeship-get",
+   "method": "GET",
+   "target": "https://trusteeship.link.lianjia.com/"
+  },
+  {
+   "item": "G3-bms-get",
+   "method": "GET",
+   "target": "https://bms.lease.ke.com/api/config/operation/retrieve/config"
+  },
+  {
+   "item": "G3-wandou-get",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v1/users/me"
+  },
+  {
+   "item": "G3-appmoma-get",
+   "method": "GET",
+   "target": "https://app-moma.ke.com/falcon/city/list"
+  },
+  {
+   "item": "G2-moma-admin-users",
+   "method": "GET",
+   "target": "https://prd-assistant-backend.ke.com/api/admin/users/search"
+  },
+  {
+   "item": "G2-staging-cache-redis",
+   "method": "GET",
+   "target": "http://prd-assistant-backend.ttb.test.ke.com/api/cache/redis"
+  },
+  {
+   "item": "G2-staging-wechat-token",
+   "method": "GET",
+   "target": "http://prd-assistant-backend.ttb.test.ke.com/api/wechat/access-token"
+  },
+  {
+   "item": "G2-staging-upload",
+   "method": "GET",
+   "target": "http://prd-assistant-backend.ttb.test.ke.com/api/upload/upload_only"
+  },
+  {
+   "item": "G4-lease-pz",
+   "method": "GET",
+   "target": "https://lease-pz.link.lianjia.com/api/houseList/search/pc/list"
+  },
+  {
+   "item": "G4-house-link",
+   "method": "GET",
+   "target": "https://house.link.lianjia.com/search/searchQueryNew"
+  },
+  {
+   "item": "G4-trusteeship",
+   "method": "GET",
+   "target": "https://trusteeship.link.lianjia.com/"
+  },
+  {
+   "item": "G4-bms-lease",
+   "method": "GET",
+   "target": "https://bms.lease.ke.com/api/config/operation/retrieve/config"
+  },
+  {
+   "item": "G4-wandou",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v1/users/me"
+  },
+  {
+   "item": "G4-moma-backend",
+   "method": "GET",
+   "target": "https://prd-assistant-backend.ke.com/api/user/info"
+  },
+  {
+   "item": "G4-app-moma",
+   "method": "GET",
+   "target": "https://app-moma.ke.com/falcon/city/list"
+  },
+  {
+   "item": "G5-search_for_type1-anon",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/house/resource/search_for_type1"
+  },
+  {
+   "item": "G5-search_for_type1-authed",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/house/resource/search_for_type1"
+  },
+  {
+   "item": "G5-batch_for_type2-anon",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/house/resource/batch_for_type2"
+  },
+  {
+   "item": "G5-batch_for_type2-authed",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/house/resource/batch_for_type2"
+  },
+  {
+   "item": "G5-notes_houses_history-anon",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/notes/houses/history"
+  },
+  {
+   "item": "G5-notes_houses_history-authed",
+   "method": "GET",
+   "target": "https://wandou.ke.com/api/v2/notes/houses/history"
+  },
+  {
+   "item": "G6-cdn-inspection-head",
+   "method": "HEAD",
+   "target": "https://img.ljcdn.com//110000-inspection/pc1_1BnFTdous.jpg"
+  },
+  {
+   "item": "G6-cdn-hdic-frame-head",
+   "method": "HEAD",
+   "target": "https://img.ljcdn.com/hdic-frame/standard_1783692113751.jpeg"
+  },
+  {
+   "item": "G7-moma-stream-nocookie",
+   "method": "POST",
+   "target": "https://prd-assistant-backend.ke.com/api/chats/1/stream"
+  },
+  {
+   "item": "G7-moma-stream-cookie",
+   "method": "POST",
+   "target": "https://prd-assistant-backend.ke.com/api/chats/1/stream"
+  },
+  {
+   "item": "G7-appmoma-ai-nocookie",
+   "method": "POST",
+   "target": "https://app-moma.ke.com/falcon/ai_endpoints/v1/chat/completions"
+  },
+  {
+   "item": "G7-appmoma-ai-cookie",
+   "method": "POST",
+   "target": "https://app-moma.ke.com/falcon/ai_endpoints/v1/chat/completions"
+  }
+ ],
+ "request_total": 37
+}

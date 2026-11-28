@@ -1,0 +1,57 @@
+{
+  "anonymous_boundary": {
+    "http": 200,
+    "errno": 401,
+    "errmsg": "未登录或登录已过期",
+    "data_null": true
+  },
+  "page_size_probe": {
+    "http": 200,
+    "requested_page_size": 100,
+    "returned_rows": 100,
+    "totalCount": 1342753,
+    "sensitive_fill_in_sample": {
+      "mobile": {
+        "present": 100,
+        "populated": 27,
+        "fill_rate": 0.27
+      },
+      "email": {
+        "present": 100,
+        "populated": 0,
+        "fill_rate": 0.0
+      },
+      "idCard": {
+        "present": 100,
+        "populated": 0,
+        "fill_rate": 0.0
+      },
+      "birthday": {
+        "present": 100,
+        "populated": 99,
+        "fill_rate": 0.99
+      },
+      "officeAddress": {
+        "present": 100,
+        "populated": 100,
+        "fill_rate": 1.0
+      },
+      "superior": {
+        "present": 100,
+        "populated": 75,
+        "fill_rate": 0.75
+      },
+      "account": {
+        "present": 100,
+        "populated": 99,
+        "fill_rate": 0.99
+      }
+    }
+  },
+  "deep_page_100": {
+    "http": 200,
+    "errno": 0,
+    "returned_rows": 100,
+    "totalCount": 1342753
+  }
+}

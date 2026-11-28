@@ -1,0 +1,309 @@
+[
+  {
+    "host": "shouye.link.lianjia.com",
+    "name": "工作台首页",
+    "url": "https://shouye.link.lianjia.com/",
+    "entry_url": "https://shouye.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "house.link.lianjia.com",
+    "name": "房源系统",
+    "url": "https://house.link.lianjia.com/",
+    "entry_url": "https://house.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "lease-pz.link.lianjia.com",
+    "name": "普租租赁系统",
+    "url": "https://lease-pz.link.lianjia.com/",
+    "entry_url": "https://lease-pz.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "trusteeship.link.lianjia.com",
+    "name": "托管业务系统",
+    "url": "https://trusteeship.link.lianjia.com/",
+    "entry_url": "https://trusteeship.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "link.fang.lianjia.com",
+    "name": "新房 / A+ 统一顶栏",
+    "url": "https://link.fang.lianjia.com/map",
+    "entry_url": "https://link.fang.lianjia.com/map",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ke.deyoulife.com",
+    "name": "德佑客源系统",
+    "url": "https://ke.deyoulife.com/",
+    "entry_url": "https://ke.deyoulife.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ke.link.lianjia.com",
+    "name": "客源系统",
+    "url": "https://ke.link.lianjia.com/",
+    "entry_url": "https://ke.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "hetong.link.lianjia.com",
+    "name": "签约合同系统",
+    "url": "https://hetong.link.lianjia.com/",
+    "entry_url": "https://hetong.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "clue.a.ke.com",
+    "name": "客户公海 / 我的潜在客户",
+    "url": "https://clue.a.ke.com/page/thread",
+    "entry_url": "https://clue.a.ke.com/page/thread",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "xiaoxi.link.lianjia.com",
+    "name": "消息系统",
+    "url": "https://xiaoxi.link.lianjia.com/",
+    "entry_url": "https://xiaoxi.link.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "odin.ke.com",
+    "name": "Odin 数据平台 / 管理驾驶舱",
+    "url": "https://odin.ke.com/",
+    "entry_url": "https://odin.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "kemcc.ke.com",
+    "name": "通知中心（kemcc）",
+    "url": "https://kemcc.ke.com/",
+    "entry_url": "https://kemcc.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "family.ke.com",
+    "name": "员工门户",
+    "url": "https://family.ke.com/home/portal",
+    "entry_url": "https://family.ke.com/home/portal",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "hr.ke.com",
+    "name": "HR 门户（KeHR）",
+    "url": "https://hr.ke.com/",
+    "entry_url": "https://hr.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "saas.a.ke.com",
+    "name": "A+ 客户端认证服务",
+    "url": "https://saas.a.ke.com/",
+    "entry_url": "https://saas.a.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "8.lianjia.com",
+    "name": "积分提佣",
+    "url": "http://8.lianjia.com/",
+    "entry_url": "http://8.lianjia.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "brand.ke.com",
+    "name": "金贝展位推广平台",
+    "url": "https://brand.ke.com/",
+    "entry_url": "https://brand.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "kaoqin.hr.ke.com",
+    "name": "查看假期余额 / 查看出勤记录",
+    "url": "http://kaoqin.hr.ke.com/",
+    "entry_url": "http://kaoqin.hr.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "study.ke.com",
+    "name": "贝壳学堂 / 在线学习",
+    "url": "https://study.ke.com/",
+    "entry_url": "https://study.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "newhouse-cps.ke.com",
+    "name": "商圈房源聚焦",
+    "url": "https://newhouse-cps.ke.com/grid/focus/admineActivity",
+    "entry_url": "https://newhouse-cps.ke.com/grid/focus/admineActivity",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "xinchou.ke.com",
+    "name": "薪酬核算系统",
+    "url": "https://xinchou.ke.com/",
+    "entry_url": "https://xinchou.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "liulian.ke.com",
+    "name": "展位管理后台",
+    "url": "http://liulian.ke.com/",
+    "entry_url": "http://liulian.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "naturaloppty.ke.com",
+    "name": "二手自然商机展位",
+    "url": "http://naturaloppty.ke.com/",
+    "entry_url": "http://naturaloppty.ke.com/",
+    "category": "confirmed_28_intranet",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "chat-excel.ke.com",
+    "name": "CHAT-EXCEL",
+    "url": "https://chat-excel.ke.com/",
+    "entry_url": "https://chat-excel.ke.com/",
+    "category": "handoff_from_2a",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "codelink.ke.com",
+    "name": "CodeLink",
+    "url": "https://codelink.ke.com/",
+    "entry_url": "https://codelink.ke.com/",
+    "category": "handoff_from_2a",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ketest-pro.ke.com",
+    "name": "Ketest Copilot",
+    "url": "https://ketest-pro.ke.com/#/keTest-copilot",
+    "entry_url": "https://ketest-pro.ke.com/#/keTest-copilot",
+    "category": "handoff_from_2a",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "speechhub.ke.com",
+    "name": "贝壳语音",
+    "url": "http://speechhub.ke.com/",
+    "entry_url": "http://speechhub.ke.com/",
+    "category": "handoff_from_2a",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "app-fly.ke.com",
+    "name": "员工文化应用（员工关系/新文化内核/品牌资源）",
+    "url": "https://app-fly.ke.com/employee-relations-hub",
+    "entry_url": "https://app-fly.ke.com/employee-relations-hub",
+    "category": "handoff_from_2a",
+    "source_category": "reappeared_page_only_unverified",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "jixiao.ke.com",
+    "name": "绩效与试用期系统",
+    "url": "https://jixiao.ke.com/p/home",
+    "entry_url": "https://jixiao.ke.com/p/home",
+    "category": "handoff_from_2a",
+    "source_category": "reappeared_page_only_unverified",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ai-sec.ke.com",
+    "name": "贝壳安全AI助手",
+    "url": "https://ai-sec.ke.com/",
+    "entry_url": "https://ai-sec.ke.com/",
+    "category": "denied_403_recheck",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "bella.ke.com",
+    "name": "Bella（招聘与面试 AI 助手）",
+    "url": "https://bella.ke.com/",
+    "entry_url": "https://bella.ke.com/",
+    "category": "denied_403_recheck",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "jianli.ke.com",
+    "name": "聘多多系统",
+    "url": "https://jianli.ke.com/",
+    "entry_url": "https://jianli.ke.com/",
+    "category": "denied_403_recheck",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "opengpt.ke.com",
+    "name": "ChatGPT 4",
+    "url": "https://opengpt.ke.com/#/intelligentChat/54961496895488",
+    "entry_url": "https://opengpt.ke.com/#/intelligentChat/54961496895488",
+    "category": "denied_403_recheck",
+    "source_category": "ai_portal_candidate",
+    "batch": "2B-1",
+    "auth_hint": "cas_cookie"
+  }
+]

@@ -1,0 +1,382 @@
+{
+ "mode": "ke_side_channel_anonymous_probe",
+ "host_surface": {
+  "https://login.ke.com/login": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "登录",
+   "sec_headers": []
+  },
+  "https://moma.ke.com/nchat": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "MOMA",
+   "sec_headers": []
+  },
+  "https://wandou.ke.com/chat": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "豌豆 PC",
+   "sec_headers": []
+  },
+  "https://app-prd.ke.com/": {
+   "http": 302,
+   "server": "Lianjia",
+   "title": "302 Found",
+   "sec_headers": []
+  },
+  "https://moma-data.ke.com/": {
+   "http": null,
+   "server": "",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://smart-mo.ke.com/xiaomo-user": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "Smart Mo · 运行中枢",
+   "sec_headers": []
+  },
+  "https://smart-mo.ke.com/xiaomo-pet": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "Smart Mo · 运行中枢",
+   "sec_headers": []
+  },
+  "https://flow-forge.ke.com/moma-business-logic/": {
+   "http": null,
+   "server": "",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://linkspace.ke.com/": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "LinkSpace",
+   "sec_headers": []
+  },
+  "https://opera-service.ke.com/myself": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "MOMA",
+   "sec_headers": []
+  },
+  "https://i.c-pc-webapi.ke.com/": {
+   "http": null,
+   "server": "",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://bms.lease.ke.com/": {
+   "http": 200,
+   "server": "Lianjia",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://t.lianjia.com/": {
+   "http": 404,
+   "server": "Lianjia",
+   "title": "链家集团",
+   "sec_headers": []
+  },
+  "https://hetong.link.lianjia.com/": {
+   "http": 302,
+   "server": "Lianjia",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://xiaoxi.link.lianjia.com/": {
+   "http": 302,
+   "server": "Lianjia",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://main.link.lianjia.com/": {
+   "http": 302,
+   "server": "Lianjia",
+   "title": "",
+   "sec_headers": []
+  },
+  "https://public-digc.ke.com/": {
+   "http": 401,
+   "server": "Lianjia",
+   "title": "",
+   "sec_headers": []
+  }
+ },
+ "staging_dns": {
+  "beta.ttb.test.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_CGNAT_IPV4_2>",
+   "http": null,
+   "title": ""
+  },
+  "prd-assistant-backend.ttb.test.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_CGNAT_IPV4_3>",
+   "http": 200,
+   "title": ""
+  },
+  "app.moma.ttb.test.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_CGNAT_IPV4_4>",
+   "http": 302,
+   "title": "302 Found"
+  },
+  "moma-data.ttb.test.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_CGNAT_IPV4_5>",
+   "http": 404,
+   "title": ""
+  },
+  "smart-mo.ttb.test.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_CGNAT_IPV4_6>",
+   "http": 200,
+   "title": "Smart Mo · 运行中枢"
+  },
+  "test-login.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_CGNAT_IPV4_7>",
+   "http": 404,
+   "title": ""
+  },
+  "test-codelink-member.ke.com": {
+   "resolves": true,
+   "ip": "<REDACTED_PUBLIC_IPV4>",
+   "http": 302,
+   "title": ""
+  }
+ },
+ "redirect_chains": {
+  "wxwork_auto_login": [
+   {
+    "url": "https://wxwork.ke.com/wxwork/login/auto?app,loginPath",
+    "http": 302
+   },
+   {
+    "url": "https://login.ke.com/wxwork/login/auto?appId,scope,state,type",
+    "http": 302
+   },
+   {
+    "url": "https://open.weixin.qq.com/connect/oauth2/authorize?appid,redirect_uri,response_type,scope,state",
+    "http": 200
+   }
+  ],
+  "app_moma_root": [
+   {
+    "url": "https://app-moma.ke.com/",
+    "http": 302
+   },
+   {
+    "url": "https://moma.ke.com/deploy_404",
+    "http": 200
+   }
+  ],
+  "app_prd_root": [
+   {
+    "url": "https://app-prd.ke.com/",
+    "http": 302
+   },
+   {
+    "url": "https://moma.ke.com/deploy_404",
+    "http": 200
+   }
+  ],
+  "test_codelink": [
+   {
+    "url": "https://test-codelink-member.ke.com/",
+    "http": 302
+   },
+   {
+    "url": "https://hip.ke.com/forbidden?id,reason",
+    "http": 200
+   }
+  ]
+ },
+ "authing_redirect_uri": {
+  "arbitrary": {
+   "http": 400,
+   "location_shape": "",
+   "error_hint": "errorContent {\n        width:50%;\n        min-width: 300px;\n        text-align: left;\n        margin: 10px auto;\n       "
+  },
+  "control_login_ke": {
+   "http": 400,
+   "location_shape": "",
+   "error_hint": "errorContent {\n        width:50%;\n        min-width: 300px;\n        text-align: left;\n        margin: 10px auto;\n       "
+  }
+ },
+ "moma_side_doors_anon": {
+  "refore_token": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "provider_callback": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "send_code_empty_post": {
+   "http": 422,
+   "errno": null,
+   "errmsg": ""
+  },
+  "migrate_trigger": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "old_cluster_top": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "feishu_connector": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "xiaomo_pet": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "welcome_ping": {
+   "http": 302,
+   "non_json_len": 0
+  },
+  "agent_file_token": {
+   "http": 401,
+   "code": "U001",
+   "message": "未登录或登录已失效"
+  },
+  "admin_file_token": {
+   "http": 401,
+   "code": "U001",
+   "message": "未登录或登录已失效"
+  }
+ },
+ "wandou_side_doors_anon": {
+  "refore_token": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "provider_callback": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "send_code_empty_post": {
+   "http": 422,
+   "errno": null,
+   "errmsg": ""
+  },
+  "migrate_trigger": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "old_cluster_top": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "feishu_connector": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "xiaomo_pet": {
+   "http": 200,
+   "errno": 401,
+   "errmsg": "未登录或登录已过期"
+  },
+  "welcome_ping": {
+   "http": 302,
+   "non_json_len": 0
+  },
+  "agent_file_token": {
+   "http": 401,
+   "code": "U001",
+   "message": "未登录或登录已失效"
+  },
+  "admin_file_token": {
+   "http": 401,
+   "code": "U001",
+   "message": "未登录或登录已失效"
+  }
+ },
+ "cdn_probe": {
+  "moma_img_root": {
+   "http": 403,
+   "dir_listing": false,
+   "len": 97
+  },
+  "app_dir_listing": {
+   "http": 404,
+   "dir_listing": false,
+   "len": 79
+  },
+  "version_minus1": {
+   "http": 404,
+   "dir_listing": false,
+   "len": 79
+  },
+  "version_plus1": {
+   "http": 404,
+   "dir_listing": false,
+   "len": 79
+  },
+  "s1_root": {
+   "http": 200,
+   "dir_listing": false,
+   "len": 1391
+  }
+ },
+ "cors_audit": {
+  "wandou.ke.comapi/v1/users/me": {
+   "http": 302,
+   "acao": "",
+   "acac": "",
+   "acam": ""
+  },
+  "prd-assistant-backend.ke.comapi/user/info": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": ""
+  },
+  "prd-assistant-backend.ke.comapi/public/homepage/bootstrap": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": ""
+  },
+  "lease-pz.link.lianjia.comapi/houseList/search/pc/list": {
+   "http": 200,
+   "acao": "https://probe-origin.example",
+   "acac": "true",
+   "acam": "GET, POST"
+  },
+  "app-moma.ke.comfalcon/city/list": {
+   "http": 200,
+   "acao": "",
+   "acac": "",
+   "acam": ""
+  }
+ },
+ "trace_method": {
+  "http": 405
+ },
+ "options_method": {
+  "http": 302,
+  "allow": ""
+ },
+ "risk_sdk": {
+  "len": 8192,
+  "urls": [],
+  "crypto_like_keys": []
+ }
+}

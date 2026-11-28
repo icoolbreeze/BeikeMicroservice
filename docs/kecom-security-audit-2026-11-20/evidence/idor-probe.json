@@ -1,0 +1,379 @@
+{
+  "mode": "idor_with_own_token_peer_id",
+  "peer_code": "30334960",
+  "A1_uc_search_peer_code": {
+    "http": 200,
+    "code": "A001",
+    "success": false,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "A2_uc_search_self_control": {
+    "http": 200,
+    "code": "A001",
+    "success": false,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "A3_uc_batch_peer_ucid": {
+    "http": 200,
+    "code": "0",
+    "success": true,
+    "shape": {
+      "list_len": 0,
+      "item_shape": null
+    },
+    "contains_peer_id": false
+  },
+  "A4_uc_batch_peer_code": {
+    "http": 200,
+    "code": "0",
+    "success": true,
+    "shape": {
+      "list_len": 0,
+      "item_shape": null
+    },
+    "contains_peer_id": false
+  },
+  "A5_uc_page_search_peer": {
+    "http": 200,
+    "code": "S001",
+    "success": false,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "A6_uc_org_allnames_probe": {
+    "http": 200,
+    "code": "A001",
+    "success": false,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "B1_notes_baseline": {
+    "http": 200,
+    "code": "0",
+    "total": 0,
+    "shape": {
+      "notes": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int",
+      "pageNo": "int",
+      "pageSize": "int"
+    },
+    "contains_peer_id": false
+  },
+  "B2_notes_inject_managerUcId": {
+    "http": 200,
+    "code": "0",
+    "total": 0,
+    "shape": {
+      "notes": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int",
+      "pageNo": "int",
+      "pageSize": "int"
+    },
+    "contains_peer_id": false
+  },
+  "B3_notes_inject_ucid": {
+    "http": 200,
+    "code": "0",
+    "total": 0,
+    "shape": {
+      "notes": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int",
+      "pageNo": "int",
+      "pageSize": "int"
+    },
+    "contains_peer_id": false
+  },
+  "B4_notes_inject_ownerUcId": {
+    "http": 200,
+    "code": "0",
+    "total": 0,
+    "shape": {
+      "notes": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int",
+      "pageNo": "int",
+      "pageSize": "int"
+    },
+    "contains_peer_id": false
+  },
+  "B5_notes_inject_agentUcId": {
+    "http": 200,
+    "code": "0",
+    "total": 0,
+    "shape": {
+      "notes": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int",
+      "pageNo": "int",
+      "pageSize": "int"
+    },
+    "contains_peer_id": false
+  },
+  "B6_notes_inject_userCode": {
+    "http": 200,
+    "code": "0",
+    "total": 0,
+    "shape": {
+      "notes": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int",
+      "pageNo": "int",
+      "pageSize": "int"
+    },
+    "contains_peer_id": false
+  },
+  "B7_customers_baseline": {
+    "http": 200,
+    "code": "0",
+    "total": 1,
+    "shape": {
+      "totalCount": "int",
+      "customers": {
+        "list_len": 1,
+        "item_shape": {
+          "customerId": "int",
+          "name": "str",
+          "avatar": "str"
+        }
+      }
+    },
+    "contains_peer_id": false
+  },
+  "B8_customers_inject_peer": {
+    "http": 200,
+    "code": "0",
+    "total": 1,
+    "shape": {
+      "totalCount": "int",
+      "customers": {
+        "list_len": 1,
+        "item_shape": {
+          "customerId": "int",
+          "name": "str",
+          "avatar": "str"
+        }
+      }
+    },
+    "contains_peer_id": false
+  },
+  "B9_notes_statistics": {
+    "http": 200,
+    "code": "0",
+    "success": true,
+    "shape": {
+      "totalCount": "int",
+      "audioCount": "int",
+      "imageCount": "int",
+      "textCount": "int",
+      "fileCount": "int",
+      "weekNoteCount": "int",
+      "weekAudioCount": "int",
+      "recordingTypeCounts": {},
+      "templateCounts": {
+        "list_len": 0,
+        "item_shape": null
+      }
+    },
+    "contains_peer_id": false
+  },
+  "C1_sessions_baseline": {
+    "http": 200,
+    "code": "0",
+    "success": true,
+    "shape": {
+      "total": "int",
+      "page": "int",
+      "pageSize": "int",
+      "list": {
+        "list_len": 6,
+        "item_shape": {
+          "sessionId": "int",
+          "title": "str",
+          "isMain": "bool",
+          "createdAt": "int",
+          "updatedAt": "int"
+        }
+      }
+    },
+    "contains_peer_id": false
+  },
+  "C2_sessions_inject_peer": {
+    "http": 200,
+    "code": "0",
+    "success": true,
+    "shape": {
+      "total": "int",
+      "page": "int",
+      "pageSize": "int",
+      "list": {
+        "list_len": 6,
+        "item_shape": {
+          "sessionId": "int",
+          "title": "str",
+          "isMain": "bool",
+          "createdAt": "int",
+          "updatedAt": "int"
+        }
+      }
+    },
+    "contains_peer_id": false
+  },
+  "D1_negotiation_peer": {
+    "http": 502,
+    "code": null,
+    "success": null,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "D2_negotiation_self": {
+    "http": 502,
+    "code": null,
+    "success": null,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "E1_moma_ai_users_search_peer": {
+    "http": 200,
+    "errno": 0,
+    "shape": {
+      "items": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "users": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int"
+    },
+    "contains_peer_id": false
+  },
+  "E2_moma_aroute_users_peer": {
+    "http": 200,
+    "errno": 0,
+    "shape": {
+      "maxPageIndexNumber": "int",
+      "pageNumberList": {
+        "list_len": 1,
+        "item_shape": "int"
+      },
+      "totalCount": "int",
+      "pageSize": "int",
+      "totalPage": "int",
+      "currentPage": "int",
+      "nextPage": "int",
+      "previousPage": "int",
+      "hasNext": "str",
+      "hasPrevious": "str",
+      "list": {
+        "list_len": 5,
+        "item_shape": {
+          "usercode": "str",
+          "orgName": "str",
+          "officeAddress": "str",
+          "officeAddressName": "str",
+          "orgcode": "str",
+          "compCode": "str",
+          "compName": "str",
+          "ucid": "int",
+          "ucPositionCode": "str",
+          "ucPositionName": "str",
+          "userName": "str",
+          "record": "int",
+          "nickName": "str",
+          "avatar": "str",
+          "account": "str",
+          "mobile": "str",
+          "homePhone": "str",
+          "compPhone": "str",
+          "superior": "str",
+          "virtualSuperior": "str",
+          "level": "str",
+          "zhiwuSeriel": "int",
+          "entryDate": "int",
+          "reentryDate": "NoneType",
+          "positionStatus": "int",
+          "lastLeaveDate": "NoneType",
+          "status": "int",
+          "email": "str",
+          "sex": "str",
+          "avatarNeedAddedResolution": "str",
+          "workerDuty": "str",
+          "brandName": "str",
+          "brandCode": "str",
+          "birthday": "int",
+          "jobSeq": "int",
+          "ehrJobCode": "str",
+          "political": "str",
+          "idType": "int",
+          "idCard": "NoneType",
+          "sourceId": "int",
+          "category": "int",
+          "firstCategory": "int",
+          "secondCategory": "int",
+          "danwei": "str",
+          "jobName": "str",
+          "firstJobSeq": "str",
+          "secondJobSeq": "str",
+          "threeJobSeq": "str",
+          "jobCode": "str",
+          "ehrLevelName": "str",
+          "firstJobSeqName": "str",
+          "secondJobSeqName": "str",
+          "threeJobSeqName": "str",
+          "ehrPositionName": "str",
+          "supervisorName": "str",
+          "agentSequenceType": "int",
+          "location": "str",
+          "locationName": "str",
+          "trailEndDate": "int",
+          "highestDegreeName": "str",
+          "isVirtual": "int",
+          "brandBusinessModeCode": "str",
+          "brandBusinessModeName": "str"
+        }
+      },
+      "startIndex": "int"
+    },
+    "contains_peer_id": true
+  },
+  "E3_moma_user_preview_peer": {
+    "http": 422,
+    "errno": null,
+    "shape": "NoneType",
+    "contains_peer_id": false
+  },
+  "E4_moma_ai_users_self_control": {
+    "http": 200,
+    "errno": 0,
+    "shape": {
+      "items": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "users": {
+        "list_len": 0,
+        "item_shape": null
+      },
+      "total": "int"
+    },
+    "contains_peer_id": false
+  }
+}

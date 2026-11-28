@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "scanned_files": [
+    "phase1_diff.md",
+    "phase1_discovery.json",
+    "TASK_SPEC.md"
+  ],
+  "scanned_file_count": 3,
+  "findings": []
+}

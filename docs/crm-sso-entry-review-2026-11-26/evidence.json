@@ -1,0 +1,2080 @@
+{
+  "checked_at_utc": "2026-11-27T05:24:24.692Z",
+  "scope": "navigation-and-existing-project-entries; current-account; read-only; no sends",
+  "results": [
+    {
+      "name": "首页",
+      "url": "https://shouye.link.lianjia.com",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1152,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "SESSION",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://shouye.link.lianjia.com/shou/index",
+        "title": "首页",
+        "bytes": 3026,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://shouye.link.lianjia.com/cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://shouye.link.lianjia.com/shou/index",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "SESSION"
+        ]
+      },
+      "elapsed_seconds": 1.93
+    },
+    {
+      "name": "房源",
+      "url": "https://fang.deyoulife.com",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://house.link.lianjia.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "HOUSEJSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://house.link.lianjia.com/search/sale/default/gdiv_mt",
+        "title": "德佑-房源",
+        "bytes": 7015,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://house.link.lianjia.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://house.link.lianjia.com/search/sale/default/gdiv_mt",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 2.66
+    },
+    {
+      "name": "客源",
+      "url": "https://ke.deyoulife.com/customer/list/",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1274,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://ke.deyoulife.com/customer-infrastructure/customer/page/allCustomer",
+        "title": "客源",
+        "bytes": 3610,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://ke.deyoulife.com/callback",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://ke.deyoulife.com/customer/list/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://ke.deyoulife.com/customer-infrastructure/customer/page/allCustomer",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "business_token",
+          "lianjia_ssid",
+          "saas_token"
+        ]
+      },
+      "elapsed_seconds": 2.78
+    },
+    {
+      "name": "我的潜在客户 / 客户公海",
+      "url": "https://clue.a.ke.com/page/potential/customer/list",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "http://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://clue.a.ke.com/page/potential/customer/list",
+        "title": "线索",
+        "bytes": 1403,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "http://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://clue.a.ke.com/cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://clue.a.ke.com/page/potential/customer/list",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "saas_token"
+        ]
+      },
+      "elapsed_seconds": 2.5
+    },
+    {
+      "name": "共享池",
+      "url": "https://ke.link.lianjia.com/customer/sharePool/page/list",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1230,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://ke.link.lianjia.com/customer/sharePool/page/list",
+        "title": "客源",
+        "bytes": 3607,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://ke.link.lianjia.com/callback",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://ke.link.lianjia.com/customer/sharePool/page/list",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "business_token"
+        ]
+      },
+      "elapsed_seconds": 2.31
+    },
+    {
+      "name": "签约",
+      "url": "https://hetong.link.lianjia.com",
+      "source": "navigation",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://hetong.link.lianjia.com//index",
+        "title": "签约服务-vr",
+        "bytes": 8581,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://hetong.link.lianjia.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://hetong.link.lianjia.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://hetong.link.lianjia.com//index",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "signapptob_token"
+        ]
+      },
+      "elapsed_seconds": 2.75
+    },
+    {
+      "name": "喜刷刷",
+      "url": "http://xss.lianjia.com",
+      "source": "navigation",
+      "verdict": "blocked",
+      "anonymous": {
+        "error": "RemoteDisconnected:Remote end closed connection without response",
+        "redirects": []
+      },
+      "authenticated": {
+        "error": "RemoteDisconnected:Remote end closed connection without response",
+        "redirects": []
+      },
+      "elapsed_seconds": 0.4
+    },
+    {
+      "name": "签后",
+      "url": "http://i.nts.jiaoyi.ke.com",
+      "source": "navigation",
+      "verdict": "denied",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid",
+          "nts_session"
+        ]
+      },
+      "authenticated": {
+        "status": 403,
+        "final": "http://i.nts.jiaoyi.ke.com/",
+        "title": "无权限",
+        "bytes": 1457,
+        "login_page": false,
+        "denied_page": true,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://i.nts.jiaoyi.ke.com/",
+            "ticket_callback": true
+          }
+        ],
+        "new_auth_cookie_names": [
+          "XSRF-TOKEN",
+          "cas_session",
+          "lianjia_ssid",
+          "nts_session"
+        ]
+      },
+      "elapsed_seconds": 1.73
+    },
+    {
+      "name": "加油站商城",
+      "url": "http://jiayou.lianjia.com",
+      "source": "navigation",
+      "verdict": "blocked",
+      "anonymous": {
+        "error": "RuntimeError:external_redirect:www.jiayou321.com",
+        "redirects": []
+      },
+      "authenticated": {
+        "error": "RuntimeError:external_redirect:www.jiayou321.com",
+        "redirects": []
+      },
+      "elapsed_seconds": 0.47
+    },
+    {
+      "name": "楼盘字典",
+      "url": "http://reds.lianjia.com",
+      "source": "navigation",
+      "verdict": "login_required",
+      "anonymous": {
+        "status": 200,
+        "final": "http://auth.lianjia.com/user/preProcess",
+        "title": "登录页面",
+        "bytes": 10255,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "http://auth.lianjia.com/user/preProcess",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://auth.lianjia.com/user/preProcess",
+        "title": "登录页面",
+        "bytes": 10255,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "http://auth.lianjia.com/user/preProcess",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 1.02
+    },
+    {
+      "name": "帮住专家",
+      "url": "http://rfq.ke.com/helpexpert/list",
+      "source": "navigation",
+      "verdict": "denied",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://rfq.ke.com/help-expert/error/403",
+        "title": "帮住专家",
+        "bytes": 1597,
+        "login_page": false,
+        "denied_page": true,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://rfq.ke.com/cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://rfq.ke.com/helpexpert/list",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://rfq.ke.com/help-expert/error/403",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 2.17,
+      "note": "SSO callback completed but application denied access"
+    },
+    {
+      "name": "合同下载 / 房源 / 钥匙管理 / 买卖房源",
+      "url": "https://house.link.lianjia.com/page/agreement-list",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "HOUSEJSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://house.link.lianjia.com/page/agreement-list",
+        "title": "德佑-房源",
+        "bytes": 12826,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 1.31
+    },
+    {
+      "name": "TE",
+      "url": "http://te.lianjia.com",
+      "source": "navigation",
+      "verdict": "http_error",
+      "anonymous": {
+        "status": 502,
+        "final": "http://te.lianjia.com",
+        "title": "502 Bad Gateway",
+        "bytes": 594,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "authenticated": {
+        "status": 502,
+        "final": "http://te.lianjia.com",
+        "title": "502 Bad Gateway",
+        "bytes": 594,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.48
+    },
+    {
+      "name": "管理驾驶舱",
+      "url": "https://odin.ke.com/portal/1809",
+      "source": "navigation",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://odin.ke.com/portal/1809",
+        "title": "奥丁数据分析平台",
+        "bytes": 523,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://odin.ke.com/portal/1809",
+        "title": "奥丁数据分析平台",
+        "bytes": 523,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.89
+    },
+    {
+      "name": "积分提佣",
+      "url": "http://8.lianjia.com",
+      "source": "navigation",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1230,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://8.lianjia.com/",
+        "title": "积分提佣",
+        "bytes": 3795,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://8.lianjia.com/casCallback",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://8.lianjia.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 1.62
+    },
+    {
+      "name": "我的客服",
+      "url": "http://helper.ke.com",
+      "source": "navigation",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://helper.ke.com/",
+        "title": "我的客服",
+        "bytes": 7382,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://helper.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://helper.ke.com/",
+        "title": "我的客服",
+        "bytes": 7382,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://helper.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.62
+    },
+    {
+      "name": "商圈房源聚焦",
+      "url": "https://newhouse-cps.ke.com/grid/focus/admineActivity",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://newhouse-cps.ke.com/grid/focus/admineActivity",
+        "title": "配置管理系统",
+        "bytes": 3940,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://newhouse-cps.ke.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://newhouse-cps.ke.com/grid/focus/admineActivity",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "PC_CPS_TOKEN"
+        ]
+      },
+      "elapsed_seconds": 1.44
+    },
+    {
+      "name": "业绩争议系统 / 我的客服",
+      "url": "http://helper.lianjia.com/plat#it--/createArguePC",
+      "source": "navigation",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://helper.ke.com/",
+        "title": "我的客服",
+        "bytes": 7382,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://helper.ke.com/plat",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://helper.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://helper.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://helper.ke.com/",
+        "title": "我的客服",
+        "bytes": 7382,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://helper.ke.com/plat",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://helper.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://helper.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 1.16
+    },
+    {
+      "name": "链家邮箱",
+      "url": "https://mail.homelink.com.cn",
+      "source": "navigation",
+      "verdict": "blocked",
+      "anonymous": {
+        "error": "URLError:<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'mail.homelink.com.cn'. (_ssl.c:1000)>",
+        "redirects": []
+      },
+      "authenticated": {
+        "error": "URLError:<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'mail.homelink.com.cn'. (_ssl.c:1000)>",
+        "redirects": []
+      },
+      "elapsed_seconds": 0.29
+    },
+    {
+      "name": "HR系统",
+      "url": "http://home.ehr.lianjia.com",
+      "source": "navigation",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://family.ke.com/myInfo/profile",
+        "title": "贝壳+",
+        "bytes": 2217,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://home.ehr.lianjia.com/shiro-cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://home.ehr.lianjia.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://family.ke.com/myInfo/profile",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 2.16
+    },
+    {
+      "name": "二手自然商机展位",
+      "url": "http://naturaloppty.ke.com",
+      "source": "legacy_navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://naturaloppty.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://naturaloppty.ke.com/",
+        "title": "二手自然商机展位工具",
+        "bytes": 4203,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://naturaloppty.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://naturaloppty.ke.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://naturaloppty.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "bmgr-token"
+        ]
+      },
+      "elapsed_seconds": 1.58
+    },
+    {
+      "name": "消息",
+      "url": "https://xiaoxi.link.lianjia.com",
+      "source": "navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1230,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "MESSAGEJSESSION",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://xiaoxi.link.lianjia.com//trend/index",
+        "title": "链家网-Link-动态",
+        "bytes": 13895,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://xiaoxi.link.lianjia.com/shiro-cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://xiaoxi.link.lianjia.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://xiaoxi.link.lianjia.com//trend/index",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "MESSAGEJSESSION"
+        ]
+      },
+      "elapsed_seconds": 3.32
+    },
+    {
+      "name": "金贝展位推广平台",
+      "url": "http://brand.ke.com",
+      "source": "legacy_navigation",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1230,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://brand.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://brand.ke.com/",
+        "title": "金贝平台",
+        "bytes": 27018,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://brand.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://brand.ke.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://brand.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://brand.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID"
+        ]
+      },
+      "elapsed_seconds": 1.98
+    },
+    {
+      "name": "展位管理后台",
+      "url": "http://liulian.ke.com",
+      "source": "legacy_navigation",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "SESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://liulian.ke.com/static/buy/commentExpo",
+        "title": "留链-展位报买",
+        "bytes": 1577,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://liulian.ke.com/cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://liulian.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://liulian.ke.com/static/buy/commentExpo",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "SESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 2.27
+    },
+    {
+      "name": "图灵",
+      "url": "https://databoard.lianjia.com",
+      "source": "legacy_navigation",
+      "verdict": "blocked",
+      "anonymous": {
+        "error": "URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1000)>",
+        "redirects": []
+      },
+      "authenticated": {
+        "error": "URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1000)>",
+        "redirects": []
+      },
+      "elapsed_seconds": 0.39
+    },
+    {
+      "name": "店面管理系统",
+      "url": "http://sm.lianjia.com",
+      "source": "legacy_navigation",
+      "verdict": "login_required",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1230,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 302,
+        "final": "http://sm.lianjia.com/login",
+        "title": "",
+        "bytes": 0,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://sm.lianjia.com/shiro-cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://sm.lianjia.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://sm.lianjia.com/shiro-cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://sm.lianjia.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "JSESSIONID",
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 2.27
+    },
+    {
+      "name": "普通租赁",
+      "url": "https://lease-pz.link.lianjia.com/rent/house/list",
+      "source": "project_docs_or_client",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://lease-pz.link.lianjia.com/rent/house/list",
+        "title": "",
+        "bytes": 7325,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://lease-pz.link.lianjia.com/rent/house/list",
+        "title": "",
+        "bytes": 7617,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_trusteeship_token"
+        ]
+      },
+      "elapsed_seconds": 0.93
+    },
+    {
+      "name": "省心租托管",
+      "url": "https://trusteeship.link.lianjia.com/",
+      "source": "project_docs_or_client",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://trusteeship.link.lianjia.com/",
+        "title": "",
+        "bytes": 3267,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://trusteeship.link.lianjia.com/",
+        "title": "",
+        "bytes": 3141,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_trusteeship_token"
+        ]
+      },
+      "elapsed_seconds": 1.04
+    },
+    {
+      "name": "Moma主站",
+      "url": "https://moma.ke.com/nchat",
+      "source": "project_docs_or_client",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://moma.ke.com/nchat",
+        "title": "MOMA",
+        "bytes": 19107,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://moma.ke.com/nchat",
+        "title": "MOMA",
+        "bytes": 19107,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.53
+    },
+    {
+      "name": "豌豆",
+      "url": "https://wandou.ke.com/chat",
+      "source": "project_docs_or_client",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://wandou.ke.com/chat",
+        "title": "豌豆 PC",
+        "bytes": 1415,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://wandou.ke.com/chat",
+        "title": "豌豆 PC",
+        "bytes": 1415,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.48
+    },
+    {
+      "name": "A+客户端服务",
+      "url": "https://saas.a.ke.com/",
+      "source": "project_docs_or_client",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1274,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "SESSION",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://saas.a.ke.com/",
+        "title": "首页",
+        "bytes": 923,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://saas.a.ke.com/cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://saas.a.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "SESSION"
+        ]
+      },
+      "elapsed_seconds": 1.83
+    },
+    {
+      "name": "IM WebView",
+      "url": "https://aplus-im.ke.com/",
+      "source": "project_docs_or_client",
+      "verdict": "blocked",
+      "anonymous": {
+        "error": "URLError:<urlopen error [Errno -2] Name or service not known>",
+        "redirects": []
+      },
+      "authenticated": {
+        "error": "URLError:<urlopen error [Errno -2] Name or service not known>",
+        "redirects": []
+      },
+      "elapsed_seconds": 0.14
+    },
+    {
+      "name": "Moma文案App",
+      "url": "https://app-moma.ke.com/60758c5d-5f65-47aa-8238-645d8caaffb1/#/",
+      "source": "project_docs_or_client",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://app-moma.ke.com/60758c5d-5f65-47aa-8238-645d8caaffb1/",
+        "title": "视频号/小红书文案生成器 - 贝壳房源AI新媒体文案工具",
+        "bytes": 5476,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://app-moma.ke.com/60758c5d-5f65-47aa-8238-645d8caaffb1/",
+        "title": "视频号/小红书文案生成器 - 贝壳房源AI新媒体文案工具",
+        "bytes": 5476,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 1.39
+    },
+    {
+      "name": "客户端通知中心",
+      "url": "https://kemcc.ke.com/noticeCenter",
+      "source": "project_docs_or_client",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://kemcc.ke.com/noticeCenter",
+        "title": "触达平台",
+        "bytes": 429,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://kemcc.ke.com/noticeCenter",
+        "title": "触达平台",
+        "bytes": 429,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.92
+    },
+    {
+      "name": "商铺写字楼",
+      "url": "http://zhenzhu.ke.com",
+      "source": "property_page",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "http://zhenzhu.ke.com",
+        "title": "",
+        "bytes": 1512,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://zhenzhu.ke.com",
+        "title": "",
+        "bytes": 1512,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 0.34
+    },
+    {
+      "name": "新房",
+      "url": "https://link.fang.lianjia.com/map",
+      "source": "property_page",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://link.fang.lianjia.com/map",
+        "title": "",
+        "bytes": 130,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://link.fang.lianjia.com/map",
+        "title": "",
+        "bytes": 130,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.92
+    },
+    {
+      "name": "小区",
+      "url": "https://hestia.lianjia.com/districtList?from=request_from_A_plus_resblock",
+      "source": "property_page",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "http://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "PHPSESSID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://hestia.lianjia.com/districtList",
+        "title": "小区列表",
+        "bytes": 759,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "http://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://hestia.lianjia.com/districtList",
+            "ticket_callback": true
+          }
+        ],
+        "new_auth_cookie_names": [
+          "PHPSESSID",
+          "lianjia_ssid",
+          "loushu_aplus_session"
+        ]
+      },
+      "elapsed_seconds": 1.39
+    },
+    {
+      "name": "HR门户",
+      "url": "https://hr.ke.com",
+      "source": "authenticated_employee_portal",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://hr.ke.com/",
+        "title": "KeHR",
+        "bytes": 1770,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://hr.ke.com/shiro-cas",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://hr.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 1.94
+    },
+    {
+      "name": "培训",
+      "url": "https://elearning.ke.com",
+      "source": "authenticated_employee_portal",
+      "verdict": "protected_page_opened",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://study.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://study.ke.com/",
+        "title": "贝好学",
+        "bytes": 985,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://study.ke.com/",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://study.ke.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://study.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "renovation-token"
+        ]
+      },
+      "elapsed_seconds": 1.68
+    },
+    {
+      "name": "AI门户",
+      "url": "https://letsai.ke.com",
+      "source": "authenticated_employee_portal",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://letsai.ke.com/wp-login.php",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://letsai.ke.com/wp-login.php",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "PHPSESSID",
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://letsai.ke.com/",
+        "title": "Let&#039;s AI | AI门户",
+        "bytes": 180417,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://letsai.ke.com/wp-login.php",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://letsai.ke.com/wp-login.php",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://letsai.ke.com/wp-login.php",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://letsai.ke.com/wp-login.php",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://letsai.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "PHPSESSID"
+        ]
+      },
+      "elapsed_seconds": 3.63
+    },
+    {
+      "name": "绩效",
+      "url": "http://jixiao.ke.com/p/home",
+      "source": "authenticated_employee_portal",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://jixiao.ke.com/p/home",
+        "title": "职能绩效系统",
+        "bytes": 2077,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://jixiao.ke.com/p/home",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://jixiao.ke.com/p/home",
+        "title": "职能绩效系统",
+        "bytes": 2077,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://jixiao.ke.com/p/home",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 1.35
+    },
+    {
+      "name": "考勤",
+      "url": "http://kaoqin.hr.ke.com",
+      "source": "authenticated_employee_portal",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "http://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "http://kaoqin.hr.ke.com/",
+        "title": "考勤SAAS系统",
+        "bytes": 6466,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "http://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "http://kaoqin.hr.ke.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "http://kaoqin.hr.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_kaoqin_login_token",
+          "lianjia_ssid"
+        ]
+      },
+      "elapsed_seconds": 1.82
+    },
+    {
+      "name": "员工文化应用",
+      "url": "https://app-fly.ke.com/4ca0a304-9d83-458e-8355-e4bcc1494196",
+      "source": "authenticated_employee_portal",
+      "verdict": "page_only_unverified",
+      "anonymous": {
+        "status": 200,
+        "final": "https://app-fly.ke.com/4ca0a304-9d83-458e-8355-e4bcc1494196",
+        "title": "贝壳企业文化数字平台",
+        "bytes": 4305,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://app-fly.ke.com/4ca0a304-9d83-458e-8355-e4bcc1494196",
+        "title": "贝壳企业文化数字平台",
+        "bytes": 4305,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 1.46
+    },
+    {
+      "name": "薪酬",
+      "url": "https://xinchou.ke.com",
+      "source": "authenticated_employee_portal",
+      "verdict": "identity_in_page",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.ke.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://xinchou.ke.com/",
+        "title": "薪酬管理系统",
+        "bytes": 9094,
+        "login_page": false,
+        "denied_page": false,
+        "identity_match": true,
+        "cas_callback": true,
+        "redirects": [
+          {
+            "url": "https://login.ke.com/login",
+            "ticket_callback": false
+          },
+          {
+            "url": "https://xinchou.ke.com/login",
+            "ticket_callback": true
+          },
+          {
+            "url": "https://xinchou.ke.com/",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "xinchou_token"
+        ]
+      },
+      "elapsed_seconds": 2.27
+    },
+    {
+      "name": "链家产品门户",
+      "url": "https://lj.lianjia.com/page/home",
+      "source": "navigation_and_observed_CAS_login_domain",
+      "verdict": "login_required",
+      "anonymous": {
+        "status": 200,
+        "final": "https://login.lianjia.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.lianjia.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": [
+          "lianjia_ssid"
+        ]
+      },
+      "authenticated": {
+        "status": 200,
+        "final": "https://login.lianjia.com/login",
+        "title": "登录",
+        "bytes": 1123,
+        "login_page": true,
+        "denied_page": false,
+        "identity_match": false,
+        "cas_callback": false,
+        "redirects": [
+          {
+            "url": "https://login.lianjia.com/login",
+            "ticket_callback": false
+          }
+        ],
+        "new_auth_cookie_names": []
+      },
+      "elapsed_seconds": 0.91
+    }
+  ]
+}

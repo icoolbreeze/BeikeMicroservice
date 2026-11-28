@@ -1,0 +1,392 @@
+[
+  {
+    "host": "notice.ke.com",
+    "name": "任务模块 / 新个人信息模块",
+    "url": "https://notice.ke.com/sasspc/profile",
+    "entry_url": "https://notice.ke.com/sasspc/profile",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "storm.link.lianjia.com",
+    "name": "业绩排名",
+    "url": "https://storm.link.lianjia.com/middle/yeji/index",
+    "entry_url": "https://storm.link.lianjia.com/middle/yeji/index",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "xinfang.a.ke.com",
+    "name": "新房工作台",
+    "url": "https://xinfang.a.ke.com/",
+    "entry_url": "https://xinfang.a.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "yezhu.link.lianjia.com",
+    "name": "业主",
+    "url": "https://yezhu.link.lianjia.com/",
+    "entry_url": "https://yezhu.link.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "oomp.ke.com",
+    "name": "二手自然商机展位",
+    "url": "https://oomp.ke.com/#/naturalOppty/businessopp/focus/overview",
+    "entry_url": "https://oomp.ke.com/#/naturalOppty/businessopp/focus/overview",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "link.lianjia.com",
+    "name": "Link",
+    "url": "https://link.lianjia.com/",
+    "entry_url": "https://link.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "gte.lianjia.com",
+    "name": "北京交易系统",
+    "url": "https://gte.lianjia.com/",
+    "entry_url": "https://gte.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "e-contract.ke.com",
+    "name": "上海合同系统",
+    "url": "https://e-contract.ke.com/contract/list?pageNo=1",
+    "entry_url": "https://e-contract.ke.com/contract/list?pageNo=1",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "deal.fang.lianjia.com",
+    "name": "新房成交管理系统",
+    "url": "https://deal.fang.lianjia.com/",
+    "entry_url": "https://deal.fang.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "pan.fang.lianjia.com",
+    "name": "贝壳新房录盘系统 lupan",
+    "url": "https://pan.fang.lianjia.com/",
+    "entry_url": "https://pan.fang.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "newcms.fang.lianjia.com",
+    "name": "新房内容配置后台 CMS",
+    "url": "http://newcms.fang.lianjia.com/",
+    "entry_url": "http://newcms.fang.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "cms.newhouse-bd.ke.com",
+    "name": "客发工作台",
+    "url": "http://cms.newhouse-bd.ke.com/",
+    "entry_url": "http://cms.newhouse-bd.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "price.lianjia.com",
+    "name": "成交价管理",
+    "url": "https://price.lianjia.com/",
+    "entry_url": "https://price.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "morg.lianjia.com",
+    "name": "银行管理平台",
+    "url": "https://morg.lianjia.com/",
+    "entry_url": "https://morg.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "intcms.jiaoyi.lianjia.com",
+    "name": "交易配置平台",
+    "url": "http://intcms.jiaoyi.lianjia.com/",
+    "entry_url": "http://intcms.jiaoyi.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "user-ntcs.gte.lianjia.com",
+    "name": "郑州交易可视化系统",
+    "url": "https://user-ntcs.gte.lianjia.com/list",
+    "entry_url": "https://user-ntcs.gte.lianjia.com/list",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "xfp.ke.com",
+    "name": "上海新房提佣核算",
+    "url": "https://xfp.ke.com/",
+    "entry_url": "https://xfp.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ishop.lianjia.com",
+    "name": "智慧门店",
+    "url": "https://ishop.lianjia.com/admin/area",
+    "entry_url": "https://ishop.lianjia.com/admin/area",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ke-map.ke.com",
+    "name": "壳慧图",
+    "url": "https://ke-map.ke.com/admin/home",
+    "entry_url": "https://ke-map.ke.com/admin/home",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "lead.ke.com",
+    "name": "口袋楼盘",
+    "url": "https://lead.ke.com/",
+    "entry_url": "https://lead.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "loushu.lianjia.com",
+    "name": "链楼书",
+    "url": "https://loushu.lianjia.com/admin/home?mineTab=history&storyTab=storeHouse",
+    "entry_url": "https://loushu.lianjia.com/admin/home?mineTab=history&storyTab=storeHouse",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "wrule.ke.com",
+    "name": "贝壳规则",
+    "url": "https://wrule.ke.com/#/",
+    "entry_url": "https://wrule.ke.com/#/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "rulemanage.ke.com",
+    "name": "同业经纪人查询",
+    "url": "https://rulemanage.ke.com/#/widget/common/black/list",
+    "entry_url": "https://rulemanage.ke.com/#/widget/common/black/list",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "wi.ke.com",
+    "name": "WI 分",
+    "url": "https://wi.ke.com/",
+    "entry_url": "https://wi.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "b.ke.com",
+    "name": "币平台",
+    "url": "https://b.ke.com/",
+    "entry_url": "https://b.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "biz-data.ke.com",
+    "name": "业务事件平台",
+    "url": "https://biz-data.ke.com/event",
+    "entry_url": "https://biz-data.ke.com/event",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "data.ke.com",
+    "name": "新房业务、每日关注",
+    "url": "https://data.ke.com/",
+    "entry_url": "https://data.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "fast.ke.com",
+    "name": "天眼系统",
+    "url": "http://fast.ke.com/",
+    "entry_url": "http://fast.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "flint.lianjia.com",
+    "name": "火石作业物料",
+    "url": "https://flint.lianjia.com/?from=link_home",
+    "entry_url": "https://flint.lianjia.com/?from=link_home",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "haoma.lianjia.com",
+    "name": "免打扰电话查询",
+    "url": "https://haoma.lianjia.com/",
+    "entry_url": "https://haoma.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "heimingdan.lianjia.com",
+    "name": "黑名单",
+    "url": "http://heimingdan.lianjia.com/",
+    "entry_url": "http://heimingdan.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "hx.ke.com",
+    "name": "红星运营平台",
+    "url": "http://hx.ke.com/",
+    "entry_url": "http://hx.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "limu.ke.com",
+    "name": "立木",
+    "url": "https://limu.ke.com/",
+    "entry_url": "https://limu.ke.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "lingjing.ke.com",
+    "name": "立木 / lingjing",
+    "url": "https://lingjing.ke.com/recommend",
+    "entry_url": "https://lingjing.ke.com/recommend",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "ncrm.lianjia.com",
+    "name": "小贝知道",
+    "url": "http://ncrm.lianjia.com/crm#/handbook",
+    "entry_url": "http://ncrm.lianjia.com/crm#/handbook",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "pref.merlin.lianjia.com",
+    "name": "Merlin 数据",
+    "url": "http://pref.merlin.lianjia.com/",
+    "entry_url": "http://pref.merlin.lianjia.com/",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "content.lianjia.com",
+    "name": "便民服务",
+    "url": "https://content.lianjia.com/service/order/print",
+    "entry_url": "https://content.lianjia.com/service/order/print",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "cms-tv.ke.com",
+    "name": "大屏二手房源/新房视频轮播",
+    "url": "https://cms-tv.ke.com/carousel/new",
+    "entry_url": "https://cms-tv.ke.com/carousel/new",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  },
+  {
+    "host": "mobile.lianjia.com",
+    "name": "LINK-APP",
+    "url": "https://mobile.lianjia.com/#/detail/link_secondhand",
+    "entry_url": "https://mobile.lianjia.com/#/detail/link_secondhand",
+    "priority": "P0",
+    "category": "p0_core_business",
+    "batch": "2B-P0",
+    "auth_hint": "cas_cookie"
+  }
+]

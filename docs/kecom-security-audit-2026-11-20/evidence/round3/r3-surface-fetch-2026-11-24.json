@@ -1,0 +1,327 @@
+{
+  "meta": {
+    "evidence_file": "r3-surface-fetch-2026-11-24.json",
+    "module": "round3-surface",
+    "viewpoint": "office-workstation (viewpoint B; round3 checklist verification, anonymous plane)",
+    "redaction": "shapes/hashes/headers only; JWT raw values never emitted",
+    "request_total": 10,
+    "retry_policy": "single attempt"
+  },
+  "findings": {
+    "ship_shell": {
+      "http": 200,
+      "asset_count": 14,
+      "assets": [
+        "/",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/css/index-D3ekSvGn.css",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/css/moma-SEed43X0.css",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/favicon.svg",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/index-sC9Sp2aO.js",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-Ba78WQDh.js",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-supabase-Di5YY3Tf.js",
+        "//s1.ljcdn.com/security/ai-security-sdk.umd.js?v=20261009",
+        "https://fonts.googleapis.com",
+        "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@400;500;600&family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;600;700;900&family=ZCOOL+KuaiLe&family=Long+Cang&family=Liu+Jian+Mao+Cao&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&display=swap",
+        "https://fonts.gstatic.com",
+        "https://s1.ljcdn.com/moma/dig-tracker.min.a19db921.js",
+        "https://s1.ljcdn.com/moma/moma-sdk-prod.min.9020871f.js",
+        "https://s1.ljcdn.com/risk-control/static/keRiskControl.js"
+      ],
+      "uuids": [
+        "00326262-b56e-484d-a3c7-25fbc5428171",
+        "19e70a9a-28fe-46ca-af62-89f1ef423206",
+        "5610092c-9d28-4bbf-87e3-3c64ce4c9172"
+      ],
+      "security_headers": {}
+    },
+    "ship_bundles": [
+      {
+        "asset": "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/index-sC9Sp2aO.js",
+        "saved_as": "ship-index-sC9Sp2aO.js",
+        "http": 200,
+        "body_len": 223859,
+        "sha256_16": "b29e9ee32d838283",
+        "uuids": [
+          "0ee83f4a-9280-41ac-8a79-033f3f7d27d6",
+          "5610092c-9d28-4bbf-87e3-3c64ce4c9172",
+          "6af06116-939a-4d84-a04e-188617d9fd98"
+        ],
+        "jwt_shapes": [
+          {
+            "alg": "HS256",
+            "typ": "JWT",
+            "claims_keys": [
+              "exp",
+              "iss",
+              "role"
+            ],
+            "iss": "supabase-platform",
+            "role": "anon",
+            "exp": 3679711776,
+            "token_sha256_16": "01a2ebbbc4f486e8",
+            "token_len": 159
+          }
+        ]
+      },
+      {
+        "asset": "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-Ba78WQDh.js",
+        "saved_as": "ship-moma-Ba78WQDh.js",
+        "http": 200,
+        "body_len": 2409847,
+        "sha256_16": "7c922c35d1d47b1d",
+        "uuids": [
+          "10000000-1000-4000-8000-100000000000",
+          "5610092c-9d28-4bbf-87e3-3c64ce4c9172"
+        ],
+        "jwt_shapes": []
+      },
+      {
+        "asset": "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-supabase-Di5YY3Tf.js",
+        "saved_as": "ship-moma-supabase-Di5YY3Tf.js",
+        "http": 200,
+        "body_len": 208819,
+        "sha256_16": "6b00dcf8f171d2bb",
+        "uuids": [],
+        "jwt_shapes": []
+      },
+      {
+        "asset": "//s1.ljcdn.com/security/ai-security-sdk.umd.js?v=20261009",
+        "saved_as": "ship-ai-security-sdk.umd.js",
+        "http": 200,
+        "body_len": 8936,
+        "sha256_16": "7039a60c0f4e7aa4",
+        "uuids": [],
+        "jwt_shapes": []
+      },
+      {
+        "asset": "https://s1.ljcdn.com/moma/dig-tracker.min.a19db921.js",
+        "saved_as": "ship-dig-tracker.min.a19db921.js",
+        "http": 200,
+        "body_len": 28429,
+        "sha256_16": "b7647b9e227ca551",
+        "uuids": [],
+        "jwt_shapes": []
+      },
+      {
+        "asset": "https://s1.ljcdn.com/moma/moma-sdk-prod.min.9020871f.js",
+        "saved_as": "ship-moma-sdk-prod.min.9020871f.js",
+        "http": 200,
+        "body_len": 19005,
+        "sha256_16": "aade78a4f48e68cf",
+        "uuids": [],
+        "jwt_shapes": []
+      },
+      {
+        "asset": "https://s1.ljcdn.com/risk-control/static/keRiskControl.js",
+        "saved_as": "ship-keRiskControl.js",
+        "http": 200,
+        "body_len": 313721,
+        "sha256_16": "040c64315cd8248a",
+        "uuids": [],
+        "jwt_shapes": []
+      }
+    ],
+    "expert_shell": {
+      "http": 200,
+      "body_len": 19588,
+      "asset_refs": [
+        "//fonts.googleapis.com",
+        "//fonts.gstatic.com",
+        "//s1.ljcdn.com/risk-control/static/keRiskControl.js",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+        "https://s1.ljcdn.com/moma/assets/OpenApiConcurrencyManagement-a4XLZsqW.js",
+        "https://s1.ljcdn.com/moma/assets/axios-vendor-B8014vQR.js",
+        "https://s1.ljcdn.com/moma/assets/commonjs-dynamic-ClruNlLf.js",
+        "https://s1.ljcdn.com/moma/assets/commonjs-helper-B4P45HeR.js",
+        "https://s1.ljcdn.com/moma/assets/element-plus-11sMN31R.js",
+        "https://s1.ljcdn.com/moma/assets/element-plus-BM2W2Zee.css",
+        "https://s1.ljcdn.com/moma/assets/helpers-D1OaW2dA.js",
+        "https://s1.ljcdn.com/moma/assets/i18n-vendor-DBsqsNUO.js",
+        "https://s1.ljcdn.com/moma/assets/index-Cb136QvW.js",
+        "https://s1.ljcdn.com/moma/assets/international-BP8FOMRr.js",
+        "https://s1.ljcdn.com/moma/assets/logo-pf9hnvMc.svg",
+        "https://s1.ljcdn.com/moma/assets/main-D-ORC4OS.js",
+        "https://s1.ljcdn.com/moma/assets/main-IBKaCmTH.css",
+        "https://s1.ljcdn.com/moma/assets/markdown-vendor-DJLqHGrL.js",
+        "https://s1.ljcdn.com/moma/assets/polyfills-CLpgIgD-.js",
+        "https://s1.ljcdn.com/moma/assets/preload-helper-C4JOxk5g.js",
+        "https://s1.ljcdn.com/moma/assets/search-chunk-order-BtiTOFtr.js",
+        "https://s1.ljcdn.com/moma/assets/ui-vendor-BHpaZB-6.js",
+        "https://s1.ljcdn.com/moma/assets/ui-vendor-DXvNY44o.css",
+        "https://s1.ljcdn.com/moma/assets/vendor-CCR3FHiZ.js",
+        "https://s1.ljcdn.com/moma/assets/vendor-eEolduWm.css",
+        "https://s1.ljcdn.com/moma/assets/vue-vendor-DHQqz561.js"
+      ],
+      "security_headers": {
+        "Set-Cookie": "lianjia_ssid=<COOKIE_LEN_36_SHA16_2d08a91e85b4bec8>; expires=Tue, 24-Nov-26 08:54:39 GMT; Max-Age=1800; domain=.ke.com; path=/"
+      },
+      "contains_inline_state_marker": true
+    },
+    "app_moma_root_headers": {
+      "http": 200,
+      "security_headers": {
+        "Vary": "Accept-Encoding",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+      }
+    }
+  },
+  "request_ledger": [
+    {
+      "item": "SURF-shipinshengcheng-shell",
+      "http": 200,
+      "url": {
+        "host": "app-moma.ke.com",
+        "path": "/shipinshengcheng"
+      },
+      "body_len": 5407,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html; charset=utf-8",
+        "vary": "Accept-Encoding",
+        "access-control-allow-headers": "X-Requested-With, Content-Type, Origin, Allow",
+        "access-control-allow-methods": "GET, HEAD, POST, PUT, OPTIONS",
+        "cache-control": "public, max-age=2592000",
+        "x-cache": "HIT from i2442205_c27865(cloudsvr)",
+        "access-control-allow-origin": "*"
+      },
+      "asset_refs": [
+        "/",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/css/index-D3ekSvGn.css",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/css/moma-SEed43X0.css",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/favicon.svg",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/index-sC9Sp2aO.js",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-Ba78WQDh.js",
+        "//file.ljcdn.com/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-supabase-Di5YY3Tf.js",
+        "//s1.ljcdn.com/security/ai-security-sdk.umd.js?v=20261009",
+        "https://fonts.googleapis.com",
+        "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@400;500;600&family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@600;700;900&family=Noto+Sans+SC:wght@400;500;600;700;900&family=ZCOOL+KuaiLe&family=Long+Cang&family=Liu+Jian+Mao+Cao&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&display=swap",
+        "https://fonts.gstatic.com",
+        "https://s1.ljcdn.com/moma/dig-tracker.min.a19db921.js",
+        "https://s1.ljcdn.com/moma/moma-sdk-prod.min.9020871f.js",
+        "https://s1.ljcdn.com/risk-control/static/keRiskControl.js"
+      ],
+      "uuids_in_html": [
+        "00326262-b56e-484d-a3c7-25fbc5428171",
+        "19e70a9a-28fe-46ca-af62-89f1ef423206",
+        "5610092c-9d28-4bbf-87e3-3c64ce4c9172"
+      ]
+    },
+    {
+      "item": "SURF-ship-js-ship-index-sC9Sp2aO.js",
+      "http": 200,
+      "url": {
+        "host": "file.ljcdn.com",
+        "path": "/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/index-sC9Sp2aO.js"
+      },
+      "body_len": 223859,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-ship-js-ship-moma-Ba78WQDh.js",
+      "http": 200,
+      "url": {
+        "host": "file.ljcdn.com",
+        "path": "/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-Ba78WQDh.js"
+      },
+      "body_len": 2409847,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-ship-js-ship-moma-supabase-Di5YY3Tf.js",
+      "http": 200,
+      "url": {
+        "host": "file.ljcdn.com",
+        "path": "/moma-img/app-5610092c-9d28-4bbf-87e3-3c64ce4c9172-7546672/js/moma-supabase-Di5YY3Tf.js"
+      },
+      "body_len": 208819,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-ship-js-ship-ai-security-sdk.umd.js",
+      "http": 200,
+      "url": {
+        "host": "s1.ljcdn.com",
+        "path": "/security/ai-security-sdk.umd.js"
+      },
+      "body_len": 8936,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-ship-js-ship-dig-tracker.min.a19db921.js",
+      "http": 200,
+      "url": {
+        "host": "s1.ljcdn.com",
+        "path": "/moma/dig-tracker.min.a19db921.js"
+      },
+      "body_len": 28429,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-ship-js-ship-moma-sdk-prod.min.9020871f.js",
+      "http": 200,
+      "url": {
+        "host": "s1.ljcdn.com",
+        "path": "/moma/moma-sdk-prod.min.9020871f.js"
+      },
+      "body_len": 19005,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-ship-js-ship-keRiskControl.js",
+      "http": 200,
+      "url": {
+        "host": "s1.ljcdn.com",
+        "path": "/risk-control/static/keRiskControl.js"
+      },
+      "body_len": 313721,
+      "response_headers": {
+        "content-type": "application/javascript"
+      }
+    },
+    {
+      "item": "SURF-expert-shell",
+      "http": 200,
+      "url": {
+        "host": "moma.ke.com",
+        "path": "/expert/<uuid>"
+      },
+      "body_len": 19588,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": "19588",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+      }
+    },
+    {
+      "item": "SURF-app-moma-root",
+      "http": 200,
+      "url": {
+        "host": "app-moma.ke.com",
+        "path": "/"
+      },
+      "body_len": 19588,
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": "19588",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "date": "2026-11-20",
+  "mode": "credential_injection_read_only",
+  "inventory": {
+    "cred_bin_path": "C:\\Users\\shipi\\vswp\\BeikeMicroservice\\.workbuddy\\crm_smoke\\cred.bin",
+    "dpapi_decrypt": {
+      "error": "error: (-2146893813, 'CryptUnprotectData', 'Key not valid for use in specified state.')"
+    },
+    "plaintext_state_cookie_names": [
+      "HOUSEJSESSIONID",
+      "Lianjia_BUcid",
+      "Lianjia_curWorkCity",
+      "Lianjia_u_info",
+      "MESSAGEJSESSION",
+      "TGC",
+      "TGC_Secure",
+      "UCID",
+      "UCID_secure",
+      "csrfSecret",
+      "digData",
+      "lianjia_ssid",
+      "lianjia_trusteeship_token",
+      "lianjia_trusteeship_token_secure",
+      "lianjia_uuid",
+      "login_ucid",
+      "puzu_lease_token",
+      "puzu_lease_token_secure",
+      "saas_token",
+      "sajssdk_2015_cross_new_user",
+      "security_ticket",
+      "sensorsdata2015jssdkcross",
+      "trusteeship-front-state"
+    ],
+    "puzu_lease_token": {
+      "present": true,
+      "len": 44,
+      "prefix2": "2."
+    },
+    "TGC": {
+      "present": true,
+      "len": 85,
+      "prefix2": "TG"
+    },
+    "security_ticket": {
+      "present": true,
+      "len": 172,
+      "prefix2": "XJ"
+    },
+    "login_ucid": {
+      "present": true,
+      "len": 16,
+      "prefix2": "10"
+    }
+  },
+  "wandou": {
+    "negative_no_token": {
+      "http": 302,
+      "body": {
+        "_non_json": ""
+      }
+    },
+    "negative_garbage_token": {
+      "http": 401,
+      "body": {
+        "code": "U001",
+        "message": "未登录或登录已失效",
+        "requestId": "93af258f-aa85-4bc2-84cf-63c9a080075e",
+        "success": false,
+        "timestamp": 1795230045392
+      }
+    },
+    "injection_users_me": {
+      "http": 401,
+      "success": false,
+      "code": "U001",
+      "data_fields": [],
+      "ucid_matches_local": false
+    },
+    "injection_customers_search": {
+      "http": 401,
+      "code": "U001",
+      "row_count": 0,
+      "row_fields": []
+    },
+    "audience_moma_with_puzu": {
+      "http": 200,
+      "body": {
+        "errno": 401,
+        "errmsg": "未登录或登录已过期",
+        "data": null
+      }
+    }
+  },
+  "cas": {
+    "tgc_cas_probe": {
+      "http": 200,
+      "redirects_to_ticket": false,
+      "redirects_to_login": false,
+      "location_host": ""
+    }
+  }
+}

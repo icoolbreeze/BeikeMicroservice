@@ -1,0 +1,176 @@
+{
+ "material": {
+  "HOUSEJSESSIONID": {
+   "len": 36,
+   "prefix": "1b",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 14,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": true
+  },
+  "csrfSecret": {
+   "len": 24,
+   "prefix": "JF",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 18,
+   "charset_classes": [
+    "lower",
+    "other",
+    "upper"
+   ],
+   "within_base64_alphabet": true
+  },
+  "lianjia_ssid": {
+   "len": 36,
+   "prefix": "09",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": true
+  },
+  "lianjia_trusteeship_token": {
+   "len": 44,
+   "prefix": "2.",
+   "dot_segments": 2,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": false
+  },
+  "lianjia_trusteeship_token_secure": {
+   "len": 44,
+   "prefix": "2.",
+   "dot_segments": 2,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": false
+  },
+  "lianjia_uuid": {
+   "len": 36,
+   "prefix": "49",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": true
+  },
+  "puzu_lease_token": {
+   "len": 44,
+   "prefix": "2.",
+   "dot_segments": 2,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": false
+  },
+  "puzu_lease_token_secure": {
+   "len": 44,
+   "prefix": "2.",
+   "dot_segments": 2,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": false
+  },
+  "saas_token": {
+   "len": 32,
+   "prefix": "32",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 14,
+   "charset_classes": [
+    "digit",
+    "lower"
+   ],
+   "within_base64_alphabet": true
+  }
+ },
+ "refresh": {
+  "TGC": {
+   "len": 86,
+   "prefix": "TG",
+   "dot_segments": 2,
+   "jwt_shaped": false,
+   "charset_size": 45,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other",
+    "upper"
+   ],
+   "within_base64_alphabet": false
+  },
+  "TGC_Secure": {
+   "len": 86,
+   "prefix": "TG",
+   "dot_segments": 2,
+   "jwt_shaped": false,
+   "charset_size": 45,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other",
+    "upper"
+   ],
+   "within_base64_alphabet": false
+  },
+  "lianjia_ssid": {
+   "len": 36,
+   "prefix": "09",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": true
+  },
+  "lianjia_uuid": {
+   "len": 36,
+   "prefix": "49",
+   "dot_segments": 1,
+   "jwt_shaped": false,
+   "charset_size": 15,
+   "charset_classes": [
+    "digit",
+    "lower",
+    "other"
+   ],
+   "within_base64_alphabet": true
+  }
+ }
+}

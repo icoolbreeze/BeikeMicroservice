@@ -1,0 +1,128 @@
+{
+  "mode": "v22_limited_sampling_aggregates_only",
+  "scope": {
+    "pages": [
+      1,
+      50,
+      100
+    ],
+    "page_size": 100,
+    "query": "a",
+    "max_records": 300
+  },
+  "totalCount_reported_by_api": 1342754,
+  "http_status_seen": {
+    "200": 3
+  },
+  "page_reports": [
+    {
+      "page": 1,
+      "http": 200,
+      "errno": 0,
+      "returned": 100,
+      "elapsed_s": 0.411
+    },
+    {
+      "page": 50,
+      "http": 200,
+      "errno": 0,
+      "returned": 100,
+      "elapsed_s": 0.414
+    },
+    {
+      "page": 100,
+      "http": 200,
+      "errno": 0,
+      "returned": 100,
+      "elapsed_s": 0.419
+    }
+  ],
+  "rows_examined": 300,
+  "unique_ucid_count_in_sample": 101,
+  "duplicate_rows_in_sample": 199,
+  "field_fill": {
+    "mobile": {
+      "present": 300,
+      "populated": 82,
+      "populated_rate": 0.2733
+    },
+    "email": {
+      "present": 300,
+      "populated": 0,
+      "populated_rate": 0.0
+    },
+    "idCard": {
+      "present": 300,
+      "populated": 0,
+      "populated_rate": 0.0
+    },
+    "birthday": {
+      "present": 300,
+      "populated": 297,
+      "populated_rate": 0.99
+    },
+    "officeAddress": {
+      "present": 300,
+      "populated": 300,
+      "populated_rate": 1.0
+    },
+    "superior": {
+      "present": 300,
+      "populated": 223,
+      "populated_rate": 0.7433
+    },
+    "account": {
+      "present": 300,
+      "populated": 297,
+      "populated_rate": 0.99
+    },
+    "homePhone": {
+      "present": 300,
+      "populated": 0,
+      "populated_rate": 0.0
+    },
+    "compPhone": {
+      "present": 300,
+      "populated": 0,
+      "populated_rate": 0.0
+    },
+    "userName": {
+      "present": 300,
+      "populated": 300,
+      "populated_rate": 1.0
+    },
+    "orgName": {
+      "present": 300,
+      "populated": 300,
+      "populated_rate": 1.0
+    },
+    "ucPositionName": {
+      "present": 300,
+      "populated": 226,
+      "populated_rate": 0.7533
+    },
+    "locationName": {
+      "present": 300,
+      "populated": 300,
+      "populated_rate": 1.0
+    }
+  },
+  "mobile": {
+    "populated": 82,
+    "populated_rate": 0.2733,
+    "length_distribution": {
+      "11": 82
+    },
+    "11_digit_count": 82,
+    "11_digit_share_of_populated": 1.0,
+    "distinct_3char_prefix_count": 18
+  },
+  "timing_s": {
+    "min": 0.411,
+    "max": 0.419,
+    "avg": 0.415
+  },
+  "extrapolation_note": "totalCount ä¸º query=a çš„ç›®å½•æ€»é‡ï¼›å¤–æŽ¨ = totalCount Ã— æ ·æœ¬å¡«å……çŽ‡ï¼Œä»…é‡çº§ä¼°ç®—",
+  "estimated_mobile_if_rate_holds": 366974,
+  "redaction": "no raw mobile/name/ucid/email/address values retained or printed"
+}

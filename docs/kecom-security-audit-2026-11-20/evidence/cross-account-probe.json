@@ -1,0 +1,66 @@
+{
+  "mode": "cross_account_identity_read_only",
+  "self_ucid": "1000000031696069",
+  "peer_ucid": "1000000030334960",
+  "peer_code": "30334960",
+  "T1_anon_with_peer_ucid_param": {
+    "http": 200,
+    "body": {
+      "_non_json_len": 1396,
+      "_prefix": "<!DOCTYPE html>\n<html>\n<head>\n    <title>Application Not Authorized to Use CAS -"
+    }
+  },
+  "T2_anon_forged_ucid_cookie": {
+    "http": 200,
+    "body": {
+      "_non_json_len": 1396,
+      "_prefix": "<!DOCTYPE html>\n<html>\n<head>\n    <title>Application Not Authorized to Use CAS -"
+    }
+  },
+  "T3_my_token_peer_managerUcId": {
+    "http": 502,
+    "body": {
+      "_non_json_len": 3006,
+      "_prefix": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta nam"
+    }
+  },
+  "T4_my_token_self_managerUcId": {
+    "http": 502,
+    "body": {
+      "_non_json_len": 3006,
+      "_prefix": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta nam"
+    }
+  },
+  "T5_customers_inject_peer_ucid": {
+    "baseline_total": 1,
+    "injected_total": 1,
+    "injected_http": 200,
+    "injected_code": "0",
+    "same_total": true
+  },
+  "T6_functionSwitch_peer": {
+    "http": 200,
+    "envelope": {
+      "code": 100000,
+      "msg": "加载成功",
+      "data_type": "bool",
+      "data_keys": null,
+      "data_len": null
+    }
+  },
+  "T6_functionSwitch_self": {
+    "http": 200,
+    "envelope": {
+      "code": 100000,
+      "msg": "加载成功",
+      "data_type": "bool",
+      "data_keys": null,
+      "data_len": null
+    }
+  },
+  "T7_crm_header_identity": {
+    "http": 200,
+    "code": 100001,
+    "data_keys": []
+  }
+}

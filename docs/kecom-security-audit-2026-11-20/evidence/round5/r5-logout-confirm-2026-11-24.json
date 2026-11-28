@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "evidence_file": "r5-logout-confirm-2026-11-24.json",
+    "module": "round5 T23 post-logout read-only state confirmation (no further logout)",
+    "generated_at_utc": "2026-11-24T15:17:19+00:00",
+    "viewpoint": "beike-server (viewpoint A)",
+    "redaction": "status/redirect-target/header-names/length only; no token value; read-only",
+    "limitation": "post-logout single snapshot; endpoints without a valid pre-logout same-path positive control are inconclusive"
+  },
+  "request_ledger": [
+    {
+      "label": "T23-confirm-tgc-exchange",
+      "url_path": "/login",
+      "http": 200,
+      "body_len": 1127,
+      "location_host": "",
+      "location_path": "",
+      "location_full_redacted": "",
+      "set_cookie_names": [
+        "CASPRIVACY",
+        "JSESSIONID",
+        "TGC",
+        "TGC_Secure",
+        "lianjia_ssid",
+        "lianjia_token",
+        "lianjia_token_secure",
+        "lianjia_uuid",
+        "login_ucid",
+        "security_ticket"
+      ],
+      "content_type": "text/html;charset=UTF-8",
+      "is_cas_login_redirect": false
+    },
+    {
+      "label": "T23-confirm-saas-root",
+      "url_path": "/",
+      "http": 302,
+      "body_len": 0,
+      "location_host": "login.ke.com",
+      "location_path": "/login",
+      "location_full_redacted": "login.ke.com/login",
+      "set_cookie_names": [
+        "HOUSEJSESSIONID",
+        "lianjia_ssid",
+        "lianjia_uuid"
+      ],
+      "content_type": "",
+      "is_cas_login_redirect": true
+    },
+    {
+      "label": "T23-confirm-saas-shiro",
+      "url_path": "/shiro-cas",
+      "http": 302,
+      "body_len": 0,
+      "location_host": "house.link.lianjia.com",
+      "location_path": "/error/500",
+      "location_full_redacted": "house.link.lianjia.com/error/500",
+      "set_cookie_names": [
+        "lianjia_ssid",
+        "rememberMe"
+      ],
+      "content_type": "",
+      "is_cas_login_redirect": false
+    },
+    {
+      "label": "T23-confirm-trust-with-cookie",
+      "url_path": "/house/detail/",
+      "http": 200,
+      "body_len": 2048,
+      "location_host": "",
+      "location_path": "",
+      "location_full_redacted": "",
+      "set_cookie_names": [
+        "csrfSecret",
+        "lianjia_ssid",
+        "lianjia_trusteeship_token",
+        "lianjia_trusteeship_token_secure",
+        "lianjia_uuid"
+      ],
+      "content_type": "text/html; charset=utf-8",
+      "is_cas_login_redirect": false
+    },
+    {
+      "label": "T23-confirm-trust-anonymous",
+      "url_path": "/house/detail/",
+      "http": 200,
+      "body_len": 2048,
+      "location_host": "",
+      "location_path": "",
+      "location_full_redacted": "",
+      "set_cookie_names": [
+        "csrfSecret",
+        "lianjia_ssid",
+        "lianjia_trusteeship_token",
+        "lianjia_trusteeship_token_secure",
+        "lianjia_uuid"
+      ],
+      "content_type": "text/html; charset=utf-8",
+      "is_cas_login_redirect": false
+    }
+  ]
+}

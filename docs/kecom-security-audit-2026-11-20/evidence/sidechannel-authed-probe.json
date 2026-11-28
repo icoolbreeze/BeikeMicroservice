@@ -1,0 +1,122 @@
+{
+ "staging_openapi": {
+  "error": "JSONDecodeError",
+  "len": 262144
+ },
+ "staging_post_auth_gate": {},
+ "connector_status": {
+  "http": 200,
+  "body": {
+   "state": "ready",
+   "message": "CRM authorization is ready",
+   "bound_employee_principal": null,
+   "mcp_transport": "stdio",
+   "checked_at": "2026-11-23T05:31:08.417807Z",
+   "credential_expires_at": "2026-11-23T06:17:41.937995Z"
+  }
+ },
+ "cas_service_whitelist": {
+  "control_lease": {
+   "http": 302,
+   "mints_st": true,
+   "loc_host": "lease-pz.link.lianjia.com",
+   "loc_is_login_page": false
+  },
+  "moma_backend": {
+   "http": 302,
+   "mints_st": true,
+   "loc_host": "prd-assistant-backend.ke.com",
+   "loc_is_login_page": false
+  },
+  "wandou_origin": {
+   "http": 200,
+   "mints_st": false,
+   "loc_host": "",
+   "loc_is_login_page": false
+  },
+  "arbitrary_example_com": {
+   "http": 200,
+   "mints_st": false,
+   "loc_host": "",
+   "loc_is_login_page": false
+  },
+  "staging_backend": {
+   "http": 200,
+   "mints_st": false,
+   "loc_host": "",
+   "loc_is_login_page": false
+  },
+  "app_moma_app": {
+   "http": 200,
+   "mints_st": false,
+   "loc_host": "",
+   "loc_is_login_page": false
+  },
+  "http_scheme_target": {
+   "http": 302,
+   "mints_st": true,
+   "loc_host": "house.link.lianjia.com",
+   "loc_is_login_page": false
+  }
+ },
+ "gotourl_open_redirect": {
+  "plain_https": {
+   "chain": [
+    "://CASâ†’https://lease-pz.link.lianjia.com/login?gotoURL,ticket",
+    "https://lease-pz.link.lianjia.com/login?gotoURL,ticket [200]"
+   ],
+   "final_host": "lease-pz.link.lianjia.com",
+   "open_redirect": false
+  },
+  "protocol_relative": {
+   "chain": [
+    "://CASâ†’https://lease-pz.link.lianjia.com/login?gotoURL,ticket",
+    "https://lease-pz.link.lianjia.com/login?gotoURL,ticket [200]"
+   ],
+   "final_host": "lease-pz.link.lianjia.com",
+   "open_redirect": false
+  },
+  "double_encoded": {
+   "chain": [
+    "://CASâ†’https://lease-pz.link.lianjia.com/login?gotoURL,ticket",
+    "https://lease-pz.link.lianjia.com/login?gotoURL,ticket [200]"
+   ],
+   "final_host": "lease-pz.link.lianjia.com",
+   "open_redirect": false
+  }
+ },
+ "moma_cookie_attrs": {
+  "lianjia_ssid": [
+   "expires=Mon, 23-Nov-26 06:01:13 GMT"
+  ]
+ },
+ "moma_login_redirect_param": {
+  "http": 200,
+  "location_shape": "",
+  "redirects_out": false
+ },
+ "puzu_audience_fanout": {
+  "https://smart-mo.ke.com": {
+   "http": 200,
+   "non_json_len": 1209
+  },
+  "https://moma-data.ke.com": {
+   "http": null,
+   "non_json_len": 8
+  },
+  "https://bms.lease.ke.com": {
+   "http": 200,
+   "errno": 100001,
+   "data_null": true
+  },
+  "https://t.lianjia.com": {
+   "http": 404,
+   "non_json_len": 34804
+  }
+ },
+ "moma_session_to_staging": {
+  "http": 200,
+  "errno": 401,
+  "data_type": "NoneType"
+ }
+}

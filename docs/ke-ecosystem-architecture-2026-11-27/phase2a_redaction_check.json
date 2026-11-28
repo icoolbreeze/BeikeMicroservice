@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "scanned_files": [
+    "phase1_diff.md",
+    "phase1_discovery.json",
+    "PHASE2_SPEC.md",
+    "phase2a_handoff_to_2b.json",
+    "phase2a_summary.md",
+    "phase2a_targets.json",
+    "site_profiles_2a.jsonl",
+    "TASK_SPEC.md"
+  ],
+  "scanned_file_count": 8,
+  "findings": []
+}

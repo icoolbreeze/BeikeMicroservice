@@ -1,0 +1,357 @@
+{
+  "meta": {
+    "evidence_file": "round2-session-2026-11-23-logout.json",
+    "module": "M1-M5-session-logout",
+    "generated_at_utc": "2026-11-24T05:29:10+00:00",
+    "viewpoint": "beike-server (viewpoint A; single authorized account, session plane)",
+    "redaction": "status/business-code/field-names/lengths/sha256/header-attributes only; no token, cookie, apikey, signature, PII or business raw value",
+    "request_total": 7,
+    "retry_policy": "single attempt per item unless explicitly stated"
+  },
+  "request_ledger": [
+    {
+      "item": "M2-moma-userinfo-pre-logout",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.253,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "540",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 540,
+      "body_sha256": "341ef4107e6ff0b9272988312d8ed2ddc00137438ee6cc811b998fc13a5854d9",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 0,
+      "text_errmsg": "获取用户信息成功",
+      "data_shape": {
+        "user_info": {
+          "name": "str",
+          "nickName": "str",
+          "account": "str",
+          "agentSequenceType": "int",
+          "email": "str",
+          "usercode": "str",
+          "avatar": "str",
+          "ucid": "int",
+          "secondJobSeqName": "str",
+          "orgName": "str",
+          "orgCode": "str",
+          "location": "str",
+          "locationName": "str",
+          "sudo_active": "bool",
+          "real_ucid": "NoneType"
+        },
+        "is_authenticated": "bool",
+        "invite_code": "str",
+        "broker_assistant_shell_only": "bool"
+      }
+    },
+    {
+      "item": "M2-wandou-me-pre-logout",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v1/users/me",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.236,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "x-frame-options": "SAMEORIGIN"
+      },
+      "body_len": 322,
+      "body_sha256": "299fe5667e1b976855b3481cf62e806a761c23e15c939b19b366efffab7a571f",
+      "json": true,
+      "top_keys": [
+        "code",
+        "data",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "0",
+      "biz_success": true,
+      "text_message": "成功",
+      "data_shape": {
+        "ucid": "str",
+        "userCode": "str",
+        "name": "str",
+        "cityCode": "str",
+        "cityName": "str",
+        "positionCode": "str",
+        "positionName": "str",
+        "positionType": "NoneType"
+      }
+    },
+    {
+      "item": "M2-tgc-exchange-pre-logout",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/login",
+        "query_param_names": [
+          "service"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "service",
+            "len": 53,
+            "sha256_16": "9202a9d919c55469"
+          }
+        ]
+      },
+      "http": 302,
+      "elapsed_s": 0.268,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-length": "0",
+        "location": "https://lease-pz.link.lianjia.com/login?gotoURL=%252F&ticket=<REDACTED_ST_LEN_45_SHA16_9f35687ccf4517bc>"
+      },
+      "body_len": 0,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "json": false,
+      "head_ascii": ""
+    },
+    {
+      "item": "M2-cas-logout",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/logout",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.186,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html;charset=UTF-8",
+        "content-length": "1134",
+        "vary": "Accept-Encoding",
+        "cache-control": "no-cache"
+      },
+      "body_len": 1134,
+      "body_sha256": "941bb0061ca805de55d185a0b9e18f8056126738b6fb3a80aff0cb48095a7541",
+      "json": false,
+      "head_ascii": "<!DOCTYPE html>\n<html>\n<head>\n    <title>Logout successful - CAS &#8211; Central Authentication Service</title>\n    <met"
+    },
+    {
+      "item": "M2-tgc-exchange-post-logout",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "login.ke.com",
+        "path": "/login",
+        "query_param_names": [
+          "service"
+        ],
+        "query_value_shapes": [
+          {
+            "name": "service",
+            "len": 53,
+            "sha256_16": "9202a9d919c55469"
+          }
+        ]
+      },
+      "http": 200,
+      "elapsed_s": 0.199,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "text/html;charset=UTF-8",
+        "content-length": "1127",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 1127,
+      "body_sha256": "c893b8d3cf8d4d8d52e67222dfd520f4785fee924ba455e774761e1002864dee",
+      "json": false,
+      "head_ascii": "<!DOCTYPE html>\n<html>\n<head>\n  <meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\">\n  <meta name=\"ke-pass"
+    },
+    {
+      "item": "KE24-moma-userinfo-old-token",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/user/info",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 200,
+      "elapsed_s": 0.159,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "User-Agent"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json",
+        "content-length": "540",
+        "vary": "Accept-Encoding"
+      },
+      "body_len": 540,
+      "body_sha256": "341ef4107e6ff0b9272988312d8ed2ddc00137438ee6cc811b998fc13a5854d9",
+      "json": true,
+      "top_keys": [
+        "data",
+        "errmsg",
+        "errno"
+      ],
+      "biz_errno": 0,
+      "text_errmsg": "获取用户信息成功",
+      "data_shape": {
+        "user_info": {
+          "name": "str",
+          "nickName": "str",
+          "account": "str",
+          "agentSequenceType": "int",
+          "email": "str",
+          "usercode": "str",
+          "avatar": "str",
+          "ucid": "int",
+          "secondJobSeqName": "str",
+          "orgName": "str",
+          "orgCode": "str",
+          "location": "str",
+          "locationName": "str",
+          "sudo_active": "bool",
+          "real_ucid": "NoneType"
+        },
+        "is_authenticated": "bool",
+        "invite_code": "str",
+        "broker_assistant_shell_only": "bool"
+      }
+    },
+    {
+      "item": "KE24-wandou-me-old-token",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "wandou.ke.com",
+        "path": "/api/v1/users/me",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "http": 401,
+      "elapsed_s": 0.218,
+      "note": "",
+      "request_header_names": [
+        "Accept",
+        "Authorization",
+        "Origin",
+        "Referer",
+        "User-Agent",
+        "X-Wandou-Client-Id"
+      ],
+      "response_headers": {
+        "server": "Lianjia",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "148",
+        "x-content-type-options": "nosniff",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "x-frame-options": "SAMEORIGIN"
+      },
+      "body_len": 148,
+      "body_sha256": "f1f33ff762fbacf8723cd4b4e97ff914e89e241a9fdb581d42616599de76da5c",
+      "json": true,
+      "top_keys": [
+        "code",
+        "message",
+        "requestId",
+        "success",
+        "timestamp"
+      ],
+      "biz_code": "U001",
+      "biz_success": false,
+      "text_message": "未登录或登录已失效",
+      "data_shape": null
+    }
+  ],
+  "findings": {
+    "principal_len": 16,
+    "phase": "logout",
+    "moma_session_exchange": {
+      "ok": true,
+      "hop_count": 3,
+      "chain": [
+        {
+          "http": 302,
+          "host": "login.ke.com",
+          "location_path": "/login"
+        },
+        {
+          "http": 307,
+          "host": "prd-assistant-backend.ke.com",
+          "location_path": ""
+        },
+        {
+          "http": 200,
+          "host": "moma.ke.com"
+        }
+      ]
+    },
+    "M2_logout_pre_status": 302,
+    "M2_tgc_replay": {
+      "method": "pre-logout TGC/TGC_Secure/security_ticket snapshot replayed in fresh jar",
+      "backed_up_names": [
+        "TGC",
+        "TGC_Secure",
+        "security_ticket"
+      ]
+    },
+    "KE24_note": "old puzu_lease_token and old prd-assistant-token-prod replayed after CAS logout; re-scan required to restore the credential store"
+  }
+}

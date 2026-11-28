@@ -1,0 +1,151 @@
+{
+ "staging_backend": {
+  "/api/user/info": {
+   "http": 200,
+   "errno": 401,
+   "data_type": "NoneType"
+  },
+  "/api/public/homepage/bootstrap": {
+   "http": 200,
+   "errno": 0,
+   "data_type": "dict",
+   "data_keys": [
+    "homepage_config",
+    "latest_announcement",
+    "latest_mascot_announcement",
+    "latest_strong_announcement",
+    "lifecycle_config",
+    "mascot_announcements",
+    "unread_summary"
+   ]
+  },
+  "/api/aroute/users/page?page=1&pageSize=2&query=1": {
+   "http": 200,
+   "errno": 401,
+   "data_type": "NoneType"
+  },
+  "/api/admin/users/search?page=1&page_size=1": {
+   "http": 200,
+   "errno": 401,
+   "data_type": "NoneType"
+  },
+  "/docs": {
+   "http": 200,
+   "body_prefix": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <link type=\"text/css\" rel=\"styles"
+  },
+  "/openapi.json": {
+   "http": 200,
+   "body_prefix": "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"聊天助手API\",\"version\":\"0.1.0\"},\"paths\":"
+  },
+  "/api/config": {
+   "http": 200,
+   "errno": 401,
+   "data_type": "NoneType"
+  },
+  "/health": {
+   "http": 302,
+   "body_prefix": ""
+  },
+  "/": {
+   "http": 200,
+   "errno": null,
+   "data_type": "NoneType"
+  }
+ },
+ "staging_smart_mo": {
+  "http": 200,
+  "body_prefix": "<!doctype html>\n<html lang=\"zh-CN\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" "
+ },
+ "staging_app_moma": {
+  "http": 302,
+  "location": "https://moma.ke.com/deploy_404"
+ },
+ "subnet_neighbors": {
+  "<REDACTED_CGNAT_IPV4_1>": {
+   "ptr": "main.link.lianjia.com",
+   "http": 403,
+   "title": "403 Forbidden"
+  },
+  "<REDACTED_CGNAT_IPV4_8>": {
+   "ptr": "wxwork.ke.com",
+   "http": 301,
+   "title": "301 Moved Permanently"
+  },
+  "<REDACTED_CGNAT_IPV4_9>": {
+   "error": "herror"
+  },
+  "<REDACTED_CGNAT_IPV4_10>": {
+   "error": "herror"
+  }
+ },
+ "cors_reflection": {
+  "https://evil.example": {
+   "http": 200,
+   "acao": "https://evil.example",
+   "acac": "true",
+   "vary": "Accept-Encoding"
+  },
+  "null": {
+   "http": 200,
+   "acao": "null",
+   "acac": "true",
+   "vary": "Accept-Encoding"
+  },
+  "https://wandou.ke.com": {
+   "http": 401,
+   "acao": "",
+   "acac": ""
+  },
+  "random_subdomain": {
+   "http": 200,
+   "acao": "https://x6569.evil.example",
+   "acac": "true"
+  },
+  "https://house.link.lianjia.com": {
+   "http": 302,
+   "acao": "",
+   "acac": ""
+  },
+  "https://bms.lease.ke.com": {
+   "http": 200,
+   "acao": "https://evil.example",
+   "acac": "true"
+  }
+ },
+ "cors_poc_with_cookies": {
+  "http": 200,
+  "acao": "https://evil.example",
+  "acac": "true",
+  "business_code": 100000,
+  "msg": "加载成功",
+  "rows_returned": 1,
+  "row_fields": [
+   "apartmentBrandName",
+   "apartmentLayoutName",
+   "apartmentStoreId",
+   "apartmentStoreName",
+   "area",
+   "bathroomAmount",
+   "bedroomAmount",
+   "bizCircleName",
+   "bizCode",
+   "buildingName",
+   "checkinTime",
+   "checkinTimeDesc",
+   "claimWarning",
+   "cloudKeeperAdjustPriceTime",
+   "cloudManagerName",
+   "cloudManagerUcId",
+   "createTime",
+   "createTimeDesc",
+   "customerHouseCode",
+   "delCode"
+  ],
+  "total": 8216
+ },
+ "cors_poc_control_same_origin": {
+  "http": 200,
+  "business_code": 100000,
+  "total": 8216
+ }
+}

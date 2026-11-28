@@ -1,0 +1,215 @@
+{
+  "meta": {
+    "evidence_file": "r4-sms-probe-dryrun.json",
+    "module": "r4-SMS-verification-code-surface",
+    "generated_at_utc": "2026-11-24T08:46:41+00:00",
+    "mode": "DRY_RUN_ZERO_REQUESTS",
+    "redaction": "plan-only; no packet sent; URLs redacted to path+param names",
+    "hard_burst_cap": 12
+  },
+  "plan": [
+    {
+      "item": "S1-send-empty",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/send_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "schema discovery; no SMS expected",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 2,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S1-verify-empty",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "schema discovery; no SMS expected",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 2,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S1-send-missing-phone",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/send_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "schema discovery; no SMS expected",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 18,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S1-verify-missing-code",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "schema discovery; no SMS expected",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 24,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S2-verify-without-send",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "state-machine oracle: no code issued; random wrong code",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 42,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S3-verify-len-4",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "length oracle: 4-digit random code, one attempt each",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 40,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S3-verify-len-5",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "length oracle: 5-digit random code, one attempt each",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 41,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S3-verify-len-6",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "length oracle: 6-digit random code, one attempt each",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 42,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S3-verify-len-8",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/verify_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "length oracle: 8-digit random code, one attempt each",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 44,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S4-send-direct-arm",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/send_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "blocked: R4_RUN/R4_SMS_LIVE_SEND/R4_SMS_PHONE not fully armed",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 27,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S4-send-xff-arm",
+      "method": "POST",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/customer_auth/send_code",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "blocked: XFF rotation arm pending authorization",
+      "xff_rotation": true,
+      "request_header_names": [
+        "X-Forwarded-For",
+        "X-Real-IP"
+      ],
+      "body_len": 27,
+      "status": "PLANNED_DRY_RUN"
+    },
+    {
+      "item": "S0-whitelist-anon-gate",
+      "method": "GET",
+      "url": {
+        "scheme": "https",
+        "host": "prd-assistant-backend.ke.com",
+        "path": "/api/admin/customer-sms-whitelist",
+        "query_param_names": [],
+        "query_value_shapes": []
+      },
+      "note": "admin RBAC gate baseline; expect errno 401",
+      "xff_rotation": false,
+      "request_header_names": [],
+      "body_len": 0,
+      "status": "PLANNED_DRY_RUN"
+    }
+  ],
+  "findings": {
+    "mode": "dry-run",
+    "phone_present": false,
+    "live_send_armed": false,
+    "hard_burst_cap": 12,
+    "S4_send_rate_limit": "blocked: live send window not armed",
+    "S5_wrong_attempt_threshold": "blocked: live send window not armed"
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "date": "2026-11-20",
+  "mode": "live_credential_injection_matrix",
+  "redaction": "no token/cookie/id values; states/codes/field names only",
+  "inventory": {
+    "principal_len": 16,
+    "material_cookie_names": [
+      "HOUSEJSESSIONID",
+      "Lianjia_BUcid",
+      "Lianjia_curWorkCity",
+      "Lianjia_u_info",
+      "UCID",
+      "UCID_secure",
+      "csrfSecret",
+      "lianjia_ssid",
+      "lianjia_trusteeship_token",
+      "lianjia_trusteeship_token_secure",
+      "lianjia_uuid",
+      "login_ucid",
+      "puzu_lease_token",
+      "puzu_lease_token_secure",
+      "saas_token"
+    ],
+    "refresh_cookie_names": [
+      "TGC",
+      "TGC_Secure",
+      "lianjia_ssid",
+      "lianjia_uuid",
+      "login_ucid",
+      "security_ticket"
+    ],
+    "puzu_token_prefix": "2.",
+    "puzu_token_len": 44,
+    "tgc_len": 86
+  },
+  "wandou": {
+    "neg_no_token": {
+      "http": 302,
+      "redirects_to_login": true
+    },
+    "neg_garbage_token": {
+      "http": 401,
+      "code": "U001"
+    },
+    "inject_users_me": {
+      "http": 200,
+      "code": "0",
+      "success": true,
+      "fields": [
+        "cityCode",
+        "cityName",
+        "name",
+        "positionCode",
+        "positionName",
+        "positionType",
+        "ucid",
+        "userCode"
+      ],
+      "principal_match": true
+    },
+    "inject_without_client_id_header": {
+      "http": 200,
+      "code": "0"
+    },
+    "inject_customers_search": {
+      "http": 200,
+      "code": "0",
+      "row_fields": [
+        "avatar",
+        "customerId",
+        "name"
+      ]
+    },
+    "inject_house_search": {
+      "http": 200,
+      "code": "0",
+      "total": 4479,
+      "row_fields": [
+        "buildArea",
+        "businessResourceType",
+        "businessType",
+        "floor",
+        "houseImage",
+        "housedelCode",
+        "housedelType",
+        "imageUrl",
+        "orientation",
+        "price",
+        "resblockName",
+        "roomLayout",
+        "unitPrice"
+      ]
+    },
+    "audience_puzu_to_moma_backend": {
+      "http": 200,
+      "errno": 401,
+      "rejected": true
+    },
+    "no_ip_device_binding_evidence": "token minted on employee workstation accepted from cloud server IP, no device fingerprint header supplied"
+  },
+  "cas": {
+    "tgc_mints_st_for_moma_service": true,
+    "http": 302
+  },
+  "moma_callback": {
+    "http": 200,
+    "session_cookies": [
+      "TGC",
+      "TGC_Secure",
+      "_account_",
+      "_displayName_",
+      "_ucid_",
+      "_usercode_",
+      "lianjia_ssid",
+      "lianjia_uuid",
+      "login_ucid",
+      "prd-assistant-token-prod",
+      "security_ticket"
+    ],
+    "has_session_token": true
+  },
+  "moma_user_info": {
+    "http": 200,
+    "errno": 0,
+    "is_authenticated": true,
+    "principal_match": true,
+    "profile_fields": [
+      "account",
+      "agentSequenceType",
+      "avatar",
+      "email",
+      "location",
+      "locationName",
+      "name",
+      "nickName",
+      "orgCode",
+      "orgName",
+      "real_ucid",
+      "secondJobSeqName",
+      "sudo_active",
+      "ucid",
+      "usercode"
+    ],
+    "sudo_active": false
+  },
+  "cas_st_replay": {
+    "http": 401,
+    "rejected_invalid_ticket": true
+  },
+  "moma_rbac_employee_session": {
+    "/api/admin/users/search?page=1&page_size=1": {
+      "http": 403,
+      "errno": null,
+      "data_empty": true
+    },
+    "/api/admin/token-quota-approvals/stats": {
+      "http": 403,
+      "errno": null,
+      "data_empty": true
+    },
+    "/api/platform-api/categories": {
+      "http": 200,
+      "errno": 0,
+      "data_empty": false
+    },
+    "/api/user/api-keys": {
+      "http": 200,
+      "errno": 0,
+      "data_empty": true
+    }
+  },
+  "moma_anonymous_controls": {
+    "/api/user/info": {
+      "http": 200,
+      "errno": 401,
+      "data_empty": true
+    },
+    "/api/chats?page=1&page_size=1": {
+      "http": 200,
+      "errno": 401,
+      "data_empty": true
+    },
+    "/api/admin/users/search?page=1&page_size=1": {
+      "http": 200,
+      "errno": 401,
+      "data_empty": true
+    }
+  }
+}

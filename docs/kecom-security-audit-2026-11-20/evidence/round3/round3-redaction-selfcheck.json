@@ -1,0 +1,15 @@
+{
+  "scanned_files": [
+    "r3-cookie-runtime-2026-11-24.json",
+    "r3-cookie-static-2026-11-24.json",
+    "r3-decrypt-crosschat-2026-11-24.json",
+    "r3-expert-gate-2026-11-24.json",
+    "r3-runtime-probe-2026-11-24.json",
+    "r3-surface-fetch-2026-11-24.json",
+    "round3-redaction-selfcheck.json",
+    "round3-verification-report-2026-11-24.md"
+  ],
+  "file_count": 8,
+  "failures": [],
+  "passed": true
+}

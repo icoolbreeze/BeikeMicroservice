@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "evidence_file": "r3-cookie-static-2026-11-24.json",
+    "module": "round3-P14-cookie-static",
+    "generated_at_utc": "2026-11-24T08:26:15+00:00",
+    "network_requests": 0,
+    "redaction": "static code markers only; no runtime values"
+  },
+  "findings": {
+    "appA_copy": {
+      "document_cookie_writes": [
+        "document.cookie=`${Ga}=${a}; path=/; max-age=${yi}; SameSite=Lax`",
+        "document.cookie=`${Ga}=; path=/; max-age=0; SameSite=Lax`"
+      ],
+      "ke_sess_bak_lifetime_consts": [
+        "const Ga=\"ke_sess_bak\",yi=168*3600"
+      ],
+      "has_prd_assistant_token_ref": false,
+      "csp_refs": 0,
+      "dompurify": 0
+    },
+    "appB_ship": {
+      "document_cookie_writes": [
+        "document.cookie=`${Pn}=${n}; path=/; max-age=${Ro}; SameSite=Lax`",
+        "document.cookie=`${Pn}=; path=/; max-age=0; SameSite=Lax`"
+      ],
+      "ke_sess_bak_lifetime_consts": [
+        "const Pn=\"ke_sess_bak\",Ro=168*3600"
+      ],
+      "has_prd_assistant_token_ref": false,
+      "csp_refs": 0,
+      "dompurify": 0
+    }
+  }
+}
